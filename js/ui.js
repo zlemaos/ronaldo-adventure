@@ -24,6 +24,10 @@
   // ---------------------------------------------------------------- animation loop (≈12 fps)
   function addCanvas(el, draw) { app.canvases.push({ el: el, draw: draw }); draw(performance.now()); }
   var last = 0;
+  function redrawAll() {
+    var t = performance.now();
+    app.canvases.forEach(function (c) { try { c.draw(t); } catch (e) { /* ignore */ } });
+  }
   function loop(t) {
     if (t - last > 80) {
       last = t;
@@ -41,12 +45,12 @@
       outfit: E.outfit(s), gender: s.hero.gender, number: s.flags.number7 ? 7 : 28, sick: !!s.sick, mood: m
     };
   }
-  function portraitCanvas(cls, sceneFn, lookFn) {
+  function portraitCanvas(cls, sceneFn, lookFn, heroX) {
     var cv = doc.createElement('canvas'); cv.width = P.W; cv.height = P.H; cv.className = 'px ' + (cls || '');
     addCanvas(cv, function (t) {
       var ctx = cv.getContext('2d'); ctx.imageSmoothingEnabled = false;
       var sc = sceneFn(); P.drawScene(ctx, sc, t, country());
-      var lk = lookFn && lookFn(); if (lk && sc !== 'grave') P.drawHero(ctx, 80, 88, Object.assign({ t: t }, lk));
+      var lk = lookFn && lookFn(); if (lk && sc !== 'grave') P.drawHero(ctx, heroX || 80, 88, Object.assign({ t: t }, lk));
     });
     return cv;
   }
@@ -138,7 +142,7 @@
     banner.appendChild(portraitCanvas('', function () { return 'stadium'; }, function () {
       var cc = RA.data.countries[app.sel.country];
       return { age: 24, skin: cc.skin[0], hairColor: cc.hair, hair: 1, outfit: 'kit', gender: app.sel.gender, number: 7, mood: 'celebrate' };
-    }));
+    }, 128));
     banner.appendChild(h('<div class="title-over"><h1>호날두의 모험</h1><p>도트 인생 시뮬레이션 · 비공식 팬 패러디</p></div>'));
     // countries
     var grid = $('#countries', el);
@@ -204,6 +208,9 @@
   }
   function save() { if (app.s) S.save(app.slot, app.s); }
   function isPhone() { return G.innerWidth <= 860; }
+  function isTouch() {
+    try { return G.matchMedia('(hover: none)').matches || G.matchMedia('(pointer: coarse)').matches; } catch (e) { return 'ontouchstart' in G; }
+  }
 
   // ---------------------------------------------------------------- game screen
   function renderGame() {
@@ -316,12 +323,15 @@
     if (!s.alive) { p.innerHTML = '<p class="muted">이번 생은 끝났습니다.</p>'; return; }
     var grid = h('<div class="acts"></div>');
     E.activities(s).forEach(function (a) {
-      var b = h('<button class="act" ' + (a.ok ? '' : 'disabled') + ' title="' + esc(a.reason) + '"><span class="ic">' + a.icon + '</span><span>' + esc(a.label) + '</span>' + (a.cost === 0 ? '<span class="muted" style="font-size:10px">행동력 0</span>' : '') + '</button>');
-      b.addEventListener('click', function () { onActivity(a); });
+      var b = h('<button class="act' + (a.ok ? '' : ' is-off') + '" aria-disabled="' + (a.ok ? 'false' : 'true') + '" title="' + esc(a.reason) + '"><span class="ic">' + a.icon + '</span><span>' + esc(a.label) + '</span>' + (a.cost === 0 ? '<span class="muted" style="font-size:10px">행동력 0</span>' : '') + '</button>');
+      b.addEventListener('click', function () {
+        if (!a.ok) { A.play('bad'); toast(a.label + ': ' + (a.reason || '지금은 할 수 없어요.')); return; }
+        onActivity(a);
+      });
       grid.appendChild(b);
     });
     p.appendChild(grid);
-    p.appendChild(h('<p class="hint">해마다 행동력 ' + E.AP_PER_YEAR + '을 쓸 수 있어요. 다 쓰지 않아도 나이를 먹을 수 있습니다. 회색 버튼에 마우스를 올리면 이유가 보여요.</p>'));
+    p.appendChild(h('<p class="hint">해마다 행동력 ' + E.AP_PER_YEAR + '을 쓸 수 있어요. 다 쓰지 않아도 나이를 먹을 수 있습니다. ' + (isTouch() ? '회색 버튼을 누르면 할 수 없는 이유가 보여요.' : '회색 버튼에 마우스를 올리거나 누르면 이유가 보여요.') + '</p>'));
   }
 
   function onActivity(a) {
@@ -359,9 +369,10 @@
   function achById(id) { return (RA.data.achievements || []).filter(function (a) { return a.id === id; })[0]; }
 
   function relLabel(p) {
-    var map = { father: '아버지', mother: '어머니', spouse: '배우자', partner: '연인', child: p.gender === 'f' ? '딸' : '아들', coach: '코치', friend: '단짝', oldfriend: '옛 친구', ex: '옛 연인' };
-    if (p.role === 'sibling') return p.gender === 'f' ? '자매' : '형제';
-    return map[p.role] || p.role;
+    if (p.role === 'friend') return '단짝';
+    if (p.role === 'coach') return '코치';
+    if (p.role === 'oldfriend') return '옛 친구';
+    return E.relWord(app.s, p);
   }
   function relIcon(p) { return { father: '👨', mother: '👩', sibling: p.gender === 'f' ? '👧' : '👦', spouse: '💍', partner: '💘', child: '🧒', coach: '🧢', friend: '🤝', oldfriend: '👋', ex: '💔' }[p.role] || '🙂'; }
   function panelPeople(p) {
@@ -644,8 +655,21 @@
       if (e.key === 'Escape' && $('.modal-wrap') && !app.s || (e.key === 'Escape' && $('.modal-wrap') && !(app.s && app.s.queue.length))) closeModal();
       if (e.key === 'Enter' && app.screen === 'game' && !$('.modal-wrap') && doc.activeElement === doc.body) onAgeUp();
     });
-    var lastPhone = isPhone();
-    G.addEventListener('resize', function () { var ph = isPhone(); if (ph !== lastPhone) { lastPhone = ph; if (app.screen === 'game') { renderTabs(); renderPanel(); } } });
+    var resizeTimer = null, lastW = G.innerWidth;
+    function onViewportChange(e) {
+      // height-only changes (mobile address bar showing/hiding) must not rebuild the screen
+      if (e && e.type === 'resize' && G.innerWidth === lastW) { redrawAll(); return; }
+      lastW = G.innerWidth;
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(function () {
+        if (app.screen === 'game' && app.s) renderGame();
+        else if (app.screen === 'summary' && app.s) renderSummary();
+        else if (app.screen === 'start') renderStart();
+        redrawAll();
+      }, 150);
+    }
+    G.addEventListener('resize', onViewportChange);
+    G.addEventListener('orientationchange', onViewportChange);
     var list = S.list();
     renderStart();
     G.requestAnimationFrame(loop);

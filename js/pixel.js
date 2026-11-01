@@ -346,7 +346,23 @@
       case 'us': for (var i = 0; i < 8; i++) r(0, i * 2, 24, 1, '#b22234'), r(0, i * 2 + 1, 24, 1, '#fff'); r(0, 0, 10, 8, '#3c3b6e'); r(2, 2, 1, 1, '#fff'); r(5, 2, 1, 1, '#fff'); r(8, 2, 1, 1, '#fff'); r(3, 5, 1, 1, '#fff'); r(6, 5, 1, 1, '#fff'); break;
       case 'br': r(0, 0, 24, 16, '#009c3b'); r(6, 4, 12, 8, '#ffdf00'); r(4, 6, 16, 4, '#ffdf00'); r(9, 2, 6, 12, '#ffdf00'); r(9, 5, 6, 6, '#002776'); r(9, 7, 6, 1, '#fff'); break;
       case 'ar': r(0, 0, 24, 16, '#fff'); r(0, 0, 24, 5, '#74acdf'); r(0, 11, 24, 5, '#74acdf'); r(11, 7, 2, 2, '#f6b40e'); r(10, 6, 4, 1, '#f6b40e'); break;
-      case 'za': r(0, 0, 24, 8, '#e03c31'); r(0, 8, 24, 8, '#001489'); r(0, 6, 24, 4, '#fff'); r(0, 7, 24, 2, '#007749'); for (var k = 0; k < 8; k++) { r(0, k, Math.max(1, 9 - k), 1, k < 7 ? '#ffb81c' : '#ffb81c'); r(0, 15 - k, Math.max(1, 9 - k), 1, '#ffb81c'); } for (var k2 = 1; k2 < 7; k2++) { r(0, k2 + 1, Math.max(0, 7 - k2), 1, '#000'); r(0, 14 - k2, Math.max(0, 7 - k2), 1, '#000'); } r(0, 7, 8, 2, '#000'); break;
+      case 'za': {
+        // Drawn per pixel from the flag's geometry: a green Y (white-edged outside, gold-edged inside)
+        // whose arms start at the hoist corners and join a horizontal band; black triangle at the hoist.
+        var X0 = 12, k = 8 / X0;
+        for (var py = 0; py < 16; py++) for (var px = 0; px < 24; px++) {
+          var cx = px + 0.5, dy = Math.abs(py + 0.5 - 8), dist, inFork = false;
+          if (cx >= X0) dist = dy;
+          else { var armY = k * (X0 - cx); dist = Math.abs(dy - armY) / Math.sqrt(1 + k * k); inFork = dy < armY; }
+          var col;
+          if (dist < 1.6) col = '#007749';
+          else if (dist < 2.6) col = inFork ? '#ffb81c' : '#ffffff';
+          else if (inFork) col = '#000000';
+          else col = py < 8 ? '#e03c31' : '#001489';
+          r(px, py, 1, 1, col);
+        }
+        break;
+      }
       case 'in': r(0, 0, 24, 5, '#ff9933'); r(0, 5, 24, 6, '#fff'); r(0, 11, 24, 5, '#138808'); r(10, 6, 4, 4, '#000080'); r(11, 7, 2, 2, '#fff'); break;
       default: r(0, 0, 24, 16, '#888');
     }

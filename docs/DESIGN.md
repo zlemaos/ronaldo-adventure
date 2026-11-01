@@ -66,6 +66,58 @@ Failbetter Games' StoryNexus/"storylet" design diaries, Choice of Games "End Gam
 - **Mobile.** ≤ 860px: single column, portrait + stats on top, tabs (기록/활동/관계/학업·직업/축구/업적),
   newest-first log, sticky bottom age button. Checked at 390×844.
 
+## 2b. Narrative-consistency rules (review round 1)
+
+- **Person gating.** Before an event can fire, the engine collects every person it names: the tokens
+  `{father} {mother} {bro} {sis1} {sis2} {spouse} {partner} {child} {friend} {coach} {siblings}`, plus the plain
+  words 아버지/아빠 and 어머니/엄마. Words like 할아버지 or 시어머니 are removed first, and events about the hero's
+  own children are exempt. The event is eligible only while each named person is alive and present
+  (`Engine.personsOk`). The same check runs on scheduled follow-ups, on queued modal events (`currentEvent` drops an event
+  that became invalid), and on activity flavour lines.
+- **Memorial tag.** `memorial: true` or `memorial: ['father']` lets an event name people who have died. A condition
+  `rel: { mother: 'dead' }` or the flags `father_dead`/`mother_dead` imply it. Log lines written by memorial events
+  carry `mem: 1`, which the narrative test uses.
+- **Siblings as a group.** `{siblings}` renders only living siblings ("현우, 가람"), and `{siblingsAll}` gives a count
+  word that includes the hero ("셋"). An event that uses either is skipped when no sibling is alive.
+- **Deaths.** `Engine.relWord` gives the correct kinship word: 형/오빠/누나/언니/남동생/여동생 from the hero's
+  gender and birth order, plus 아내/남편/아들/딸. A death in the family queues a seriously written grief event
+  (`sys_grief`; the father keeps `canon_father_farewell`). That year no random storylets fire, only due follow-ups and
+  priority events. A "first holiday after a death" event uses `cond.recent: { mother_dead: 2 }`, so it fires at most
+  once and only within 2 years of the death. Present-tense texts that say "여섯 식구" use `cond.family: 'all'`, which
+  requires both parents and all three siblings to be alive.
+- **Jail gating.** While the hero is in prison, only events flagged `jailOk`, `anyState`, or with `cond.flags`
+  containing `jailed` may fire. Grief and farewell events count as family visits. Queued events are filtered the moment
+  a sentence starts (`dropJailBlocked`). A scheduled follow-up that comes due during the sentence waits until release.
+  Only study, exercise, meditation and family visits remain as activities, with prison-specific lines.
+- **homeShort.** Each country has `places.homeShort`, a short noun such as "서귀포 돌담집". `{house}` now renders
+  this short form, so it reads naturally inside sentences ("어릴 적 {house}에서 했던 다짐"). The long description is
+  `{houseLong}` and is used only in the birth line.
+- **Particles.** `Text.fixJosa` looks past closing quotes and brackets to find the last syllable:
+  `"장례지도사"(으)로` → `"장례지도사"로`. `Text.hasLeftoverJosa` detects any marker that slipped through.
+- **Repetition.** Activity flavour lines come from per-stage pools: football has child, teen, academy, pro, veteran
+  and amateur pools of 10–12 lines, and work, exercise, haircut, family, kids, doctor and others have 9–15 each.
+  `Engine.line` never repeats a line within 3 years. Family time draws from one pool covering the family of origin,
+  the hero's own family and memories, so there is always something left to say.
+- **Names.** New friends, partners, coaches and children get given names that nobody in the hero's life already has,
+  which avoids confusing namesakes.
+- **Test.** `test/narrative.test.js` plays 100 seeded lives per country with three autoplayer archetypes. It asserts
+  zero non-memorial mentions of a person after their death, zero leftover particle markers, zero non-prison events
+  while jailed (the log marks entries written in prison with `j: 1`), and no activity line repeated within 3 years.
+  It also includes unit tests for each rule above.
+
+## 2c. UI notes (review round 1, part B)
+
+- Resizing the viewport or rotating the phone rebuilds the current screen after a 150 ms debounce, with fresh 160×96
+  canvases that keep `image-rendering: pixelated`. Height-only resizes, such as the mobile address bar appearing or
+  hiding, only trigger a redraw.
+- Unavailable activities are not `disabled`; they are marked `aria-disabled` with an `is-off` style. Tapping one
+  shows the reason in a toast. Desktop keeps the hover tooltip, and the hint text depends on
+  `(hover: none)` / `(pointer: coarse)`.
+- On the title banner the hero stands at x=128 and the title is limited to 64% of the width, so they no longer
+  overlap at 360–430 px.
+- The South African flag is drawn pixel by pixel from its geometry: green Y bands, white edges outside the Y, gold
+  edges inside, and the black hoist triangle.
+
 ## 3. Architecture
 
 ```
@@ -309,7 +361,7 @@ no national/ethnic stereotypes, father's alcoholism/illness handled seriously an
 | moveAbroad | emigrate (sets `abroad`) |
 | becomeMonk / leaveMonastery | religious life (career `monk`, sets/clears `monk`) |
 
-Additional engine-only event fields (used by canon/system events): `manual: true` (never picked
+Additional event fields: `memorial: true | [persons]`, `jailOk: true`, `cond.recent: { flag: years }`, `cond.family: 'all'`, country `places.homeShort`, tokens `{houseLong}`, `{siblings}`, `{siblingsAll}`. Engine-only (canon/system events): `manual: true` (never picked
 randomly; queued by the engine), `when: function (s) {…}` (extra condition), `textFn`, `choicesFn`,
 choice `run: function (s) {…}`, choice `reqFn`, and `check.min/max` to clamp a skill-check chance.
 
@@ -354,26 +406,24 @@ finite, or any life throws. Latest output:
 
 | country | avgDeath | median | min | max | pro | natTeam | ballon | worldCup | topOfCareer | degree | married | kidsAvg | jailed | fatherSober | fatherDiedAtAvg | achievementsAvg | sectorsUsed |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| kr | 72.2 | 74 | 5 | 99 | 27.2% | 23.0% | 4.8% | 1.2% | 73.8% | 56.0% | 36.6% | 0.37 | 22.0% | 4.0% | 23.8 | 7.3 | 22 |
-| jp | 72.1 | 74 | 28 | 96 | 25.0% | 20.6% | 7.0% | 1.0% | 72.0% | 52.2% | 40.4% | 0.51 | 21.4% | 4.0% | 24.0 | 7.2 | 20 |
-| cn | 70.9 | 72 | 8 | 99 | 24.2% | 20.0% | 5.4% | 1.0% | 75.4% | 53.8% | 38.8% | 0.46 | 19.4% | 4.8% | 24.1 | 7.0 | 22 |
-| us | 70.3 | 72 | 11 | 99 | 25.4% | 22.6% | 6.6% | 1.8% | 67.8% | 50.2% | 35.8% | 0.41 | 22.2% | 4.4% | 23.8 | 7.0 | 22 |
-| br | 71.4 | 72 | 4 | 101 | 28.2% | 24.2% | 3.8% | 5.4% | 71.6% | 53.8% | 39.4% | 0.42 | 20.8% | 4.0% | 23.9 | 7.3 | 22 |
-| ar | 71.3 | 73 | 17 | 97 | 25.0% | 20.2% | 6.4% | 4.0% | 71.0% | 51.4% | 40.2% | 0.31 | 24.4% | 3.2% | 23.8 | 7.1 | 22 |
-| za | 71.8 | 73 | 3 | 97 | 26.8% | 21.6% | 6.2% | 1.0% | 74.0% | 51.6% | 35.6% | 0.39 | 19.0% | 3.8% | 23.5 | 7.2 | 22 |
-| in | 70.6 | 73 | 4 | 100 | 27.4% | 23.4% | 4.8% | 0.4% | 73.8% | 55.0% | 39.4% | 0.36 | 19.8% | 3.2% | 23.7 | 7.2 | 22 |
-Top career sectors by country:
-- kr: sports 26.4%, trade 11.6%, service 7.0%, entertainment 6.6%, parttime 5.6%, agri 5.2%
+| kr | 69.9 | 72 | 7 | 98 | 28.2% | 24.4% | 5.0% | 1.0% | 71.0% | 51.4% | 41.4% | 0.42 | 18.8% | 3.4% | 24.1 | 7.2 | 22 |
+| jp | 70.1 | 72 | 4 | 100 | 27.0% | 21.4% | 6.0% | 0.6% | 71.6% | 53.0% | 34.4% | 0.38 | 22.0% | 4.4% | 23.9 | 7.1 | 21 |
+| cn | 70.5 | 72 | 3 | 100 | 26.2% | 21.2% | 6.2% | 0.4% | 72.6% | 54.4% | 34.0% | 0.38 | 19.4% | 3.0% | 24.1 | 7.1 | 21 |
+| us | 69.6 | 71 | 11 | 95 | 28.0% | 24.2% | 8.0% | 2.0% | 73.0% | 53.2% | 36.6% | 0.40 | 20.0% | 2.8% | 23.7 | 7.3 | 21 |
+| br | 70.3 | 72 | 4 | 99 | 27.8% | 23.0% | 4.2% | 6.4% | 72.0% | 52.4% | 38.0% | 0.38 | 16.8% | 3.6% | 24.2 | 7.2 | 22 |
+| ar | 69.8 | 71 | 12 | 98 | 24.8% | 21.2% | 6.4% | 5.2% | 70.8% | 54.4% | 32.8% | 0.42 | 22.4% | 3.6% | 23.8 | 7.0 | 22 |
+| za | 70.0 | 71 | 9 | 95 | 24.4% | 20.6% | 5.2% | 0.4% | 72.0% | 51.0% | 34.0% | 0.46 | 21.0% | 3.6% | 23.8 | 6.9 | 22 |
+| in | 71.2 | 73 | 11 | 99 | 25.2% | 21.8% | 4.2% | 0.0% | 70.8% | 50.6% | 42.6% | 0.41 | 22.0% | 4.6% | 24.1 | 7.1 | 21 |
 
-- jp: sports 27.0%, entertainment 10.0%, trade 9.0%, parttime 8.4%, service 7.2%, agri 5.4%
-- cn: sports 24.4%, trade 9.6%, service 8.8%, entertainment 8.0%, arts 7.6%, parttime 6.6%
-- us: sports 23.8%, service 9.4%, parttime 9.0%, trade 8.4%, entertainment 6.4%, arts 6.4%
-- br: sports 26.6%, trade 9.2%, service 8.4%, arts 6.6%, religion 6.4%, parttime 5.6%
-- ar: sports 27.2%, service 11.0%, trade 8.4%, entertainment 6.8%, parttime 6.0%, public 5.8%
-- za: sports 26.2%, trade 8.4%, service 8.4%, entertainment 7.0%, agri 5.8%, public 5.8%
-- in: sports 30.2%, service 8.2%, entertainment 7.8%, parttime 6.8%, trade 6.2%, arts 5.6%
-Subtest: simulate 500 lives in kr
-ok 16 - simulate 500 lives in kr
+Top career sectors by country:
+- kr: sports 29.2%, trade 8.2%, parttime 7.0%, agri 6.8%, transport 5.8%, service 5.6%
+- jp: sports 27.2%, service 9.2%, entertainment 8.8%, parttime 7.4%, trade 7.4%, agri 6.2%
+- cn: sports 24.8%, trade 9.2%, service 8.2%, parttime 8.0%, entertainment 7.0%, agri 5.8%
+- us: sports 27.2%, trade 8.2%, entertainment 8.0%, service 7.6%, parttime 6.6%, arts 6.6%
+- br: sports 24.4%, service 9.8%, entertainment 7.8%, trade 7.6%, parttime 7.2%, arts 6.6%
+- ar: sports 25.0%, trade 8.6%, agri 7.8%, parttime 7.4%, entertainment 6.8%, service 6.2%
+- za: sports 25.8%, trade 10.0%, parttime 7.8%, entertainment 7.6%, service 6.4%, agri 5.8%
+- in: sports 25.0%, trade 11.8%, entertainment 8.0%, parttime 7.4%, arts 6.6%, service 6.4%
 
 Reading: about a quarter of lives turn pro (higher for the football-focused archetype), roughly one in five
 pros wins a Ballon d'Or, and World Cups are realistic by country (Brazil/Argentina ≈ 4–5 %, India ≈ 0.4 %).
@@ -386,7 +436,7 @@ Cup odds lowered, fraud-offer event made once-per-life.
 
 ## 8. Verification
 
-- `npm test` → 23 tests pass (schema, volume, conditions, age-up, checks, careers/promotion, 8-country
+- `npm test` → all tests pass (now including the narrative-consistency suite) (schema, volume, conditions, age-up, checks, careers/promotion, 8-country
   family generation, particles, save round trip, v1 migration, deterministic replay, delayed events,
   generations, football route, 8 × 500-life simulation).
 - Headless Chromium (Playwright) at 1280×800 and 390×844 from `file://`: country select → age 1 → events
