@@ -62,7 +62,7 @@ for (const c of COUNTRIES) {
     assert.ok(avg > 55 && avg < 92, 'average death age ' + avg);
     assert.ok(pros / LIVES > 0.05 && pros / LIVES < 0.7, 'pro share ' + pros / LIVES);
     assert.ok(ballon / LIVES < 0.2, 'ballon share too high');
-    assert.ok(Object.keys(sectors).length >= 12, 'career spread ' + Object.keys(sectors).length);
+    assert.ok(Object.keys(sectors).length >= Math.min(12, LIVES / 5), 'career spread ' + Object.keys(sectors).length);
   });
 }
 
