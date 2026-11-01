@@ -41,7 +41,6 @@
   }
 
   // Resolve fallback particles written as 을(를), (으)로, (이)가, 와(과), (이) after a word.
-  // Resolve fallback particles written as 을(를), (으)로, (이)가, 와(과), (이) after a word.
   // Closing quotes, brackets and similar punctuation between the word and the particle are skipped
   // when looking for the last syllable: '"장례지도사"(으)로' → '"장례지도사"로'.
   var JOSA_RE = /([가-힣A-Za-z0-9])(["'”’」』》〉)\]]*)(을\(를\)|를\(을\)|\(으\)로|\(이\)가|와\(과\)|과\(와\)|\(이\)|\(아\)야|은\(는\)|는\(은\))/g;
