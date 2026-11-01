@@ -104,6 +104,19 @@ Failbetter Games' StoryNexus/"storylet" design diaries, Choice of Games "End Gam
   zero non-memorial mentions of a person after their death, zero leftover particle markers, zero non-prison events
   while jailed (the log marks entries written in prison with `j: 1`), and no activity line repeated within 3 years.
   It also includes unit tests for each rule above.
+- **Particles after inserted values (round 2).** A particle is never written directly after a placeholder
+  (`{hometown}을`); templates use the marker form (`{hometown}[을/를]`). `test/josa.test.js` renders every event,
+  choice, career and activity template with each of the 8 countries' values. It fails on any hard-coded particle after
+  a placeholder, and on any particle that does not match the inserted value's final consonant, covering
+  을/를, 이/가, 은/는, 와/과, 으로/로, (이)라 and 아/야.
+- **Memorial frequency (round 2).** One-time memorial acts (the bench donation, finding the father's old bag, the
+  headstone unveiling) are `once`. Recurring rituals (제사/기일, 오봉, 청명절, 망자의 날, 위령의 날) have a 5-year
+  cooldown and wording that changes on each occurrence: `textVariants`/`logVariants` on the event, and `logVariants`
+  on a choice. `maxTimes` caps an event per life; the "smell of the alley reminds me of mother" memory has
+  `maxTimes: 2`. Scheduled follow-ups now respect `once` and `maxTimes` as well. The narrative test checks that
+  once/maxTimes limits hold, that rituals are at least 3 years apart, and that no ritual repeats the same sentence.
+- **Start screen.** The family preview lists "형제자매" with each sibling's kinship word for the chosen hero gender
+  (남: 형/누나, 여: 오빠/언니).
 
 ## 2c. UI notes (review round 1, part B)
 
@@ -361,7 +374,7 @@ no national/ethnic stereotypes, father's alcoholism/illness handled seriously an
 | moveAbroad | emigrate (sets `abroad`) |
 | becomeMonk / leaveMonastery | religious life (career `monk`, sets/clears `monk`) |
 
-Additional event fields: `memorial: true | [persons]`, `jailOk: true`, `cond.recent: { flag: years }`, `cond.family: 'all'`, country `places.homeShort`, tokens `{houseLong}`, `{siblings}`, `{siblingsAll}`. Engine-only (canon/system events): `manual: true` (never picked
+Additional event fields: `memorial: true | [persons]`, `maxTimes`, `textVariants`, `logVariants` (event or choice), `jailOk: true`, `cond.recent: { flag: years }`, `cond.family: 'all'`, country `places.homeShort`, tokens `{houseLong}`, `{siblings}`, `{siblingsAll}`. Engine-only (canon/system events): `manual: true` (never picked
 randomly; queued by the engine), `when: function (s) {…}` (extra condition), `textFn`, `choicesFn`,
 choice `run: function (s) {…}`, choice `reqFn`, and `check.min/max` to clamp a skill-check chance.
 

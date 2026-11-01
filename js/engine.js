@@ -331,12 +331,21 @@
   // `memorial: ['father']`; conditions such as rel.father 'dead' or the flag father_dead imply it.
   var PERSON_TOKENS = ['father', 'mother', 'bro', 'sis1', 'sis2', 'spouse', 'partner', 'friend', 'coach', 'child', 'siblings', 'siblingsAll'];
   var TOKEN_RE = /\{([a-zA-Z0-9]+)\}/g;
+  // Recurring events may vary their wording: textVariants/logVariants are used in turn (1st, 2nd, 3rd time…)
+  function variant(s, ev, list, base) {
+    if (!list || !list.length) return base;
+    var n = Math.max(1, s.fired[ev.id] || 1);
+    return list[(n - 1) % list.length];
+  }
+  E.eventText = function (s, ev) { return ev.textFn ? ev.textFn(s) : variant(s, ev, ev.textVariants, ev.text); };
+  E.eventLog = function (s, ev) { return variant(s, ev, ev.logVariants, ev.log); };
   function eventTexts(ev) {
-    var out = [ev.text, ev.log];
+    var out = [ev.text, ev.log].concat(ev.textVariants || [], ev.logVariants || []);
     (ev.choices || []).forEach(function (ch) {
       out.push(ch.text, ch.log);
       if (ch.success) out.push(ch.success.log);
       if (ch.fail) out.push(ch.fail.log);
+      out = out.concat(ch.logVariants || []);
     });
     return out.filter(Boolean);
   }
@@ -393,6 +402,7 @@
     if (s.age < age[0] || s.age > age[1]) return false;
     if (ev.countries && ev.countries.indexOf(s.country) < 0) return false;
     if (ev.once && s.fired[ev.id]) return false;
+    if (ev.maxTimes && (s.fired[ev.id] || 0) >= ev.maxTimes) return false;
     var cd = ev.cooldown != null ? ev.cooldown : 6;
     if (s.cd[ev.id] != null && s.age - s.cd[ev.id] < cd) return false;
     // While in prison only prison-aware events can fire
@@ -420,7 +430,7 @@
     if (!s.queue.length) return null;
     var ev = E.eventIndex()[s.queue[0]];
     if (!ev || (s.jail > 0 && !E.jailOk(ev)) || (!ev.manual && !E.personsOk(s, ev))) { s.queue.shift(); return E.currentEvent(s); }
-    var text = ev.textFn ? ev.textFn(s) : ev.text;
+    var text = E.eventText(s, ev);
     return {
       id: ev.id, text: E.render(s, text), scene: ev.scene || E.sceneFor(s, ev),
       choices: eventChoices(s, ev).map(function (ch, i) {
@@ -444,7 +454,7 @@
     s.queue.shift();
     var mem = E.eventRefs(ev).isMemorial ? { mem: 1, ev: ev.id } : { ev: ev.id };
     mem.j = s.jail > 0 ? 1 : 0; // the outcome of an event that starts a prison term was written outside
-    if (!ev.manual || ev.id.indexOf('canon_') === 0 || ev.memorial) addLog(s, E.render(s, ev.textFn ? ev.textFn(s) : ev.text), 'q', mem);
+    if (!ev.manual || ev.id.indexOf('canon_') === 0 || ev.memorial) addLog(s, E.render(s, E.eventText(s, ev)), 'q', mem);
     var res = { changes: [], outcome: null, log: '', anim: ch.anim || null };
     var branch = ch;
     if (ch.check) {
@@ -453,7 +463,7 @@
       res.outcome = ok ? 'success' : 'fail';
     }
     applyEffects(s, branch.effects, res.changes);
-    var log = branch.log;
+    var log = variant(s, ev, branch.logVariants, branch.log);
     if (branch.run) log = branch.run(s, res) || log;
     var sch = branch.schedule || ch.schedule;
     if (sch) s.pending.push({ age: s.age + (sch.years || 1), id: sch.id });
@@ -473,9 +483,9 @@
     // choiceless: apply now, log it
     var wasJailed = s.jail > 0 ? 1 : 0;
     var changes = applyEffects(s, ev.effects, []);
-    var text = ev.textFn ? ev.textFn(s) : ev.text;
+    var text = E.eventText(s, ev), evLog = E.eventLog(s, ev);
     var log = ev.run ? ev.run(s) : null;
-    addLog(s, E.render(s, text) + (ev.log ? ' ' + E.render(s, ev.log) : '') + (log ? ' ' + log : ''), ev.kind || 'event', { mem: E.eventRefs(ev).isMemorial ? 1 : null, ev: ev.id, j: wasJailed });
+    addLog(s, E.render(s, text) + (evLog ? ' ' + E.render(s, evLog) : '') + (log ? ' ' + log : ''), ev.kind || 'event', { mem: E.eventRefs(ev).isMemorial ? 1 : null, ev: ev.id, j: wasJailed });
     changes.forEach(function (c) { if (c.k === 'msg') addLog(s, c.t, 'info'); });
   }
   E.fireEvent = fireEvent;
@@ -499,6 +509,8 @@
       var ev = idx[p.id];
       if (ev && !used[ev.id] && s.alive) {
         var ageOk = true; // scheduled follow-ups ignore age windows/cooldowns but respect cond
+        if (ev.once && s.fired[ev.id]) return;                                  // once-per-life holds for follow-ups too
+        if (ev.maxTimes && (s.fired[ev.id] || 0) >= ev.maxTimes) return;
         if (s.jail > 0 && !E.jailOk(ev)) { s.pending.push({ age: s.age + s.jail + 1, id: p.id }); return; } // wait until release
         if (E.condMatches(s, ev.cond) && E.personsOk(s, ev) && (!ev.when || ev.when(s)) && ageOk) { chosen.push(ev); used[ev.id] = 1; }
       }
@@ -549,7 +561,7 @@
     if (a > sc.high.to && ed.stage === 'high') {
       ed.stage = 'none';
       if (degreeRank(ed.degree) < 1) ed.degree = 'high';
-      if (!silent) addLog(s, sc.high.name + '를 졸업했다.', 'milestone');
+      if (!silent) addLog(s, sc.high.name + T.particle(sc.high.name, '을/를') + ' 졸업했다.', 'milestone');
     } else if (a < sc.elem.from) ed.stage = 'none';
   };
 

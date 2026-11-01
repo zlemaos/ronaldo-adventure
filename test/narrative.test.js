@@ -42,6 +42,23 @@ function audit(s) {
     if (T.hasLeftoverJosa(e.t)) problems.push('leftover josa at ' + e.age + ': ' + e.t);
     if (e.j && e.ev && !E.jailOk(idx[e.ev])) problems.push('event while jailed at ' + e.age + ' (' + e.ev + '): ' + e.t);
   }
+  // once-per-life and capped events never exceed their limit
+  for (const id of Object.keys(s.fired)) {
+    const ev = idx[id]; if (!ev || ev.manual) continue;
+    if (ev.once && s.fired[id] > 1) problems.push('once-per-life event fired ' + s.fired[id] + 'x: ' + id);
+    if (ev.maxTimes && s.fired[id] > ev.maxTimes) problems.push('event over its cap ' + s.fired[id] + 'x: ' + id);
+  }
+  // recurring memorial rituals: at least 5 years apart, never the same sentence twice in a row
+  const ritual = new Map();
+  for (const e of s.log) {
+    if (!e.mem || !e.ev || e.k === 'q' || !idx[e.ev] || idx[e.ev].manual) continue;
+    const prev = ritual.get(e.ev);
+    if (prev && prev.age !== e.age) {
+      if (e.age - prev.age < 3) problems.push('memorial ' + e.ev + ' repeated after ' + (e.age - prev.age) + ' years');
+      if (prev.t === e.t) problems.push('memorial ' + e.ev + ' repeated the same text: ' + e.t);
+    }
+    if (!prev || prev.age !== e.age) ritual.set(e.ev, e);
+  }
   // flavour lines of an activity never repeat within 3 years (same year or the next two)
   const seen = new Map();
   for (const e of s.log) {
@@ -143,4 +160,21 @@ test('prison blocks work, school and dating events and activities', () => {
   s.queue = ['sys_grad', 'sys_grief'];
   E.dropJailBlocked(s);
   assert.deepStrictEqual(s.queue, ['sys_grief']);
+});
+
+test('one-time memorials fire once, recurring rituals vary their text', () => {
+  const idx = E.eventIndex();
+  assert.ok(idx.us_father_memory.once, 'the bench is donated once');
+  assert.ok(idx.ar_father_bag.once);
+  assert.strictEqual(idx.life_old_mother_memory.maxTimes, 2);
+  const s = E.newGame({ country: 'kr', seed: 'ritual' });
+  s.age = 30; E.person(s, 'father').alive = false; s.flags.father_dead = 25;
+  const ev = idx.kr_father_jesa;
+  const texts = [];
+  for (let k = 0; k < 3; k++) { s.fired[ev.id] = k + 1; texts.push(E.render(s, E.eventText(s, ev))); }
+  assert.strictEqual(new Set(texts).size, 3);
+  s.cd[ev.id] = 30; s.age = 33;
+  assert.ok(!E.eventMatches(s, ev), 'not again within the cooldown');
+  s.age = 35;
+  assert.ok(E.eventMatches(s, ev));
 });

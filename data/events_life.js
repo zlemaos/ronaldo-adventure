@@ -461,7 +461,7 @@
       text: '친구 생일 파티에서 누군가 몰래 술병을 꺼냈다.',
       choices: [
         { text: '마신다', effects: { happy: 3, health: -3, flags: ['drinker'] }, log: '다음 날 아침, 머리가 깨질 것 같았다. 기억은 군데군데 비어 있었다.' },
-        { text: '탄산음료로 버틴다', effects: { grit: 2, smarts: 1 }, log: '모두를 집에 데려다준 건 결국 {name}이었다.' },
+        { text: '탄산음료로 버틴다', effects: { grit: 2, smarts: 1 }, log: '결국 {name}[이/가] 모두를 집에 데려다줬다.' },
         { text: '집안 일을 떠올리고 자리를 뜬다', effects: { grit: 3, rel: { family: 2 } }, log: '술이 사람을 어떻게 아프게 하는지 이미 알고 있었다. 일찍 집에 왔다.' }
       ]
     },
@@ -984,12 +984,15 @@
       log: '피로연에서 {name}[이/가] 춤추는 영상이 가족 단톡방의 전설이 됐다.'
     },
     {
-      id: 'life_ya_father_grave', age: [20, 60], cooldown: 6,
+      id: 'life_ya_father_grave', age: [20, 60], cooldown: 5, maxTimes: 4,
       cond: { flags: ['father_dead'] },
       text: '{father}의 기일이다. {fatherJob} 일을 하던 공원에 꽃이 피었다.',
+      textVariants: ['{father}의 기일이다. {fatherJob} 일을 하던 공원에 꽃이 피었다.', '또 {father}의 기일. 올해는 혼자 공원 벤치에 앉아 한참 꽃을 바라봤다.', '{father}의 기일. 아버지가 쓰던 낡은 모자를 꺼내 먼지를 털었다.', '{father}의 기일. 아버지 나이가 되어 보니 그 시절 아버지가 조금 이해된다.'],
       choices: [
-        { text: '묘소에 꽃을 놓는다', effects: { happy: 2, grit: 2, rel: { family: 3 } }, log: '"아빠, 저 잘 지내요." 바람이 대답하듯 불었다.' },
-        { text: '아빠가 가꾸던 화단에 물을 준다', effects: { happy: 3, rel: { mother: 3 } }, log: '{mother}[과/와] 나란히 서서 오래도록 꽃을 바라봤다.' }
+        { text: '묘소에 꽃을 놓는다', effects: { happy: 2, grit: 2, rel: { family: 3 } }, log: '"아빠, 저 잘 지내요." 바람이 대답하듯 불었다.',
+          logVariants: ['"아빠, 저 잘 지내요." 바람이 대답하듯 불었다.', '묘비 앞에 올해 있었던 일을 조용히 털어놓았다.', '묘소 옆 잡초를 뽑다 보니 해가 기울었다.', '꽃을 놓고 돌아서는데 어디선가 공 차는 소리가 들렸다.'] },
+        { text: '아빠가 가꾸던 화단에 물을 준다', effects: { happy: 3, rel: { family: 3 } }, log: '화단 가장자리에 앉아 오래도록 꽃을 바라봤다.',
+          logVariants: ['화단 가장자리에 앉아 오래도록 꽃을 바라봤다.', '아버지가 심은 나무가 어느새 지붕보다 높아졌다.', '물을 주다 보니 아버지가 흥얼거리던 노래가 입에서 나왔다.', '공원 관리인이 아버지를 기억한다며 인사를 건넸다.'] }
       ]
     },
     {
@@ -1439,9 +1442,10 @@
       ]
     },
     {
-      id: 'life_old_mother_memory', age: [61, 110], once: true,
+      id: 'life_old_mother_memory', age: [61, 110], maxTimes: 2, cooldown: 10,
       cond: { flags: ['mother_dead'] },
       text: '{food} 냄새가 골목에서 풍겨 온다. 순간 {mother}[이/가] 부엌에서 부르는 것만 같다.',
+      textVariants: ['{food} 냄새가 골목에서 풍겨 온다. 순간 {mother}[이/가] 부엌에서 부르는 것만 같다.', '시장에서 {mother}[과/와] 꼭 닮은 뒷모습을 봤다. 한참을 그 자리에 서 있었다.'],
       effects: { happy: 2, grit: 1 },
       log: '그 자리에 오래 서 있었다. 나이가 들어도 엄마는 늘 엄마였다.'
     }

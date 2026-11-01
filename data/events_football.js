@@ -32,7 +32,7 @@
         { text: '"나중에 큰 집 사 줄게"라고 약속한다', effects: { grit: 3, rel: { mother: 4 }, flags: ['promised_house'] }, log: '{mother}[은/는] 웃었지만 눈가가 촉촉했다.' }
       ] },
     { id: 'canon_mother_shift', age: [6, 12], once: true, weight: 20, cond: { flags: ['!heir'], rel: { mother: 'alive' } },
-      text: '{motherJob}로 일하는 {mother}[은/는] 새벽에 나가 밤늦게 들어온다. 오늘은 손이 퉁퉁 부어 있다.',
+      text: '{motherJob}[으로/로] 일하는 {mother}[은/는] 새벽에 나가 밤늦게 들어온다. 오늘은 손이 퉁퉁 부어 있다.',
       choices: [
         { text: '엄마 손을 주물러 드린다', effects: { rel: { mother: 8 }, happy: 2 }, log: '"우리 막내 손이 약손이네." 엄마가 그대로 잠들었다.' },
         { text: '설거지를 대신 해 둔다', effects: { rel: { mother: 6 }, grit: 2 }, log: '그릇 하나를 깼지만 엄마는 꼭 안아 주었다.' }
@@ -105,9 +105,9 @@
         { text: '그냥 즐기면서 찬다', effects: { happy: 3 }, log: '축구는 취미로도 충분히 즐겁다.' }
       ] },
     { id: 'canon_academy_offer', age: [12, 12], once: true, priority: true, cond: { flags: ['!heir'], fb: ['regional', 'local'], stats: { football: [42, 100] } },
-      text: '{bigcity}의 {academy}에서 입단 테스트 합격 통지가 왔다. 단, 열두 살에 혼자 {bigcity}로 올라가 기숙사에서 지내야 한다.',
+      text: '{bigcity}의 {academy}에서 입단 테스트 합격 통지가 왔다. 단, 열두 살에 혼자 {bigcity}[으로/로] 올라가 기숙사에서 지내야 한다.',
       choices: [
-        { text: '혼자 떠난다', effects: { grit: 4, happy: -3, rel: { mother: -2 }, fx: ['joinAcademy'] }, log: '{hometown}을 떠나는 날, {mother}[은/는] 손을 흔들다 끝내 돌아서서 울었다.' },
+        { text: '혼자 떠난다', effects: { grit: 4, happy: -3, rel: { mother: -2 }, fx: ['joinAcademy'] }, log: '{hometown}[을/를] 떠나는 날, {mother}[은/는] 손을 흔들다 끝내 돌아서서 울었다.' },
         { text: '가족 곁에 남는다', effects: { happy: 3, rel: { family: 6 }, flags: ['stayed_home'] }, log: '아직은 엄마 밥이 더 좋다. 기회는 또 올지도 모른다.' }
       ] },
     { id: 'canon_academy_second', age: [13, 15], once: true, weight: 40, cond: { fb: ['regional', 'local'], flags: ['!moved_alone'], stats: { football: [54, 100] } },
@@ -129,7 +129,7 @@
         { text: '같이 웃어넘긴다', effects: { happy: -1, grit: 1 }, log: '몇 주 뒤, 그 아이들이 내 사투리를 따라 하며 친해졌다.' },
         { text: '참지 못하고 의자를 걷어찬다', check: { stat: 'grit', diff: 55 },
           success: { effects: { happy: 1 }, log: '{coach}[은/는] 혼을 냈지만 "그 승부욕을 운동장에서 써라"라고 덧붙였다.' },
-          fail: { effects: { happy: -4, flags: ['academy_warning'] }, log: '퇴소 경고를 받았다. 한 번만 더 그러면 {hometown}으로 돌아가야 한다.' } },
+          fail: { effects: { happy: -4, flags: ['academy_warning'] }, log: '퇴소 경고를 받았다. 한 번만 더 그러면 {hometown}[으로/로] 돌아가야 한다.' } },
         { text: '운동장에서 실력으로 보여 준다', check: { stat: 'football', diff: 42 },
           success: { effects: { football: 1, fame: 2, happy: 4 }, log: '연습 경기에서 세 골. 아무도 사투리를 놀리지 않게 됐다.' },
           fail: { effects: { happy: -2 }, log: '오늘은 공이 발에 붙지 않았다. 내일은 다를 것이다.' } }
@@ -140,7 +140,7 @@
         { text: '고개 숙여 사과한다', effects: { grit: 3, unflags: ['academy_warning'] }, log: '그날 이후로 분노를 슈팅에만 담기로 했다.' },
         { text: '"제가 왜요?"라고 대든다', check: { stat: 'football', diff: 60 },
           success: { effects: { fame: 1 }, log: '코치는 한숨을 쉬었다. 실력이 너무 좋아서 내보낼 수가 없다.' },
-          fail: { effects: { fx: ['quitFootball'], happy: -8 }, log: '아카데미에서 퇴출됐다. 짐을 싸서 {hometown}으로 돌아왔다.' } }
+          fail: { effects: { fx: ['quitFootball'], happy: -8 }, log: '아카데미에서 퇴출됐다. 짐을 싸서 {hometown}[으로/로] 돌아왔다.' } }
       ] },
     { id: 'canon_homesick', age: [12, 16], cooldown: 3, weight: 18, cond: { flags: ['moved_alone'], fb: ['academy'], stats: { happy: [0, 42] } },
       text: '향수병이 심해졌다. 밤마다 {mother}[이/가] 해 주던 {food} 생각이 난다.',

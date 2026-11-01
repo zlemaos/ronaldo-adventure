@@ -157,7 +157,10 @@
     $('#family', el).innerHTML = '<b>' + esc(c.places.hometown) + '</b>에서 태어납니다.<br>' +
       '아버지 <b>' + esc(f.father.name) + '</b> — ' + esc(f.father.job) + ', ' + esc(f.father.job2) + '<br>' +
       '어머니 <b>' + esc(f.mother.name) + '</b> — ' + esc(f.mother.job) + '<br>' +
-      '형제: ' + f.siblings.map(function (x) { return esc(x.name); }).join(', ') + ' (모두 손위)<br>' +
+      '형제자매: ' + f.siblings.map(function (x) {
+        var word = E.relWord({ hero: { gender: app.sel.gender } }, { role: 'sibling', gender: x.gender, bornAt: -x.gap });
+        return word + ' <b>' + esc(x.name) + '</b>';
+      }).join(', ') + '<br>' +
       '<span class="muted">동네 클럽 ' + esc(c.clubs.local) + ' → ' + esc(c.clubs.regional) + ' → ' + esc(c.places.bigcity) + '의 ' + esc(c.clubs.academy) + '</span>';
     $('#in-name', el).value = app.sel.name;
     $('#in-seed', el).value = app.sel.seed;

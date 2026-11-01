@@ -115,6 +115,9 @@ function validate(RA) {
     if (!ev.id || eids.has(ev.id)) err(w + ': missing/duplicate id');
     eids.add(ev.id);
     checkText(w, ev.text);
+    (ev.textVariants || []).forEach((t, i) => checkText(w + ' textVariant' + i, t));
+    (ev.logVariants || []).forEach((t, i) => checkText(w + ' logVariant' + i, t));
+    if (ev.maxTimes != null && !(ev.maxTimes >= 1)) err(w + ': maxTimes must be >= 1');
     if (ev.age && !(Array.isArray(ev.age) && ev.age[0] <= ev.age[1])) err(w + ': age');
     (ev.countries || []).forEach(c => { if (!COUNTRIES.includes(c)) err(w + ': bad country ' + c); });
     const cd = ev.cond || {};
@@ -145,6 +148,7 @@ function validate(RA) {
           checkText(cw + ' log', ch.log);
           checkEffects(cw, ch.effects);
         }
+        (ch.logVariants || []).forEach((t, k) => checkText(cw + ' logVariant' + k, t));
         if (ch.schedule && !ch.schedule.id) err(cw + ': schedule.id');
       });
     } else {

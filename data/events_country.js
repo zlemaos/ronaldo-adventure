@@ -209,11 +209,17 @@
     ]
   });
   E({
-    id: 'kr_father_jesa', age: [22, 85], countries: ['kr'], cooldown: 8,
+    id: 'kr_father_jesa', age: [22, 85], countries: ['kr'], cooldown: 5,
     cond: { flags: ['father_dead'] },
     text: '{father}의 기일. 형제들이 서귀포 집에 모여 상 위에 {father}[이/가] 좋아하던 {food}[을/를] 올렸다.',
+    textVariants: [
+      '{father}의 기일. 형제들이 서귀포 집에 모여 상 위에 {father}[이/가] 좋아하던 {food}[을/를] 올렸다.',
+      '또 {father}의 기일이 돌아왔다. 올해는 조카들이 절하는 법을 배워 상 앞에 줄지어 섰다.',
+      '{father}의 기일. 지방을 쓰는 손이 예전보다 느려졌다. 향 냄새가 방 안에 오래 머물렀다.'
+    ],
     effects: { happy: -1, rel: { family: 4 } },
-    log: '{bro}[이/가] 장비 가방 냄새가 아직도 기억난다고 해서 다 같이 웃다가 울었다.'
+    log: '장비 가방 냄새가 아직도 기억난다는 이야기에 다 같이 웃다가 울었다.',
+    logVariants: ['장비 가방 냄새가 아직도 기억난다는 이야기에 다 같이 웃다가 울었다.', '아이들에게 할아버지가 꽃을 얼마나 잘 가꿨는지 이야기해 줬다.', '상을 물린 뒤 다 같이 {food}[을/를] 나눠 먹으며 옛날 이야기를 했다.']
   });
   E({
     id: 'kr_olle_old', age: [62, 90], countries: ['kr'], cooldown: 5,
@@ -401,11 +407,17 @@
     ]
   });
   E({
-    id: 'jp_obon_father', age: [22, 85], countries: ['jp'], cooldown: 8,
+    id: 'jp_obon_father', age: [22, 85], countries: ['jp'], cooldown: 5,
     cond: { flags: ['father_dead'] },
     text: '오봉, 불단 앞에 {father}의 사진과 낡은 {localClub} 열쇠 꾸러미가 놓여 있다. 멀리서 에이사 북소리가 들린다.',
+    textVariants: [
+      '오봉, 불단 앞에 {father}의 사진과 낡은 {localClub} 열쇠 꾸러미가 놓여 있다. 멀리서 에이사 북소리가 들린다.',
+      '오봉 마지막 날, 강가에서 등불을 띄웠다. {father}의 등불이 가장 멀리 흘러갔다.',
+      '올해 오봉에는 {father}[이/가] 좋아하던 {food}[을/를] 불단에 올렸다. 향이 가늘게 피어올랐다.'
+    ],
     effects: { happy: -1, rel: { family: 4 } },
-    log: '{bro}[이/가] "아버지도 저 북소리 따라 오셨을 거야"라고 했다.'
+    log: '"아버지도 저 북소리 따라 오셨을 거야"라는 말에 다들 고개를 끄덕였다.',
+    logVariants: ['"아버지도 저 북소리 따라 오셨을 거야"라는 말에 다들 고개를 끄덕였다.', '등불이 보이지 않을 때까지 아무도 자리를 뜨지 않았다.', '불단 앞에서 올해 있었던 일을 하나씩 보고했다.']
   });
   E({
     id: 'jp_senior_life', age: [65, 90], countries: ['jp'], cooldown: 5,
@@ -587,11 +599,17 @@
     ]
   });
   E({
-    id: 'cn_qingming', age: [22, 85], countries: ['cn'], cooldown: 8,
+    id: 'cn_qingming', age: [22, 85], countries: ['cn'], cooldown: 5,
     cond: { flags: ['father_dead'] },
-    text: '청명절, 형제들이 {father}의 묘를 찾아 풀을 뽑고 꽃을 놓는다. 공원 정원사였던 {father}[이/가] 봤다면 잘 다듬었다고 했을 것이다.',
+    text: '청명절, 가족들이 {father}의 묘를 찾아 풀을 뽑고 꽃을 놓는다. 공원 정원사였던 {father}[이/가] 봤다면 잘 다듬었다고 했을 것이다.',
+    textVariants: [
+      '청명절, 가족들이 {father}의 묘를 찾아 풀을 뽑고 꽃을 놓는다. 공원 정원사였던 {father}[이/가] 봤다면 잘 다듬었다고 했을 것이다.',
+      '청명절 아침, 이슬비가 내렸다. {father}의 묘 앞에 차 한 잔을 따랐다.',
+      '올해 청명절에는 아이들이 직접 심은 꽃모종을 {father}의 묘에 옮겨 심었다.'
+    ],
     effects: { happy: -1, rel: { family: 4 } },
-    log: '{bro}[이/가] 무덤가에 작은 축구공 모양 장식을 놓았다.'
+    log: '무덤가에 작은 축구공 모양 장식을 놓았다.',
+    logVariants: ['무덤가에 작은 축구공 모양 장식을 놓았다.', '돌아오는 길에 다 같이 {food}[을/를] 먹었다.', '묘비의 이름을 손으로 한 번 쓸어 보았다.']
   });
   E({
     id: 'cn_square_dance', age: [60, 90], countries: ['cn'], cooldown: 5,
@@ -787,7 +805,7 @@
     ]
   });
   E({
-    id: 'us_father_memory', age: [22, 85], countries: ['us'], cooldown: 8,
+    id: 'us_father_memory', age: [22, 85], countries: ['us'], once: true, // a bench is donated once
     cond: { flags: ['father_dead'] },
     text: '{father}[이/가] 돌보던 카운티 공원에 가족이 작은 벤치를 기증했다. 명판에는 "그는 잔디와 아이들을 사랑했다"라고 적혀 있다.',
     effects: { happy: -1, rel: { family: 4 } },
@@ -967,11 +985,17 @@
     ]
   });
   E({
-    id: 'br_finados', age: [22, 85], countries: ['br'], cooldown: 8,
+    id: 'br_finados', age: [22, 85], countries: ['br'], cooldown: 5,
     cond: { flags: ['father_dead'] },
-    text: '11월 2일 망자의 날. 형제들이 {father}의 묘에 꽃과 {localClub} 깃발을 꽂았다.',
+    text: '11월 2일 망자의 날. 가족들이 {father}의 묘에 꽃과 {localClub} 깃발을 꽂았다.',
+    textVariants: [
+      '11월 2일 망자의 날. 가족들이 {father}의 묘에 꽃과 {localClub} 깃발을 꽂았다.',
+      '망자의 날, 묘지 입구에서 꽃을 파는 할머니가 {father}[을/를] 기억하고 있었다.',
+      '올해 망자의 날에는 {localClub} 꼬마 선수들이 함께 와서 묘 앞에서 응원가를 불렀다.'
+    ],
     effects: { happy: -1, rel: { family: 4 } },
-    log: '{bro}[이/가] {father}[이/가] 공을 닦던 모습을 흉내 내서 다들 울다 웃었다.'
+    log: '누군가 {father}[이/가] 공을 닦던 모습을 흉내 내서 다들 울다 웃었다.',
+    logVariants: ['누군가 {father}[이/가] 공을 닦던 모습을 흉내 내서 다들 울다 웃었다.', '촛불이 다 탈 때까지 묘지에 앉아 있었다.', '돌아오는 길, 골목에서 아이들이 맨발로 공을 차고 있었다.']
   });
   E({
     id: 'br_domino_old', age: [65, 90], countries: ['br'], cooldown: 5,
@@ -1157,7 +1181,7 @@
     ]
   });
   E({
-    id: 'ar_father_bag', age: [22, 85], countries: ['ar'], cooldown: 8,
+    id: 'ar_father_bag', age: [22, 85], countries: ['ar'], once: true, // the old bag is found once
     cond: { flags: ['father_dead'] },
     text: '창고에서 {father}의 낡은 장비 가방을 찾았다. 안에는 꼬마 {name}의 첫 축구화가 고이 싸여 있었다.',
     effects: { happy: -1, rel: { family: 4 } },
@@ -1535,11 +1559,17 @@
     ]
   });
   E({
-    id: 'in_all_souls', age: [22, 85], countries: ['in'], cooldown: 8,
+    id: 'in_all_souls', age: [22, 85], countries: ['in'], cooldown: 5,
     cond: { flags: ['father_dead'] },
-    text: '위령의 날, 마을 묘지가 촛불로 환하다. 형제들이 {father}의 묘에 화환과 작은 축구공을 놓았다.',
+    text: '위령의 날, 마을 묘지가 촛불로 환하다. 가족들이 {father}의 묘에 화환과 작은 축구공을 놓았다.',
+    textVariants: [
+      '위령의 날, 마을 묘지가 촛불로 환하다. 가족들이 {father}의 묘에 화환과 작은 축구공을 놓았다.',
+      '위령의 날 미사가 끝나고, 성당 마당에서 {father}[을/를] 기억하는 이웃들과 이야기를 나눴다.',
+      '올해 위령의 날에는 아이들이 {father}의 묘에 직접 그린 그림을 놓았다.'
+    ],
     effects: { happy: -1, rel: { family: 4 } },
-    log: '{bro}[이/가] "아버지는 공원 꽃을 이렇게 가꾸셨지"라며 화환을 다듬었다.'
+    log: '"아버지는 공원 꽃을 이렇게 가꾸셨지"라며 화환을 다듬었다.',
+    logVariants: ['"아버지는 공원 꽃을 이렇게 가꾸셨지"라며 화환을 다듬었다.', '촛불 하나를 더 켜고 한참을 서 있었다.', '돌아오는 길에 바닷가에 들러 노을을 봤다.']
   });
   E({
     id: 'in_old_beach', age: [62, 90], countries: ['in'], cooldown: 5,

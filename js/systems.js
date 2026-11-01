@@ -323,7 +323,7 @@
       ]
     },
     {
-      id: 'sys_retire', manual: true, scene: 'office', text: '{job}로 일한 지 오래다. 은퇴할 나이가 됐다.',
+      id: 'sys_retire', manual: true, scene: 'office', text: '{job}[으로/로] 일한 지 오래다. 은퇴할 나이가 됐다.',
       choices: [
         { text: '은퇴한다', run: function (s) { var k = E.careerIndex()[s.job.id]; s.pension = Math.round(E.salaryOf(s, k, s.job.level) * 0.3); E.endJob(s, '은퇴'); s.retiredFromWork = true; E.addStat(s, 'happy', 6); return '은퇴했다. 매년 연금이 나온다.'; } },
         { text: '아직 더 일한다', run: function (s) { E.addStat(s, 'health', -2); return '"평생 현역"을 외쳤다.'; } }
