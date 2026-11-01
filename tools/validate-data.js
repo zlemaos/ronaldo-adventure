@@ -8,7 +8,9 @@ const path = require('path');
 function loadAll() {
   const root = path.join(__dirname, '..');
   delete globalThis.RA;
-  require(path.join(root, 'data/constants.js'));
+  const cp = path.join(root, 'data/constants.js');
+  delete require.cache[require.resolve(cp)];
+  require(cp);
   const files = fs.readdirSync(path.join(root, 'data')).filter(f => f.endsWith('.js') && f !== 'constants.js').sort();
   for (const f of files) {
     const p = path.join(root, 'data', f);

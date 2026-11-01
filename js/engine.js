@@ -206,9 +206,18 @@
   E.addLog = addLog;
 
   // ---------------------------------------------------------------- stats & effects
+  // Soft cap: gains shrink as a stat approaches 100 (fractions carry over between calls).
+  // Football has its own talent cap and fame is driven by events, so both grow linearly.
   function addStat(s, k, d) {
     if (k === 'money') { s.money += d; return; }
-    s.stats[k] = clamp(Math.round((s.stats[k] || 0) + d), 0, 100);
+    var v = s.stats[k] || 0;
+    if (d > 0 && k !== 'football' && k !== 'fame') {
+      d *= clamp((104 - v) / 55, 0.08, 1);
+      s.frac = s.frac || {};
+      var acc = (s.frac[k] || 0) + d, whole = Math.floor(acc);
+      s.frac[k] = acc - whole; d = whole;
+    }
+    s.stats[k] = clamp(Math.round(v + d), 0, 100);
   }
   E.addStat = addStat;
 
@@ -345,6 +354,7 @@
     var ch = choices[idx];
     if (!ch || !E.choiceAvailable(s, ch)) return null;
     s.queue.shift();
+    if (!ev.manual || ev.id.indexOf('canon_') === 0) addLog(s, E.render(s, ev.textFn ? ev.textFn(s) : ev.text), 'q');
     var res = { changes: [], outcome: null, log: '', anim: ch.anim || null };
     var branch = ch;
     if (ch.check) {
@@ -567,9 +577,11 @@
     var j = s.job;
     j.years++; j.atLevel++;
     var st = s.stats[k.keyStat] || 0;
-    j.perf = clamp(j.perf + (st - 50) / 8 + (rnd(s) * 10 - 5) + (s.y.workHard ? 8 : 0) - (s.y.slack ? 10 : 0), 0, 100);
+    j.perf = clamp(j.perf + (st - 55) / 10 + (rnd(s) * 10 - 5) + (s.y.workHard ? 8 : 0) - (s.y.slack ? 10 : 0), 0, 100);
     var n = k.ladder.length - 1;
-    if (j.perf >= 62 && j.atLevel >= k.promoteYears && j.level < n && rnd(s) < 0.45 + (j.perf - 62) / 60) {
+    var gate = j.level < n - 1 || st >= 72; // the top rung needs real excellence
+    if (k.special === 'politics' && j.level >= n - 2) gate = gate && s.stats.fame >= 45 && rnd(s) < 0.4; // elections are hard to win
+    if (gate && j.perf >= 66 && j.atLevel >= k.promoteYears && j.level < n && rnd(s) < 0.35 + (j.perf - 66) / 60) {
       E.FX.promote(s, true);
     } else if (j.perf <= 12 && rnd(s) < 0.35) {
       addLog(s, '실적 부진으로 ' + k.name + ' 일자리에서 해고됐다.', 'bad');
@@ -600,7 +612,7 @@
   // ---------------------------------------------------------------- yearly simulation
   E.mortality = function (s) {
     var a = s.age, st = s.stats;
-    var q = a < 5 ? 0.0006 : a < 40 ? 0.0004 + 0.00002 * a : 0.00012 * Math.exp(0.082 * a);
+    var q = a < 5 ? 0.0006 : a < 40 ? 0.0004 + 0.00002 * a : 0.00008 * Math.exp(0.082 * a);
     var hm = st.health >= 80 ? 0.55 : st.health >= 60 ? 0.85 : st.health >= 40 ? 1.4 : st.health >= 20 ? 2.6 : 5;
     q *= hm;
     if (s.flags.smoker) q *= 1.4;

@@ -1511,7 +1511,7 @@
       log: '{food}[을/를] 사 줬다. 진짜 할머니도 같이 나와서 셋이 사진을 찍었다.'
     },
     {
-      id: 'life_any_fraud_offer', age: [18, 70], cooldown: 8,
+      id: 'life_any_fraud_offer', age: [18, 70], once: true, weight: 6,
       cond: { money: [-999999, 4000] },
       text: '"통장만 빌려주면 한 달에 2000 줄게." 낯선 메시지가 왔다.',
       choices: [

@@ -58,7 +58,7 @@
     if (E.rnd(s) < Math.max(0.03, pLeague * 0.6)) { fb.trophies.cup++; parts.push('컵 대회 우승!'); anim = 'trophy'; }
     if (abroad && E.rnd(s) < Math.max(0.01, 0.06 + (rating - 82) / 70)) { fb.trophies.cont++; parts.push('유럽 챔피언스 컵 정상!'); anim = 'trophy'; E.unlock(s, 'champions'); }
     // individual award
-    if (abroad && rating >= 88 && goals >= 30 && E.rnd(s) < (rating - 87) / 13 * 0.3 + (anim ? 0.04 : 0)) {
+    if (abroad && rating >= 89 && goals >= 30 && E.rnd(s) < (rating - 88) / 12 * 0.22 + (anim ? 0.02 : 0)) {
       fb.trophies.ballon++; parts.push('발롱도르 수상!!'); anim = 'ballon'; E.unlock(s, 'ballon'); E.addStat(s, 'fame', 10);
     }
     // salary & fame
