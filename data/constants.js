@@ -55,7 +55,7 @@
       'spouse', 'child', 'coach', 'city', 'hometown', 'region', 'bigcity', 'capital', 'house',
       'localClub', 'regionalClub', 'academy', 'bigClub', 'rivalClub', 'league', 'nationalTeam',
       'abroadClub', 'food', 'food2', 'holiday', 'holiday2', 'school', 'exam', 'univ', 'job',
-      'fatherJob', 'fatherJob2', 'motherJob', 'currency', 'leader', 'country', 'sportsClub'],
+      'fatherJob', 'fatherJob2', 'motherJob', 'currency', 'leader', 'country', 'sportsClub', 'houseLong', 'siblings', 'siblingsAll'],
     REL_KEYS: ['father', 'mother', 'siblings', 'bro', 'sis1', 'sis2', 'friend', 'partner',
       'spouse', 'children', 'coach', 'family']
   };

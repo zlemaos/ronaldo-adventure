@@ -173,7 +173,7 @@
     },
     {
       id: 'life_child_dinner_share', age: [5, 12], cooldown: 4,
-      cond: { money: [-999999, 2500] },
+      cond: { money: [-999999, 2500], family: 'all' },
       text: '오늘 저녁 {food}[이/가] 여섯 식구에게는 조금 모자라다.',
       choices: [
         { text: '내 몫을 {mother}에게 덜어 준다', effects: { health: -1, happy: 2, rel: { mother: 6 } }, log: '{mother}[은/는] 다시 돌려주며 "엄마는 아까 먹었어"라고 했다. 거짓말인 걸 알았다.' },
@@ -659,7 +659,7 @@
       cond: { flags: ['moved_alone'] },
       text: '기숙사 우편함에 {mother}의 편지가 와 있다. 봉투에서 고향 냄새가 난다.',
       effects: { happy: 4, rel: { mother: 5 }, unflags: ['homesick'] },
-      log: '편지 끝에는 {sis1}, {sis2}, {bro}의 서툰 낙서가 있었다. 베개 밑에 넣고 잤다.'
+      log: '편지 끝에는 {siblings}의 서툰 낙서가 있었다. 베개 밑에 넣고 잤다.'
     },
     {
       id: 'life_teen_accent_tease', age: [12, 17], once: true,
@@ -1157,8 +1157,8 @@
       log: '"그때 네가 내 손을 잡아 줘서 고맙다." {father}[이/가] 처음으로 그 이야기를 꺼냈다.'
     },
     {
-      id: 'life_mid_mother_funeral', age: [40, 90], once: true,
-      cond: { flags: ['mother_dead'] },
+      id: 'life_mid_mother_funeral', age: [1, 120], once: true, priority: true,
+      cond: { recent: { mother_dead: 2 } },
       text: '{mother}[이/가] 떠난 뒤 첫 {holiday}. 식탁에 빈자리가 크다.',
       choices: [
         { text: '엄마의 {food}[을/를] 만들어 본다', effects: { happy: 2, grit: 2, rel: { siblings: 6 } }, log: '맛은 달랐지만, 형제들이 한 숟가락씩 뜨며 울고 웃었다.' },
@@ -1895,9 +1895,9 @@
     },
     {
       id: 'life_any_siblings_reunion', age: [30, 90], cooldown: 7,
-      text: '{bro}, {sis1}, {sis2}[과/와] 오랜만에 한자리에 모였다. 다들 흰머리가 늘었다.',
+      text: '{siblings}[과/와] 오랜만에 한자리에 모였다. 다들 흰머리가 늘었다.',
       effects: { happy: 6, rel: { siblings: 6 } },
-      log: '{house} 시절 이불 쟁탈전 이야기에 넷 다 눈물이 나도록 웃었다.'
+      log: '{house} 시절 이불 쟁탈전 이야기에 {siblingsAll} 다 눈물이 나도록 웃었다.'
     }
   ]);
 })(typeof globalThis !== 'undefined' ? globalThis : this);

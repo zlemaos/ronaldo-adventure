@@ -32,6 +32,7 @@ function autoplay(RA, opts) {
     let qg = 0;
     while (s.queue.length && qg++ < 40) {
       const ev = E.currentEvent(s);
+      if (!ev) break;
       const en = ev.choices.filter(c => c.enabled);
       const c = en.length ? en[Math.floor(RA.RNG.next(pick) * en.length)] : ev.choices[0];
       if (!E.choose(s, c.i)) s.queue.shift();

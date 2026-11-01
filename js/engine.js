@@ -90,6 +90,15 @@
     return fullName(c, sur, given);
   }
   E.randomName = randomName;
+  // A name whose given part is not already used by anyone in the hero's life (avoids confusing namesakes)
+  E.freshName = function (s, gender) {
+    var c = country(s);
+    var used = s.people.map(function (p) { return displayName(s, p); }).concat([s.hero.given]);
+    var pool = c.names[gender === 'f' ? 'f' : 'm'].filter(function (n) { return used.indexOf(n) < 0; });
+    if (!pool.length) return randomName(s, gender); // a very sociable life ran out of distinct names
+    return fullName(c, pick(s, c.names.surnames), pick(s, pool));
+  };
+
 
   // ---------------------------------------------------------------- new game
   E.newGame = function (opts) {
@@ -137,7 +146,7 @@
     s.year = s.birthYear + s.age;
     s.people.forEach(function (p) { if (p.bornAt != null) p.age = s.age - p.bornAt; });
     if (!opts.parentState) {
-      addLog(s, T.render('{hometown}의 {house}에서 사남매의 막내로 태어났다.', vars(s)), 'milestone');
+      addLog(s, T.render('{hometown}의 {houseLong}에서 사남매의 막내로 태어났다.', vars(s)), 'milestone');
     }
     E.updateEducation(s, true);
     return s;
@@ -166,7 +175,11 @@
     v.coach = displayName(s, person(s, 'coach')) || '코치님';
     v.city = s.flags.moved_alone && s.age < 40 ? c.places.bigcity : (s.flags.abroad ? s.abroadCity || '외국 도시' : c.places.city);
     v.hometown = c.places.hometown; v.region = c.places.region; v.bigcity = c.places.bigcity; v.capital = c.places.capital;
-    v.house = c.places.house;
+    v.house = c.places.homeShort || c.places.house;
+    v.houseLong = c.places.house;
+    var sibs = peopleByRel(s, 'siblings');
+    v.siblings = sibs.length ? T.joinNames(sibs.map(function (p) { return displayName(s, p); })) : '형제들';
+    v.siblingsAll = T.countWord(sibs.length + 1);
     v.localClub = c.clubs.local; v.regionalClub = c.clubs.regional; v.academy = c.clubs.academy; v.bigClub = c.clubs.big;
     v.rivalClub = c.clubs.rival; v.league = c.clubs.league; v.nationalTeam = c.nationalTeam;
     v.abroadClub = s.fb.abroadClub;
@@ -199,8 +212,13 @@
   E.displayName = displayName;
 
   // ---------------------------------------------------------------- log
-  function addLog(s, text, kind) {
-    s.log.push({ age: s.age, year: s.year, t: T.fixJosa(text), k: kind || 'info' });
+  function addLog(s, text, kind, extra) {
+    var e = { age: s.age, year: s.year, t: T.fixJosa(text), k: kind || 'info' };
+    s.seq = (s.seq || 0) + 1; e.n = s.seq;            // monotonic sequence number (audits)
+    if (s.jail > 0) e.j = 1;                           // written while in prison
+    if (extra) for (var x in extra) if (extra[x] != null) e[x] = extra[x];
+    if (e.j === 0) delete e.j;
+    s.log.push(e);
     if (s.log.length > MAX_LOG) s.log.splice(0, s.log.length - MAX_LOG);
   }
   E.addLog = addLog;
@@ -291,6 +309,13 @@
     if (cond.sector) { if (!s.job || cond.sector.indexOf(careerById(s.job.id).sector) < 0) return false; }
     if (cond.level) { if (!s.job || !inRange(s.job.level, cond.level)) return false; }
     if (cond.gender && s.hero.gender !== cond.gender) return false;
+    // recent: { flag: maxYears } — the flag was set no more than maxYears ago (e.g. first holiday after a death)
+    if (cond.recent) for (k in cond.recent) { if (!s.flags[k] || s.age - s.flags[k] > cond.recent[k]) return false; }
+    // family: 'all' — both parents and all three siblings still alive (present-tense "여섯 식구" texts)
+    if (cond.family === 'all') {
+      var fam = s.people.filter(function (p) { return p.role === 'father' || p.role === 'mother' || p.role === 'sibling'; });
+      if (fam.length < 5 || fam.some(function (p) { return !p.alive; })) return false;
+    }
     if (cond.rel) for (k in cond.rel) {
       var want = cond.rel[k], st = relState(s, k);
       if (want === 'alive' || want === 'yes') { if (st !== 'alive' && st !== 'yes') return false; }
@@ -299,6 +324,68 @@
     }
     return true;
   };
+
+  // ---------------------------------------------------------------- person gating
+  // Every event that names a person (via tokens, or plainly as 아버지/어머니) is only eligible while that
+  // person is alive and present. Events can opt in to referencing the dead with `memorial: true` or
+  // `memorial: ['father']`; conditions such as rel.father 'dead' or the flag father_dead imply it.
+  var PERSON_TOKENS = ['father', 'mother', 'bro', 'sis1', 'sis2', 'spouse', 'partner', 'friend', 'coach', 'child', 'siblings', 'siblingsAll'];
+  var TOKEN_RE = /\{([a-zA-Z0-9]+)\}/g;
+  function eventTexts(ev) {
+    var out = [ev.text, ev.log];
+    (ev.choices || []).forEach(function (ch) {
+      out.push(ch.text, ch.log);
+      if (ch.success) out.push(ch.success.log);
+      if (ch.fail) out.push(ch.fail.log);
+    });
+    return out.filter(Boolean);
+  }
+  E.eventRefs = function (ev) {
+    if (ev._refs) return ev._refs;
+    var refs = {}, m;
+    eventTexts(ev).forEach(function (t) {
+      TOKEN_RE.lastIndex = 0;
+      while ((m = TOKEN_RE.exec(t))) if (PERSON_TOKENS.indexOf(m[1]) >= 0) refs[m[1] === 'siblingsAll' ? 'siblings' : m[1]] = 1;
+      // plain words for the hero's own parents (grand-/in-law words removed first)
+      var plain = t.replace(/할아버지|시아버지|외할아버지|장인|할머니|시어머니|장모|친구 (아버지|어머니|엄마|아빠)|아이 (엄마|아빠)/g, '');
+      var aboutOwnKids = ev.cond && ev.cond.rel && (ev.cond.rel.children || ev.cond.rel.child);
+      if (!aboutOwnKids) {
+        if (/아버지|아빠/.test(plain)) refs.father = 1;
+        if (/어머니|엄마/.test(plain)) refs.mother = 1;
+      }
+    });
+    var mem = {};
+    if (ev.memorial === true) PERSON_TOKENS.forEach(function (k) { mem[k] = 1; });
+    else (ev.memorial || []).forEach(function (k) { mem[k] = 1; });
+    var c = ev.cond || {};
+    if (c.rel) Object.keys(c.rel).forEach(function (k) { if (c.rel[k] === 'dead') mem[k] = 1; });
+    (c.flags || []).forEach(function (f) { if (f === 'father_dead') mem.father = 1; if (f === 'mother_dead') mem.mother = 1; });
+    if (c.recent) Object.keys(c.recent).forEach(function (f) { if (f === 'father_dead') mem.father = 1; if (f === 'mother_dead') mem.mother = 1; });
+    ev._refs = { refs: refs, mem: mem, isMemorial: Object.keys(mem).length > 0 };
+    return ev._refs;
+  };
+  function personPresent(s, who) {
+    if (who === 'siblings') return peopleByRel(s, 'siblings').length > 0;
+    if (who === 'friend' || who === 'coach') {
+      // generic fallback words are fine when nobody holds the role; a dead holder is never named
+      return true;
+    }
+    var p = person(s, who);
+    return !!(p && p.alive);
+  }
+  E.personsOk = function (s, ev) {
+    var r = E.eventRefs(ev);
+    for (var who in r.refs) if (!r.mem[who] && !personPresent(s, who)) return false;
+    return true;
+  };
+  // Events allowed while the hero is in prison
+  E.jailOk = function (ev) {
+    return !!(ev && (ev.jailOk || ev.anyState || (ev.cond && ev.cond.flags && ev.cond.flags.indexOf('jailed') >= 0)));
+  };
+  function dropJailBlocked(s) {
+    if (s.jail > 0) s.queue = s.queue.filter(function (id) { return E.jailOk(E.eventIndex()[id]); });
+  }
+  E.dropJailBlocked = dropJailBlocked;
 
   E.eventMatches = function (s, ev) {
     if (!s.alive) return false;
@@ -309,8 +396,9 @@
     var cd = ev.cooldown != null ? ev.cooldown : 6;
     if (s.cd[ev.id] != null && s.age - s.cd[ev.id] < cd) return false;
     // While in prison only prison-aware events can fire
-    if (s.jail > 0 && !(ev.cond && ev.cond.flags && ev.cond.flags.indexOf('jailed') >= 0) && !ev.anyState) return false;
+    if (s.jail > 0 && !E.jailOk(ev)) return false;
     if (!E.condMatches(s, ev.cond)) return false;
+    if (!E.personsOk(s, ev)) return false;
     if (ev.when && !ev.when(s)) return false;
     return true;
   };
@@ -331,7 +419,7 @@
   E.currentEvent = function (s) {
     if (!s.queue.length) return null;
     var ev = E.eventIndex()[s.queue[0]];
-    if (!ev) { s.queue.shift(); return E.currentEvent(s); }
+    if (!ev || (s.jail > 0 && !E.jailOk(ev)) || (!ev.manual && !E.personsOk(s, ev))) { s.queue.shift(); return E.currentEvent(s); }
     var text = ev.textFn ? ev.textFn(s) : ev.text;
     return {
       id: ev.id, text: E.render(s, text), scene: ev.scene || E.sceneFor(s, ev),
@@ -354,7 +442,9 @@
     var ch = choices[idx];
     if (!ch || !E.choiceAvailable(s, ch)) return null;
     s.queue.shift();
-    if (!ev.manual || ev.id.indexOf('canon_') === 0) addLog(s, E.render(s, ev.textFn ? ev.textFn(s) : ev.text), 'q');
+    var mem = E.eventRefs(ev).isMemorial ? { mem: 1, ev: ev.id } : { ev: ev.id };
+    mem.j = s.jail > 0 ? 1 : 0; // the outcome of an event that starts a prison term was written outside
+    if (!ev.manual || ev.id.indexOf('canon_') === 0 || ev.memorial) addLog(s, E.render(s, ev.textFn ? ev.textFn(s) : ev.text), 'q', mem);
     var res = { changes: [], outcome: null, log: '', anim: ch.anim || null };
     var branch = ch;
     if (ch.check) {
@@ -368,8 +458,9 @@
     var sch = branch.schedule || ch.schedule;
     if (sch) s.pending.push({ age: s.age + (sch.years || 1), id: sch.id });
     res.log = E.render(s, log || '');
-    if (res.log) addLog(s, res.log, res.outcome === 'fail' ? 'bad' : res.outcome === 'success' ? 'good' : 'event');
+    if (res.log) addLog(s, res.log, res.outcome === 'fail' ? 'bad' : res.outcome === 'success' ? 'good' : 'event', mem);
     res.changes.forEach(function (c) { if (c.k === 'msg') addLog(s, c.t, 'info'); });
+    dropJailBlocked(s);
     E.checkAchievements(s);
     E.checkDeath(s, true);
     return res;
@@ -380,10 +471,11 @@
     s.cd[ev.id] = s.age;
     if (ev.choices || ev.choicesFn) { s.queue.push(ev.id); return; }
     // choiceless: apply now, log it
+    var wasJailed = s.jail > 0 ? 1 : 0;
     var changes = applyEffects(s, ev.effects, []);
     var text = ev.textFn ? ev.textFn(s) : ev.text;
     var log = ev.run ? ev.run(s) : null;
-    addLog(s, E.render(s, text) + (ev.log ? ' ' + E.render(s, ev.log) : '') + (log ? ' ' + log : ''), ev.kind || 'event');
+    addLog(s, E.render(s, text) + (ev.log ? ' ' + E.render(s, ev.log) : '') + (log ? ' ' + log : ''), ev.kind || 'event', { mem: E.eventRefs(ev).isMemorial ? 1 : null, ev: ev.id, j: wasJailed });
     changes.forEach(function (c) { if (c.k === 'msg') addLog(s, c.t, 'info'); });
   }
   E.fireEvent = fireEvent;
@@ -407,7 +499,8 @@
       var ev = idx[p.id];
       if (ev && !used[ev.id] && s.alive) {
         var ageOk = true; // scheduled follow-ups ignore age windows/cooldowns but respect cond
-        if (E.condMatches(s, ev.cond) && (!ev.when || ev.when(s)) && ageOk) { chosen.push(ev); used[ev.id] = 1; }
+        if (s.jail > 0 && !E.jailOk(ev)) { s.pending.push({ age: s.age + s.jail + 1, id: p.id }); return; } // wait until release
+        if (E.condMatches(s, ev.cond) && E.personsOk(s, ev) && (!ev.when || ev.when(s)) && ageOk) { chosen.push(ev); used[ev.id] = 1; }
       }
     });
     var all = E.allEvents();
@@ -418,6 +511,7 @@
     var pool = eligible.filter(function (ev) { return !ev.priority && !used[ev.id] && !ev.manual; });
     var n = s.age < 3 ? 1 : (rnd(s) < 0.55 ? 2 : 1);
     if (s.age >= 14 && s.age < 70 && rnd(s) < 0.2) n++;
+    if (s.y.bereaved) n = 0; // a year of mourning: no cheerful random storylets
     n = Math.max(0, Math.min(n, 4 - chosen.length));
     for (var i = 0; i < n && pool.length; i++) {
       var ev = R.weighted(s.rng, pool, function (e) {
@@ -728,22 +822,51 @@
     if (sp && sp.rel < 8 && rnd(s) < 0.5) { E.FX.divorce(s); }
   }
 
+  // Korean kinship word for a person, seen from the hero
+  E.relWord = function (s, p) {
+    if (!p) return '';
+    var hm = s.hero.gender !== 'f';
+    switch (p.role) {
+      case 'father': return '아버지';
+      case 'mother': return '어머니';
+      case 'sibling':
+        var older = (p.bornAt != null ? p.bornAt : -1) < 0;
+        if (older) return p.gender === 'f' ? (hm ? '누나' : '언니') : (hm ? '형' : '오빠');
+        return p.gender === 'f' ? '여동생' : '남동생';
+      case 'spouse': return p.gender === 'f' ? '아내' : '남편';
+      case 'child': return p.gender === 'f' ? '딸' : '아들';
+      case 'partner': return '연인';
+      case 'friend': case 'oldfriend': return '친구';
+      case 'coach': return '은사';
+      case 'ex': return '옛 연인';
+    }
+    return '지인';
+  };
+  var GRIEF_ROLES = ['mother', 'sibling', 'spouse', 'child'];
+
   function personDies(s, p, cause) {
-    p.alive = false; p.diedAt = s.age;
-    var nm = displayName(s, p);
-    var roleTxt = { father: '아버지', mother: '어머니', sibling: '형제', spouse: '배우자', child: '자식', friend: '친구', partner: '연인', coach: '은사' }[p.role] || '지인';
+    p.alive = false; p.diedAt = s.age; p.diedSeq = (s.seq || 0) + 1;
+    var nm = displayName(s, p), word = E.relWord(s, p);
+    var mem = { mem: 1 };
     if (p.role === 'father') {
       s.flags.father_dead = s.age;
-      addLog(s, '아버지 ' + nm + '께서 ' + cause + '(으)로 세상을 떠나셨다. 마지막까지 막내의 경기를 이야기하셨다고 한다.', 'death');
+      addLog(s, '아버지 ' + nm + '께서 ' + cause + '(으)로 세상을 떠나셨다. 마지막까지 막내의 경기를 이야기하셨다고 한다.', 'death', mem);
       addStat(s, 'happy', -18);
       E.queueSys(s, 'canon_father_farewell');
+      s.y.bereaved = true;
     } else if (p.role === 'mother') {
       s.flags.mother_dead = s.age;
-      addLog(s, '어머니 ' + nm + '께서 세상을 떠나셨다. 집 안에 그 음식 냄새가 아직 남아 있는 것 같다.', 'death');
+      addLog(s, '어머니 ' + nm + '께서 ' + cause + '(으)로 세상을 떠나셨다.', 'death', mem);
       addStat(s, 'happy', -18);
     } else if (p.role !== 'ex') {
-      addLog(s, roleTxt + ' ' + nm + '(이)가 세상을 떠났다 (' + p.age + '세).', 'death');
+      addLog(s, word + ' ' + nm + '(이)가 ' + cause + '(으)로 세상을 떠났다 (' + p.age + '세).', 'death', mem);
       addStat(s, 'happy', p.rel > 60 ? -12 : -5);
+    }
+    if (GRIEF_ROLES.indexOf(p.role) >= 0) {
+      s.flags[p.role === 'sibling' ? 'sibling_dead' : p.role + '_dead'] = s.age;
+      s.griefs = (s.griefs || []).concat([p.id]);
+      s.y.bereaved = true;
+      if (s.queue.indexOf('sys_grief') < 0) s.queue.unshift('sys_grief');
     }
     if ((p.role === 'father' || p.role === 'mother') && s.age >= 18) {
       var inh = Math.round(rint(s, 2000, 12000) * wage(s));
@@ -755,7 +878,7 @@
 
   function yearlyKids(s) {
     peopleByRel(s, 'children').forEach(function (k) {
-      if (k.age === 18) addLog(s, displayName(s, k) + '(이)가 성인이 됐다.', 'info');
+      if (k.age === 18) addLog(s, E.relWord(s, k) + ' ' + displayName(s, k) + '(이)가 성인이 됐다.', 'info');
     });
   }
 

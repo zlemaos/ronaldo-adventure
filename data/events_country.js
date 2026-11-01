@@ -9,7 +9,7 @@
 
   /* =============================================================== KOREA */
   E({
-    id: 'kr_seollal_sebae', age: [3, 10], countries: ['kr'], once: true,
+    id: 'kr_seollal_sebae', age: [3, 10], countries: ['kr'], once: true, cond: { family: 'all' },
     text: '설날 아침, 좁은 방에 여섯 식구가 줄지어 앉았다. {name}[이/가] 서툰 세배를 하자 {father}[이/가] 꼬깃꼬깃한 지폐를 내밀었다.',
     effects: { happy: 4, money: 20, rel: { family: 3 } },
     log: '절하다 앞으로 굴렀지만 세뱃돈은 받았다.'

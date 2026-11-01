@@ -20,7 +20,7 @@
   FX.joinLocalClub = function (s) {
     if (s.fb.stage !== 'none' && s.fb.stage !== 'retired') return null;
     s.fb.stage = 'local'; s.fb.club = E.country(s).clubs.local; s.fb.clubs.push(s.fb.club);
-    if (!E.person(s, 'coach')) E.addPerson(s, { role: 'coach', name: E.randomName(s, 'm'), gender: 'm', age: E.rint(s, 35, 55), rel: 60 });
+    if (!E.person(s, 'coach')) E.addPerson(s, { role: 'coach', name: E.freshName(s, 'm'), gender: 'm', age: E.rint(s, 35, 55), rel: 60 });
     return s.fb.club + '에 입단했다! 등번호가 적힌 낡은 유니폼이 무릎까지 내려온다.';
   };
   FX.joinRegionalClub = function (s) {
@@ -101,7 +101,7 @@
   };
   FX.newFriend = function (s) {
     var g = E.chance(s, 0.6) ? 'm' : 'f';
-    var p = E.addPerson(s, { role: 'friend', name: E.randomName(s, g), gender: g, age: Math.max(1, s.age + E.rint(s, -2, 2)), rel: E.rint(s, 55, 75) });
+    var p = E.addPerson(s, { role: 'friend', name: E.freshName(s, g), gender: g, age: Math.max(1, s.age + E.rint(s, -2, 2)), rel: E.rint(s, 55, 75) });
     s.bestFriend = p.id;
     return dn(s, p) + '와(과) 단짝이 됐다.';
   };
@@ -113,7 +113,7 @@
   FX.newPartner = function (s) {
     if (E.person(s, 'spouse') || E.person(s, 'partner')) return null;
     var g = s.hero.gender === 'm' ? 'f' : 'm';
-    var p = E.addPerson(s, { role: 'partner', name: E.randomName(s, g), gender: g, age: Math.max(14, s.age + E.rint(s, -3, 3)), rel: E.rint(s, 60, 80), since: s.age });
+    var p = E.addPerson(s, { role: 'partner', name: E.freshName(s, g), gender: g, age: Math.max(14, s.age + E.rint(s, -3, 3)), rel: E.rint(s, 60, 80), since: s.age });
     s.flags.dated = s.flags.dated || s.age;
     return dn(s, p) + '와(과) 사귀기 시작했다.';
   };
@@ -140,7 +140,9 @@
   };
   FX.haveChild = function (s) {
     var g = E.chance(s, 0.5) ? 'm' : 'f';
-    var c = E.country(s), given = E.pick(s, c.names[g]);
+    var c = E.country(s), used = s.people.map(function (p) { return E.displayName(s, p); }).concat([s.hero.given]);
+    var pool = c.names[g].filter(function (n) { return used.indexOf(n) < 0; });
+    var given = E.pick(s, pool.length ? pool : c.names[g]);
     var nm = E.fullName(c, s.hero.surname, given);
     E.addPerson(s, { role: 'child', name: nm, gender: g, age: 0, rel: 85, bornAt: s.age });
     E.addStat(s, 'happy', 8);
@@ -240,7 +242,41 @@
 
   // ---------------------------------------------------------------- system events (engine-built)
   var MAJOR_KEYS = Object.keys(C.MAJORS);
+  // Grief for a family member (mother, sibling, spouse, child). Written seriously; it is the only thing
+  // that happens in that year's event queue besides due follow-ups.
+  function griefPerson(s) {
+    var id = (s.griefs || [])[0];
+    return s.people.filter(function (p) { return p.id === id; })[0] || null;
+  }
+  function griefDone(s, log) {
+    s.griefs = (s.griefs || []).slice(1);
+    if (s.griefs.length) s.queue.unshift('sys_grief');
+    return log;
+  }
+  function gname(s) { var p = griefPerson(s); return p ? E.displayName(s, p) : '그 사람'; }
+  var GRIEF_EVENT = {
+    id: 'sys_grief', manual: true, memorial: true, jailOk: true, scene: 'grave',
+    textFn: function (s) {
+      var p = griefPerson(s);
+      if (!p) return '오래 마음에 남을 이별이 있었다.';
+      var nm = E.displayName(s, p), w = E.relWord(s, p), pp = T.particle;
+      switch (p.role) {
+        case 'mother': return '어머니 ' + nm + '의 장례를 치렀다. 평생 새벽부터 일하며 우리를 먹여 살린 손이 이제 차갑다. 부엌에 서 있던 뒷모습이 자꾸 떠오른다.';
+        case 'sibling': return w + ' ' + nm + '의 장례식. 어린 시절 한 방에서 이불을 나눠 덮던 밤들이 떠오른다. 아직 할 말이 많이 남아 있었다.';
+        case 'spouse': return w + ' ' + nm + pp(nm, '을/를') + ' 떠나보냈다. 함께 늙어 가자던 약속이 집 안 곳곳에 남아 있다.';
+        case 'child': return '자식을 먼저 보내는 슬픔은 어떤 말로도 설명할 수 없다. ' + w + ' ' + nm + '의 방은 그대로다.';
+      }
+      return nm + pp(nm, '을/를') + ' 떠나보냈다.';
+    },
+    choices: [
+      { text: '장례식에서 마지막 인사를 건넨다', effects: { happy: -2, rel: { family: 5 } }, run: function (s) { var n = gname(s); return griefDone(s, '조문객들이 ' + n + T.particle(n, '과/와') + ' 함께한 이야기를 하나씩 꺼냈다. 울다가, 웃다가, 다시 울었다.'); } },
+      { text: '함께한 날들을 글로 적어 남긴다', effects: { smarts: 1, happy: -1 }, run: function (s) { return griefDone(s, '함께 찍은 사진 뒤에 날짜와 짧은 편지를 적었다. 고맙다는 말을 너무 늦게 했다.'); } },
+      { text: '한동안 모든 것을 멈추고 슬퍼한다', effects: { happy: -5, health: -2, grit: 2 }, run: function (s) { return griefDone(s, '몇 주 동안 아무것도 하지 못했다. 슬픔은 사라지지 않지만, 조금씩 견딜 만해졌다.'); } }
+    ]
+  };
+
   E.SYS_EVENTS = [
+    GRIEF_EVENT,
     {
       id: 'sys_exam', manual: true, scene: 'school',
       textFn: function (s) {

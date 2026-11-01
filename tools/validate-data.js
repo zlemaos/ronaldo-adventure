@@ -54,7 +54,7 @@ function validate(RA) {
       f.siblings.forEach(s => { if (!s.name || !(s.gap >= 1)) err(w + ': bad sibling'); });
     }
     const p = c.places || {};
-    ['hometown', 'region', 'city', 'bigcity', 'capital', 'house'].forEach(k => { if (!p[k]) err(w + ': places.' + k); });
+    ['hometown', 'region', 'city', 'bigcity', 'capital', 'house', 'homeShort'].forEach(k => { if (!p[k]) err(w + ': places.' + k); });
     const cl = c.clubs || {};
     ['local', 'regional', 'academy', 'big', 'rival', 'league'].forEach(k => { if (!cl[k]) err(w + ': clubs.' + k); });
     const s = c.school || {};
@@ -118,8 +118,11 @@ function validate(RA) {
     if (ev.age && !(Array.isArray(ev.age) && ev.age[0] <= ev.age[1])) err(w + ': age');
     (ev.countries || []).forEach(c => { if (!COUNTRIES.includes(c)) err(w + ': bad country ' + c); });
     const cd = ev.cond || {};
-    const allowed = ['stats', 'money', 'flags', 'fb', 'edu', 'degree', 'career', 'sector', 'level', 'rel', 'gender'];
+    const allowed = ['stats', 'money', 'flags', 'fb', 'edu', 'degree', 'career', 'sector', 'level', 'rel', 'gender', 'recent', 'family'];
     Object.keys(cd).forEach(k => { if (!allowed.includes(k)) err(w + ': unknown cond ' + k); });
+    if (cd.family && cd.family !== 'all') err(w + ': cond.family must be "all"');
+    if (ev.memorial && ev.memorial !== true && !Array.isArray(ev.memorial)) err(w + ': memorial must be true or a list');
+
     Object.keys(cd.stats || {}).forEach(s => { if (!C.STATS.includes(s)) err(w + ': bad cond stat ' + s); });
     (cd.fb || []).forEach(s => { if (!C.FB_STAGES.includes(s)) err(w + ': bad fb ' + s); });
     (cd.edu || []).forEach(s => { if (!C.EDU_STAGES.includes(s)) err(w + ': bad edu ' + s); });

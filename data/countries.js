@@ -27,6 +27,7 @@
     places: {
       hometown: '제주 서귀포 바닷가 동네', region: '제주', city: '서귀포',
       bigcity: '서울', capital: '서울',
+      homeShort: '서귀포 돌담집',
       house: '방 두 칸에 여섯 식구가 사는 낡은 슬레이트 지붕 돌담집'
     },
     clubs: {
@@ -80,6 +81,7 @@
     places: {
       hometown: '오키나와 나고시 바닷가 마을', region: '오키나와', city: '나고',
       bigcity: '도쿄', capital: '도쿄',
+      homeShort: '나고의 콘크리트 단층집',
       house: '태풍에 대비해 낮게 지은 낡은 콘크리트 단층집, 다다미방 두 칸에 여섯 식구'
     },
     clubs: {
@@ -133,6 +135,7 @@
     places: {
       hometown: '하이난섬 하이커우 변두리 어촌 골목', region: '하이난', city: '하이커우',
       bigcity: '상하이', capital: '베이징',
+      homeShort: '하이커우의 낡은 벽돌집',
       house: '야자수 옆 낡은 2층 벽돌집, 방 두 칸에 여섯 식구가 산다'
     },
     clubs: {
@@ -186,6 +189,7 @@
     places: {
       hometown: '하와이 빅아일랜드 힐로의 바닷가 동네', region: '하와이', city: '힐로',
       bigcity: '로스앤젤레스', capital: '워싱턴 D.C.',
+      homeShort: '힐로의 낡은 목조 주택',
       house: '비 오면 양철 지붕이 북처럼 울리는 낡은 목조 주택, 방 둘에 여섯 식구'
     },
     clubs: {
@@ -239,6 +243,7 @@
     places: {
       hometown: '마라냥주 상루이스섬 언덕배기 동네', region: '마라냥', city: '상루이스',
       bigcity: '상파울루', capital: '브라질리아',
+      homeShort: '언덕 골목의 작은 벽돌집',
       house: '언덕 골목 끝 벽돌을 다 못 바른 작은 집, 방 둘에 여섯 식구와 해먹 세 개'
     },
     clubs: {
@@ -292,6 +297,7 @@
     places: {
       hometown: '티에라델푸에고섬 리오그란데의 바람 센 동네', region: '티에라델푸에고', city: '리오그란데',
       bigcity: '부에노스아이레스', capital: '부에노스아이레스',
+      homeShort: '리오그란데의 조립식 집',
       house: '바람막이 함석 담장 안 낡은 조립식 집, 난로 하나를 여섯 식구가 둘러앉는다'
     },
     clubs: {
@@ -345,6 +351,7 @@
     places: {
       hometown: '이스턴케이프 이스트런던 근교의 타운십', region: '이스턴케이프', city: '이스트런던',
       bigcity: '요하네스버그', capital: '프리토리아',
+      homeShort: '양철 지붕 블록집',
       house: '양철 지붕을 얹은 방 두 칸짜리 작은 블록집, 마당에 빨랫줄과 여섯 식구'
     },
     clubs: {
@@ -398,6 +405,7 @@
     places: {
       hometown: '고아주 남쪽 바닷가 어촌 마을', region: '고아', city: '마르가오',
       bigcity: '콜카타', capital: '뉴델리',
+      homeShort: '고아의 붉은 벽돌집',
       house: '야자수 그늘 아래 붉은 라테라이트 벽돌집, 방 두 칸에 여섯 식구'
     },
     clubs: {

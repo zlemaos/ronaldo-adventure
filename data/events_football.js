@@ -26,7 +26,7 @@
         { text: '축구보다 다른 게 좋다', effects: { smarts: 2, flags: ['declined_club'] }, log: '공보다 책이 좋았다. 아직은.' }
       ] },
     { id: 'canon_crowded_house', age: [5, 11], once: true, weight: 25, cond: { flags: ['!heir'] },
-      text: '{house}에서는 {bro}, {sis1}, {sis2}[과/와] 방 하나를 나눠 쓴다. 비 오는 날엔 양동이를 받쳐 둔다.',
+      text: '{house}에서는 {siblings}[과/와] 방 하나를 나눠 쓴다. 비 오는 날엔 양동이를 받쳐 둔다.',
       choices: [
         { text: '형, 누나들과 베개 싸움을 한다', effects: { happy: 5, rel: { siblings: 5 } }, log: '양동이가 엎어졌지만 다 같이 깔깔 웃었다.' },
         { text: '"나중에 큰 집 사 줄게"라고 약속한다', effects: { grit: 3, rel: { mother: 4 }, flags: ['promised_house'] }, log: '{mother}[은/는] 웃었지만 눈가가 촉촉했다.' }
@@ -52,7 +52,7 @@
         { text: '치료를 받아 보자고 진지하게 말한다', check: { stat: 'grit', diff: 35 },
           success: { effects: { rel: { father: 4 }, fx: ['fatherSeekHelp'] }, log: '{father}[은/는] 한참을 침묵하다 "…병원에 한번 가 보마"라고 했다.' },
           fail: { effects: { rel: { father: -2 }, happy: -3 }, log: '{father}[은/는] 창밖만 바라봤다. 오늘은 아닌가 보다. 그래도 포기하지 않기로 했다.' } },
-        { text: '가족 모두 모여 이야기하자고 한다', effects: { rel: { family: 3 }, fx: ['fatherSeekHelp'] }, log: '{mother}, {bro}, {sis1}, {sis2}까지 식탁에 둘러앉았다. 처음으로 다 같이 울었다.' },
+        { text: '가족 모두 모여 이야기하자고 한다', effects: { rel: { family: 3 }, fx: ['fatherSeekHelp'] }, log: '{mother}[과/와] {siblings}까지 식탁에 둘러앉았다. 처음으로 다 같이 울었다.' },
         { text: '아무 말 없이 곁에 앉아 있는다', effects: { rel: { father: 7 } }, log: '{father}[이/가] 잔을 내려놓고 내 축구 이야기를 물었다.' }
       ] },
     { id: 'canon_father_clinic', age: [16, 45], cooldown: 4, weight: 12, cond: { flags: ['!heir', 'father_drinking', '!father_sober'], rel: { father: 'alive' }, money: [1500, 1e12] },
@@ -77,11 +77,11 @@
           success: { effects: { rel: { father: 8 }, fame: 3 }, log: '골을 넣고 하늘을 향해 두 손을 들었다. 병실 TV 앞에서 {father}[이/가] 울었다고 한다.' },
           fail: { effects: { happy: -4 }, log: '골은 없었다. 그래도 {father}[은/는] "끝까지 뛰는 모습이 좋았다"고 했다.' } }
       ] },
-    { id: 'canon_father_farewell', manual: true, age: [1, 120],
+    { id: 'canon_father_farewell', manual: true, memorial: ['father'], jailOk: true, age: [1, 120],
       text: '장례식장에는 {localClub}의 꼬마 선수들이 낡은 유니폼을 입고 줄지어 섰다. {father}[이/가] 평생 빨고 개던 유니폼들이다.',
       choices: [
         { text: '아버지의 이름을 가슴에 새기고 뛴다', effects: { grit: 5, football: 1, happy: 2 }, log: '그 뒤로 골을 넣을 때마다 하늘을 가리켰다.' },
-        { text: '한동안 아무것도 하지 못한다', effects: { happy: -5, health: -2, rel: { family: 6 } }, log: '{mother}[과/와] {bro}, {sis1}, {sis2}[이/가] 번갈아 곁을 지켰다.' },
+        { text: '한동안 아무것도 하지 못한다', effects: { happy: -5, health: -2, rel: { family: 6 } }, log: '가족들이 번갈아 곁을 지켰다. 아무도 서두르라고 말하지 않았다.' },
         { text: '술은 평생 입에 대지 않기로 맹세한다', effects: { health: 3, flags: ['teetotal'], unflags: ['drinker'] }, log: '아버지를 앗아 간 병을 이해하게 됐다. 그리고 미워하지 않기로 했다.' }
       ] },
     { id: 'canon_father_sober_year', age: [10, 70], once: true, weight: 40, cond: { flags: ['father_sober'], rel: { father: 'alive' } },

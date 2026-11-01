@@ -41,12 +41,21 @@
   }
 
   // Resolve fallback particles written as 을(를), (으)로, (이)가, 와(과), (이) after a word.
-  var JOSA_RE = /([가-힣A-Za-z0-9)])(을\(를\)|를\(을\)|\(으\)로|\(이\)가|와\(과\)|과\(와\)|\(이\)|\(아\)야|은\(는\)|는\(은\))/g;
+  // Resolve fallback particles written as 을(를), (으)로, (이)가, 와(과), (이) after a word.
+  // Closing quotes, brackets and similar punctuation between the word and the particle are skipped
+  // when looking for the last syllable: '"장례지도사"(으)로' → '"장례지도사"로'.
+  var JOSA_RE = /([가-힣A-Za-z0-9])(["'”’」』》〉)\]]*)(을\(를\)|를\(을\)|\(으\)로|\(이\)가|와\(과\)|과\(와\)|\(이\)|\(아\)야|은\(는\)|는\(은\))/g;
   var JOSA_MAP = { '을(를)': '을/를', '를(을)': '을/를', '(으)로': '으로/로', '(이)가': '이/가', '와(과)': '과/와', '과(와)': '과/와', '(이)': '이/', '(아)야': '아/야', '은(는)': '은/는', '는(은)': '은/는' };
   function fixJosa(text) {
     if (!text) return text;
-    return String(text).replace(JOSA_RE, function (m, ch, j) { return ch + particle(ch, JOSA_MAP[j]); });
+    return String(text).replace(JOSA_RE, function (m, ch, close, j) { return ch + close + particle(ch, JOSA_MAP[j]); });
   }
+  // Leftover particle markers that should never reach the player
+  var LEFTOVER_RE = /\(으\)로|\(이\)가|와\(과\)|과\(와\)|을\(를\)|를\(을\)|은\(는\)|는\(은\)/;
+  function hasLeftoverJosa(text) { return LEFTOVER_RE.test(String(text || '')); }
+
+  function joinNames(list) { return list.join(', '); }
+  function countWord(n) { return ['아무도', '혼자', '둘', '셋', '넷', '다섯', '여섯', '일곱'][n] || String(n) + '명'; }
 
   function groupDigits(n) {
     return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
@@ -66,5 +75,5 @@
     return (neg ? '-' : '') + s + ' ' + cur.unit;
   }
 
-  RA.Text = { render: render, particle: particle, fixJosa: fixJosa, money: money, groupDigits: groupDigits };
+  RA.Text = { render: render, particle: particle, fixJosa: fixJosa, hasLeftoverJosa: hasLeftoverJosa, joinNames: joinNames, countWord: countWord, money: money, groupDigits: groupDigits };
 })(typeof globalThis !== 'undefined' ? globalThis : this);
