@@ -1,0 +1,846 @@
+/* Core game engine: pure logic, no DOM. Runs in the browser (classic script) and in Node tests.
+ * Depends on: data/constants.js, data/*.js packs, js/rng.js, js/text.js. */
+(function (G) {
+  var RA = G.RA = G.RA || {};
+  var C = RA.C, R = RA.RNG, T = RA.Text;
+  var E = RA.Engine = RA.Engine || {};
+
+  var BIRTH_YEAR = 1985;
+  var AP_PER_YEAR = 3;
+  var MAX_LOG = 600;
+
+  // ---------------------------------------------------------------- helpers
+  function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
+  function country(s) { return RA.data.countries[s.country]; }
+  function wage(s) { return country(s).wage; }
+  function careerById(id) { return E.careerIndex()[id]; }
+  E.clamp = clamp;
+  E.country = country;
+  E.BIRTH_YEAR = BIRTH_YEAR;
+
+  var _careerIndex = null, _eventIndex = null;
+  E.careerIndex = function () {
+    if (!_careerIndex || _careerIndex._n !== RA.data.careers.length) {
+      _careerIndex = { _n: RA.data.careers.length };
+      RA.data.careers.forEach(function (k) { _careerIndex[k.id] = k; });
+    }
+    return _careerIndex;
+  };
+  E.allEvents = function () { return (RA.data.events || []).concat(E.SYS_EVENTS || []); };
+  E.eventIndex = function () {
+    var all = E.allEvents();
+    if (!_eventIndex || _eventIndex._n !== all.length) {
+      _eventIndex = { _n: all.length };
+      all.forEach(function (e) { _eventIndex[e.id] = e; });
+    }
+    return _eventIndex;
+  };
+  E.resetCaches = function () { _careerIndex = null; _eventIndex = null; };
+
+  function rnd(s) { return R.next(s.rng); }
+  function rint(s, a, b) { return R.int(s.rng, a, b); }
+  function chance(s, p) { return R.chance(s.rng, p); }
+  function pick(s, arr) { return R.pick(s.rng, arr); }
+  E.rnd = rnd; E.rint = rint; E.chance = chance; E.pick = pick;
+
+  function degreeRank(d) { return C.DEGREES.indexOf(d || 'none'); }
+  E.degreeRank = degreeRank;
+
+  function fullName(c, surname, given) {
+    if (!surname) return given;
+    if (c.nameOrder === 'surname-first') {
+      // Korean/Chinese/Japanese style: no space for Korean-like 1-2 syllable surnames
+      return surname.length <= 2 && /[가-힣]/.test(surname) && /[가-힣]/.test(given) ? surname + given : surname + ' ' + given;
+    }
+    return given + ' ' + surname;
+  }
+  E.fullName = fullName;
+
+  // ---------------------------------------------------------------- people
+  function addPerson(s, p) {
+    p.id = s.nextPid++;
+    if (p.alive == null) p.alive = true;
+    if (p.rel == null) p.rel = 60;
+    s.people.push(p);
+    return p;
+  }
+  function person(s, key) {
+    var ps = s.people, i;
+    if (key === 'friend') { for (i = 0; i < ps.length; i++) if (ps[i].id === s.bestFriend && ps[i].alive) return ps[i]; return null; }
+    if (key === 'child') { for (i = 0; i < ps.length; i++) if (ps[i].role === 'child' && ps[i].alive) return ps[i]; return null; }
+    if (key === 'bro' || key === 'sis1' || key === 'sis2') { for (i = 0; i < ps.length; i++) if (ps[i].key === key) return ps[i]; return null; }
+    if (key === 'father' || key === 'mother') { for (i = 0; i < ps.length; i++) if (ps[i].role === key) return ps[i]; return null; }
+    for (i = 0; i < ps.length; i++) if (ps[i].role === key && ps[i].alive) return ps[i];
+    return null;
+  }
+  function peopleByRel(s, key) {
+    switch (key) {
+      case 'siblings': return s.people.filter(function (p) { return p.role === 'sibling' && p.alive; });
+      case 'children': return s.people.filter(function (p) { return p.role === 'child' && p.alive; });
+      case 'family': return s.people.filter(function (p) { return ['father', 'mother', 'sibling', 'spouse', 'child'].indexOf(p.role) >= 0 && p.alive; });
+      default: var p = person(s, key); return p && p.alive ? [p] : [];
+    }
+  }
+  E.person = person; E.peopleByRel = peopleByRel; E.addPerson = addPerson;
+
+  function randomName(s, gender) {
+    var c = country(s);
+    var given = pick(s, c.names[gender === 'f' ? 'f' : 'm']);
+    var sur = pick(s, c.names.surnames);
+    return fullName(c, sur, given);
+  }
+  E.randomName = randomName;
+
+  // ---------------------------------------------------------------- new game
+  E.newGame = function (opts) {
+    opts = opts || {};
+    var cid = opts.country || 'kr';
+    var c = RA.data.countries[cid];
+    if (!c) throw new Error('unknown country ' + cid);
+    var seed = opts.seed != null && String(opts.seed).trim() ? String(opts.seed).trim() : R.randomSeedString();
+    var s = {
+      saveVersion: C.SAVE_VERSION,
+      seed: seed, rng: R.create(seed + '|' + cid + '|' + (opts.generation || 1)),
+      country: cid, generation: opts.generation || 1,
+      birthYear: opts.birthYear || BIRTH_YEAR, age: 0, year: 0, alive: true, cause: null,
+      hero: {
+        given: opts.given || c.hero.given,
+        surname: opts.surname != null ? opts.surname : (c.hero.surname || ''),
+        nick: opts.nick || c.hero.nick,
+        gender: opts.gender || 'm', hair: 0, skin: 0
+      },
+      stats: {}, money: 0, flags: {}, cd: {}, fired: {}, log: [], people: [], nextPid: 1,
+      bestFriend: null,
+      edu: { stage: 'none', degree: 'none', major: null, univ: null, univYears: 0, grades: 50, examScore: null },
+      job: null, jobHistory: [], retiredFromWork: false, pension: 0,
+      fb: {
+        stage: 'none', club: null, apps: 0, goals: 0, caps: 0, natGoals: 0, injury: 0, seasons: 0,
+        trophies: { league: 0, cup: 0, cont: 0, natCup: 0, wc: 0, ballon: 0 }, clubs: [],
+        talent: 0, abroadClub: null, bestSeason: 0
+      },
+      achievements: {}, pending: [], queue: [], ap: AP_PER_YEAR, jail: 0, sick: null,
+      y: {}, hist: [], legacy: opts.legacy || null
+    };
+    s.year = s.birthYear;
+    s.hero.skin = rint(s, 0, (c.skin || [1]).length - 1);
+    s.hero.hair = rint(s, 0, 2);
+    var st = s.stats;
+    st.health = rint(s, 75, 95); st.happy = rint(s, 65, 90); st.smarts = rint(s, 15, 40);
+    st.looks = rint(s, 35, 80); st.football = rint(s, 2, 8); st.grit = rint(s, 25, 50); st.fame = 0;
+    s.fb.talent = rint(s, 55, 100);
+    s.fb.abroadClub = pick(s, E.ABROAD_CLUBS);
+    s.money = opts.inheritMoney || 0;
+
+    if (opts.parentState) E.buildHeirFamily(s, opts);
+    else buildCanonFamily(s, c);
+    s.age = opts.startAge || 1;
+    s.year = s.birthYear + s.age;
+    s.people.forEach(function (p) { if (p.bornAt != null) p.age = s.age - p.bornAt; });
+    if (!opts.parentState) {
+      addLog(s, T.render('{hometown}의 {house}에서 사남매의 막내로 태어났다.', vars(s)), 'milestone');
+    }
+    E.updateEducation(s, true);
+    return s;
+  };
+
+  function buildCanonFamily(s, c) {
+    var f = c.family;
+    var dadAge = rint(s, 30, 34), momAge = rint(s, 29, 32);
+    addPerson(s, { role: 'father', key: 'father', name: f.father.name, gender: 'm', bornAt: -dadAge, rel: rint(s, 65, 85), recovery: 0, liver: rint(s, 60, 74) });
+    addPerson(s, { role: 'mother', key: 'mother', name: f.mother.name, gender: 'f', bornAt: -momAge, rel: rint(s, 80, 95) });
+    f.siblings.forEach(function (sb) {
+      addPerson(s, { role: 'sibling', key: sb.key, name: sb.name, gender: sb.gender, bornAt: -sb.gap, rel: rint(s, 55, 85) });
+    });
+  }
+
+  // ---------------------------------------------------------------- template vars
+  function vars(s) {
+    var c = country(s), v = {};
+    v.name = s.hero.given; v.nick = s.hero.nick;
+    v.father = displayName(s, person(s, 'father')) || '아버지'; v.mother = displayName(s, person(s, 'mother')) || '어머니';
+    v.bro = displayName(s, person(s, 'bro')) || '형'; v.sis1 = displayName(s, person(s, 'sis1')) || '누나'; v.sis2 = displayName(s, person(s, 'sis2')) || '작은누나';
+    v.friend = displayName(s, person(s, 'friend')) || '친구';
+    v.partner = displayName(s, person(s, 'partner')) || '연인';
+    v.spouse = displayName(s, person(s, 'spouse')) || '배우자';
+    v.child = displayName(s, person(s, 'child')) || '아이';
+    v.coach = displayName(s, person(s, 'coach')) || '코치님';
+    v.city = s.flags.moved_alone && s.age < 40 ? c.places.bigcity : (s.flags.abroad ? s.abroadCity || '외국 도시' : c.places.city);
+    v.hometown = c.places.hometown; v.region = c.places.region; v.bigcity = c.places.bigcity; v.capital = c.places.capital;
+    v.house = c.places.house;
+    v.localClub = c.clubs.local; v.regionalClub = c.clubs.regional; v.academy = c.clubs.academy; v.bigClub = c.clubs.big;
+    v.rivalClub = c.clubs.rival; v.league = c.clubs.league; v.nationalTeam = c.nationalTeam;
+    v.abroadClub = s.fb.abroadClub;
+    var dayIdx = (s.age * 7 + s.year) % c.foods.length;
+    v.food = c.foods[dayIdx]; v.food2 = c.foods[(dayIdx + 2) % c.foods.length];
+    v.holiday = c.holidays[s.age % c.holidays.length]; v.holiday2 = c.holidays[(s.age + 1) % c.holidays.length];
+    var st = c.school[s.edu.stage];
+    v.school = st && st.school ? st.school : (s.edu.univ || c.school.high.school);
+    v.exam = c.school.exam.name;
+    v.univ = s.edu.univ || c.school.univMid;
+    v.job = s.job ? E.jobTitle(s) : '백수';
+    v.fatherJob = c.family.father.job; v.fatherJob2 = c.family.father.job2; v.motherJob = c.family.mother.job;
+    v.currency = c.currency.unit; v.leader = c.leader; v.country = c.name; v.sportsClub = c.school.sportsClub;
+    return v;
+  }
+  function displayName(s, p) {
+    if (!p) return null;
+    // Family members are addressed by given name within the family (more natural in Korean text)
+    var c = country(s), parts = p.name.split(' ');
+    if (p.role === 'father' || p.role === 'mother') return p.name;
+    if (c.nameOrder === 'surname-first') {
+      if (parts.length > 1) return parts.slice(1).join(' ');
+      // Hangul name without space: drop 1-syllable surname
+      return p.name.length >= 3 ? p.name.slice(1) : p.name;
+    }
+    return parts[0];
+  }
+  E.vars = vars;
+  E.render = function (s, text) { return T.fixJosa(T.render(text, vars(s))); };
+  E.displayName = displayName;
+
+  // ---------------------------------------------------------------- log
+  function addLog(s, text, kind) {
+    s.log.push({ age: s.age, year: s.year, t: T.fixJosa(text), k: kind || 'info' });
+    if (s.log.length > MAX_LOG) s.log.splice(0, s.log.length - MAX_LOG);
+  }
+  E.addLog = addLog;
+
+  // ---------------------------------------------------------------- stats & effects
+  function addStat(s, k, d) {
+    if (k === 'money') { s.money += d; return; }
+    s.stats[k] = clamp(Math.round((s.stats[k] || 0) + d), 0, 100);
+  }
+  E.addStat = addStat;
+
+  function changeRel(s, key, d) {
+    peopleByRel(s, key).forEach(function (p) { p.rel = clamp(Math.round(p.rel + d), 0, 100); });
+  }
+
+  // Apply a declarative effects object. Returns a list of human-readable changes.
+  function applyEffects(s, eff, out) {
+    out = out || [];
+    if (!eff) return out;
+    C.STATS.forEach(function (k) {
+      if (typeof eff[k] === 'number' && eff[k] !== 0) {
+        var before = s.stats[k]; addStat(s, k, eff[k]);
+        var d = s.stats[k] - before;
+        if (d) out.push({ k: k, d: d });
+      }
+    });
+    if (typeof eff.money === 'number' && eff.money !== 0) {
+      var m = Math.round(eff.money * wage(s));
+      s.money += m; out.push({ k: 'money', d: m });
+    }
+    if (eff.rel) Object.keys(eff.rel).forEach(function (r) { changeRel(s, r, eff.rel[r]); out.push({ k: 'rel', who: r, d: eff.rel[r] }); });
+    (eff.flags || []).forEach(function (f) { s.flags[f] = s.age || 1; });
+    (eff.unflags || []).forEach(function (f) { delete s.flags[f]; });
+    var fx = eff.fx ? (Array.isArray(eff.fx) ? eff.fx : [eff.fx]) : [];
+    fx.forEach(function (name) {
+      var fn = E.FX[name];
+      if (!fn) throw new Error('unknown fx ' + name);
+      var msg = fn(s);
+      if (msg) out.push({ k: 'msg', t: T.fixJosa(msg) });
+    });
+    if (eff.achieve) E.unlock(s, eff.achieve);
+    return out;
+  }
+  E.applyEffects = applyEffects;
+
+  // ---------------------------------------------------------------- conditions
+  function inRange(v, r) { return !r || (v >= r[0] && v <= r[1]); }
+  function hasFlags(s, list) {
+    for (var i = 0; i < list.length; i++) {
+      var f = list[i];
+      if (f.charAt(0) === '!') { if (s.flags[f.slice(1)]) return false; }
+      else if (!s.flags[f]) return false;
+    }
+    return true;
+  }
+  E.hasFlags = hasFlags;
+
+  function relState(s, key) {
+    if (key === 'children') return peopleByRel(s, 'children').length ? 'yes' : 'no';
+    var p = person(s, key);
+    if (!p) return 'none';
+    return p.alive ? 'alive' : 'dead';
+  }
+
+  E.condMatches = function (s, cond) {
+    if (!cond) return true;
+    var k;
+    if (cond.stats) for (k in cond.stats) if (!inRange(s.stats[k], cond.stats[k])) return false;
+    if (cond.money && !inRange(s.money / wage(s), cond.money)) return false;
+    if (cond.flags && !hasFlags(s, cond.flags)) return false;
+    if (cond.fb && cond.fb.indexOf(s.fb.stage) < 0) return false;
+    if (cond.edu && cond.edu.indexOf(s.edu.stage) < 0) return false;
+    if (cond.degree && degreeRank(s.edu.degree) < degreeRank(cond.degree)) return false;
+    if (cond.career) {
+      if (cond.career === 'any') { if (!s.job) return false; }
+      else if (cond.career === 'none') { if (s.job) return false; }
+      else if (!s.job || cond.career.indexOf(s.job.id) < 0) return false;
+    }
+    if (cond.sector) { if (!s.job || cond.sector.indexOf(careerById(s.job.id).sector) < 0) return false; }
+    if (cond.level) { if (!s.job || !inRange(s.job.level, cond.level)) return false; }
+    if (cond.gender && s.hero.gender !== cond.gender) return false;
+    if (cond.rel) for (k in cond.rel) {
+      var want = cond.rel[k], st = relState(s, k);
+      if (want === 'alive' || want === 'yes') { if (st !== 'alive' && st !== 'yes') return false; }
+      else if (want === 'dead') { if (st !== 'dead') return false; }
+      else if (want === 'no') { if (st === 'alive' || st === 'yes') return false; }
+    }
+    return true;
+  };
+
+  E.eventMatches = function (s, ev) {
+    if (!s.alive) return false;
+    var age = ev.age || [1, 120];
+    if (s.age < age[0] || s.age > age[1]) return false;
+    if (ev.countries && ev.countries.indexOf(s.country) < 0) return false;
+    if (ev.once && s.fired[ev.id]) return false;
+    var cd = ev.cooldown != null ? ev.cooldown : 6;
+    if (s.cd[ev.id] != null && s.age - s.cd[ev.id] < cd) return false;
+    // While in prison only prison-aware events can fire
+    if (s.jail > 0 && !(ev.cond && ev.cond.flags && ev.cond.flags.indexOf('jailed') >= 0) && !ev.anyState) return false;
+    if (!E.condMatches(s, ev.cond)) return false;
+    if (ev.when && !ev.when(s)) return false;
+    return true;
+  };
+
+  // ---------------------------------------------------------------- event presentation
+  E.choiceAvailable = function (s, ch) {
+    if (ch.reqFn && !ch.reqFn(s)) return false;
+    if (!ch.req) return true;
+    if (ch.req.stats) for (var k in ch.req.stats) if ((s.stats[k] || 0) < ch.req.stats[k]) return false;
+    if (ch.req.money != null && s.money / wage(s) < ch.req.money) return false;
+    if (ch.req.flags && !hasFlags(s, ch.req.flags)) return false;
+    return true;
+  };
+
+  function eventChoices(s, ev) { return ev.choicesFn ? ev.choicesFn(s) : (ev.choices || []); }
+
+  // Current pending modal event, rendered for the UI.
+  E.currentEvent = function (s) {
+    if (!s.queue.length) return null;
+    var ev = E.eventIndex()[s.queue[0]];
+    if (!ev) { s.queue.shift(); return E.currentEvent(s); }
+    var text = ev.textFn ? ev.textFn(s) : ev.text;
+    return {
+      id: ev.id, text: E.render(s, text), scene: ev.scene || E.sceneFor(s, ev),
+      choices: eventChoices(s, ev).map(function (ch, i) {
+        var chance = ch.check ? E.checkChance(s, ch.check) : null;
+        return { i: i, text: E.render(s, ch.text), enabled: E.choiceAvailable(s, ch), chance: chance };
+      })
+    };
+  };
+
+  E.checkChance = function (s, chk) {
+    return clamp(0.5 + ((s.stats[chk.stat] || 0) - chk.diff) / 40, chk.min != null ? chk.min : 0.05, chk.max != null ? chk.max : 0.95);
+  };
+
+  // Resolve a choice of the current event. Returns {log, changes, outcome}
+  E.choose = function (s, idx) {
+    var ev = E.eventIndex()[s.queue[0]];
+    if (!ev) return null;
+    var choices = eventChoices(s, ev);
+    var ch = choices[idx];
+    if (!ch || !E.choiceAvailable(s, ch)) return null;
+    s.queue.shift();
+    var res = { changes: [], outcome: null, log: '', anim: ch.anim || null };
+    var branch = ch;
+    if (ch.check) {
+      var ok = rnd(s) < E.checkChance(s, ch.check);
+      branch = ok ? ch.success : ch.fail;
+      res.outcome = ok ? 'success' : 'fail';
+    }
+    applyEffects(s, branch.effects, res.changes);
+    var log = branch.log;
+    if (branch.run) log = branch.run(s, res) || log;
+    var sch = branch.schedule || ch.schedule;
+    if (sch) s.pending.push({ age: s.age + (sch.years || 1), id: sch.id });
+    res.log = E.render(s, log || '');
+    if (res.log) addLog(s, res.log, res.outcome === 'fail' ? 'bad' : res.outcome === 'success' ? 'good' : 'event');
+    res.changes.forEach(function (c) { if (c.k === 'msg') addLog(s, c.t, 'info'); });
+    E.checkAchievements(s);
+    E.checkDeath(s, true);
+    return res;
+  };
+
+  function fireEvent(s, ev) {
+    s.fired[ev.id] = (s.fired[ev.id] || 0) + 1;
+    s.cd[ev.id] = s.age;
+    if (ev.choices || ev.choicesFn) { s.queue.push(ev.id); return; }
+    // choiceless: apply now, log it
+    var changes = applyEffects(s, ev.effects, []);
+    var text = ev.textFn ? ev.textFn(s) : ev.text;
+    var log = ev.run ? ev.run(s) : null;
+    addLog(s, E.render(s, text) + (ev.log ? ' ' + E.render(s, ev.log) : '') + (log ? ' ' + log : ''), ev.kind || 'event');
+    changes.forEach(function (c) { if (c.k === 'msg') addLog(s, c.t, 'info'); });
+  }
+  E.fireEvent = fireEvent;
+
+  // Queue an engine-triggered event (marks it fired; optional cooldown in years)
+  E.queueSys = function (s, id, cooldown) {
+    if (s.queue.indexOf(id) >= 0) return false;
+    if (cooldown != null && s.cd[id] != null && s.age - s.cd[id] < cooldown) return false;
+    s.fired[id] = (s.fired[id] || 0) + 1; s.cd[id] = s.age;
+    s.queue.push(id);
+    return true;
+  };
+
+  // Choose this year's storylets
+  E.selectEvents = function (s) {
+    var idx = E.eventIndex(), chosen = [], used = {};
+    // 1) delayed consequences that are due
+    var due = s.pending.filter(function (p) { return p.age <= s.age; });
+    s.pending = s.pending.filter(function (p) { return p.age > s.age; });
+    due.forEach(function (p) {
+      var ev = idx[p.id];
+      if (ev && !used[ev.id] && s.alive) {
+        var ageOk = true; // scheduled follow-ups ignore age windows/cooldowns but respect cond
+        if (E.condMatches(s, ev.cond) && (!ev.when || ev.when(s)) && ageOk) { chosen.push(ev); used[ev.id] = 1; }
+      }
+    });
+    var all = E.allEvents();
+    var eligible = all.filter(function (ev) { return !used[ev.id] && E.eventMatches(s, ev); });
+    // 2) canon / priority milestones
+    eligible.filter(function (ev) { return ev.priority; }).slice(0, 2).forEach(function (ev) { chosen.push(ev); used[ev.id] = 1; });
+    // 3) random storylets
+    var pool = eligible.filter(function (ev) { return !ev.priority && !used[ev.id] && !ev.manual; });
+    var n = s.age < 3 ? 1 : (rnd(s) < 0.55 ? 2 : 1);
+    if (s.age >= 14 && s.age < 70 && rnd(s) < 0.2) n++;
+    n = Math.max(0, Math.min(n, 4 - chosen.length));
+    for (var i = 0; i < n && pool.length; i++) {
+      var ev = R.weighted(s.rng, pool, function (e) {
+        var w = e.weight != null ? e.weight : 10;
+        if (e.countries) w *= 1.6;
+        if (e.cond && (e.cond.sector || e.cond.career)) w *= 1.3;
+        if (e.once) w *= 1.2;
+        return w;
+      });
+      if (!ev) break;
+      chosen.push(ev); used[ev.id] = 1;
+      pool = pool.filter(function (e) { return e !== ev; });
+    }
+    chosen.forEach(function (ev) { fireEvent(s, ev); });
+    return chosen.map(function (e) { return e.id; });
+  };
+
+  // ---------------------------------------------------------------- education
+  E.updateEducation = function (s, silent) {
+    var c = country(s), sc = c.school, ed = s.edu, a = s.age;
+    if (s.jail > 0) return;
+    var stages = ['elem', 'middle', 'high'];
+    if (ed.stage === 'univ' || ed.stage === 'grad') return; // handled yearly in progressUniversity
+    if (s.flags.dropout) { ed.stage = 'none'; return; }
+    for (var i = 0; i < stages.length; i++) {
+      var st = sc[stages[i]];
+      if (a >= st.from && a <= st.to) {
+        if (ed.stage !== stages[i]) {
+          ed.stage = stages[i];
+          if (!silent) addLog(s, st.school + '(' + st.name + ')에 입학했다.', 'milestone');
+        }
+        return;
+      }
+    }
+    if (a > sc.high.to && ed.stage === 'high') {
+      ed.stage = 'none';
+      if (degreeRank(ed.degree) < 1) ed.degree = 'high';
+      if (!silent) addLog(s, sc.high.name + '를 졸업했다.', 'milestone');
+    } else if (a < sc.elem.from) ed.stage = 'none';
+  };
+
+  function progressUniversity(s) {
+    var ed = s.edu;
+    if (ed.stage !== 'univ' && ed.stage !== 'grad') return;
+    ed.univYears++;
+    addStat(s, 'smarts', rint(s, 1, 3));
+    // tuition (scholarship or abroad changes cost)
+    if (!s.flags.scholarship) s.money -= Math.round((ed.univTier === 'abroad' ? 30000 : ed.univTier === 'top' ? 6000 : 4000) * (ed.univTier === 'abroad' ? 1 : wage(s)));
+    var need = ed.stage === 'univ' ? (ed.major === 'medicine' ? 6 : 4) : (ed.target === 'phd' ? 4 : 2);
+    if (ed.univYears >= need) {
+      if (ed.stage === 'univ') {
+        ed.degree = 'bachelor'; ed.stage = 'none';
+        addLog(s, ed.univ + ' ' + C.MAJORS[ed.major] + ' 전공으로 졸업했다. 학사모를 던졌다!', 'milestone');
+        E.queueSys(s, 'sys_grad');
+      } else {
+        ed.degree = ed.target; ed.stage = 'none';
+        addLog(s, (ed.target === 'phd' ? '박사' : '석사') + ' 학위를 받았다.', 'milestone');
+        if (ed.target === 'master') E.queueSys(s, 'sys_phd');
+      }
+      ed.univYears = 0;
+    }
+  }
+
+  // ---------------------------------------------------------------- careers
+  E.jobTitle = function (s) {
+    if (!s.job) return '무직';
+    var k = careerById(s.job.id);
+    return E.ladderTitle(s, k, s.job.level) + (k.special === 'football' ? '' : ' (' + k.name + ')');
+  };
+  // Ladder titles may contain tokens like {leader}; render with a minimal var set (no recursion via vars()).
+  E.ladderTitle = function (s, k, level) {
+    var c = country(s);
+    return T.render(k.ladder[clamp(level, 0, k.ladder.length - 1)], { leader: c.leader, country: c.name, nationalTeam: c.nationalTeam, bigClub: c.clubs.big });
+  };
+
+  E.salaryOf = function (s, k, level) {
+    var n = k.ladder.length - 1, f = n ? level / n : 0;
+    var lo = Math.max(k.salary[0], 1), hi = Math.max(k.salary[1], lo);
+    var base = lo * Math.pow(hi / lo, f);
+    var w = wage(s);
+    if (k.special === 'football') w = s.flags.abroad ? 1 : Math.max(w, 0.35);
+    return Math.round(base * w);
+  };
+
+  // Requirement check; returns list of unmet reasons (Korean)
+  E.jobMissing = function (s, k) {
+    var r = k.req || {}, miss = [];
+    if (s.age < r.minAge) miss.push(r.minAge + '세 이상');
+    if (s.age > r.maxAge) miss.push(r.maxAge + '세 이하');
+    if (r.degree && degreeRank(s.edu.degree) < degreeRank(r.degree)) miss.push(C.DEGREE_LABELS[r.degree] + ' 이상');
+    if (r.majors && r.majors.length && (degreeRank(s.edu.degree) < 2 || r.majors.indexOf(s.edu.major) < 0)) miss.push('전공: ' + r.majors.map(function (m) { return C.MAJORS[m]; }).join('/'));
+    if (r.stats) Object.keys(r.stats).forEach(function (st) { if ((s.stats[st] || 0) < r.stats[st]) miss.push(C.STAT_LABELS[st] + ' ' + r.stats[st] + '+'); });
+    if (r.flags && !hasFlags(s, r.flags)) miss.push('특별 조건');
+    if (r.fame && s.stats.fame < r.fame) miss.push('명성 ' + r.fame + '+');
+    var school = ['elem', 'middle', 'high', 'univ', 'grad'].indexOf(s.edu.stage) >= 0;
+    if (school && k.sector !== 'parttime') miss.push('학업 중');
+    if (k.special === 'football') miss.push('유스 아카데미를 거쳐야 함');
+    if (s.jail > 0) miss.push('수감 중');
+    return miss;
+  };
+
+  E.hireChance = function (s, k) {
+    var st = s.stats[k.keyStat] || 0;
+    var p = 0.95 - (k.difficulty - 1) * 0.16 + (st - 50) / 150 + (s.flags.ever_jailed && k.sector !== 'crime' ? -0.2 : 0);
+    return clamp(p, 0.05, 0.95);
+  };
+
+  E.jobList = function (s) {
+    return RA.data.careers.filter(function (k) {
+      var r = k.req || {};
+      return k.special !== 'football' && s.age >= r.minAge - 4 && s.age <= r.maxAge;
+    }).map(function (k) {
+      var miss = E.jobMissing(s, k);
+      return { id: k.id, name: k.name, sector: k.sector, desc: k.desc, salary: E.salaryOf(s, k, 0), missing: miss, ok: !miss.length, chance: miss.length ? 0 : E.hireChance(s, k), current: s.job && s.job.id === k.id };
+    });
+  };
+
+  function startJob(s, id, level) {
+    if (s.job) endJob(s, '이직');
+    s.job = { id: id, level: level || 0, years: 0, atLevel: 0, perf: 50, since: s.age };
+    var k = careerById(id);
+    if (k.special === 'religion') s.flags.monk = s.age;
+  }
+  function endJob(s, why) {
+    if (!s.job) return;
+    var k = careerById(s.job.id);
+    s.jobHistory.push({ id: s.job.id, title: E.ladderTitle(s, k, s.job.level), name: k.name, from: s.job.since, to: s.age, why: why, level: s.job.level, top: s.job.level === k.ladder.length - 1 });
+    s.lastSalary = E.salaryOf(s, k, s.job.level);
+    s.job = null;
+  }
+  E.startJob = startJob; E.endJob = endJob;
+
+  E.applyJob = function (s, id) {
+    var k = careerById(id);
+    if (!k || E.jobMissing(s, k).length) return { ok: false, log: '지원 자격이 없다.' };
+    if (s.ap <= 0) return { ok: false, log: '올해는 더 이상 행동할 힘이 없다.' };
+    s.ap--;
+    if (rnd(s) < E.hireChance(s, k)) {
+      startJob(s, id, 0);
+      var msg = k.name + '(으)로 취직했다! 첫 직함은 "' + E.ladderTitle(s, k, 0) + '".';
+      addLog(s, msg, 'good');
+      E.checkAchievements(s);
+      return { ok: true, log: T.fixJosa(msg) };
+    }
+    var no = k.name + ' 면접에서 떨어졌다. "좋은 분이지만 인연이 아닌 것 같습니다."';
+    addLog(s, no, 'bad');
+    return { ok: false, log: no };
+  };
+
+  function yearlyCareer(s) {
+    if (!s.job) {
+      if (s.retiredFromWork && s.pension) s.money += s.pension;
+      return;
+    }
+    var k = careerById(s.job.id);
+    if (k.special === 'football') return; // football module handles pros
+    var j = s.job;
+    j.years++; j.atLevel++;
+    var st = s.stats[k.keyStat] || 0;
+    j.perf = clamp(j.perf + (st - 50) / 8 + (rnd(s) * 10 - 5) + (s.y.workHard ? 8 : 0) - (s.y.slack ? 10 : 0), 0, 100);
+    var n = k.ladder.length - 1;
+    if (j.perf >= 62 && j.atLevel >= k.promoteYears && j.level < n && rnd(s) < 0.45 + (j.perf - 62) / 60) {
+      E.FX.promote(s, true);
+    } else if (j.perf <= 12 && rnd(s) < 0.35) {
+      addLog(s, '실적 부진으로 ' + k.name + ' 일자리에서 해고됐다.', 'bad');
+      endJob(s, '해고'); addStat(s, 'happy', -8);
+      return;
+    }
+    var sal = E.salaryOf(s, k, j.level);
+    s.money += Math.round(sal * 0.78);
+    s.y.income = (s.y.income || 0) + sal;
+    addStat(s, 'happy', -(k.stress - 2) + (j.perf > 70 ? 1 : 0));
+    if (k.stress >= 4) addStat(s, 'health', -1);
+    if (k.fame) addStat(s, 'fame', Math.round(k.fame * (n ? j.level / n : 1)));
+    if (k.risk && s.jail === 0) {
+      if (k.special === 'crime' && rnd(s) < 0.03 * k.risk) { E.FX.jail(s); return; }
+      if (k.special !== 'crime' && rnd(s) < 0.006 * k.risk) { addStat(s, 'health', -rint(s, 5, 20)); addLog(s, '업무 중 사고로 다쳤다.', 'bad'); }
+    }
+    if (k.special === 'politics' && j.level === n) E.unlock(s, 'leader');
+    if (k.special === 'space' && j.level >= 1) E.unlock(s, 'astronaut');
+    if ((k.sector === 'science' || k.id === 'professor') && j.level >= n - 1 && s.stats.smarts >= 92 && rnd(s) < 0.04) {
+      addLog(s, '스톡홀름에서 전화가 왔다. 노벨상 수상자로 선정됐다!', 'milestone');
+      addStat(s, 'fame', 25); s.money += Math.round(1000000 * wage(s)); E.unlock(s, 'nobel');
+      s.y.anim = 'trophy';
+    }
+    // mandatory retirement prompt
+    if (s.age >= 65 && k.sector !== 'crime' && k.special !== 'politics') E.queueSys(s, 'sys_retire', 5);
+  }
+
+  // ---------------------------------------------------------------- yearly simulation
+  E.mortality = function (s) {
+    var a = s.age, st = s.stats;
+    var q = a < 5 ? 0.0006 : a < 40 ? 0.0004 + 0.00002 * a : 0.00012 * Math.exp(0.082 * a);
+    var hm = st.health >= 80 ? 0.55 : st.health >= 60 ? 0.85 : st.health >= 40 ? 1.4 : st.health >= 20 ? 2.6 : 5;
+    q *= hm;
+    if (s.flags.smoker) q *= 1.4;
+    if (s.flags.drinker) q *= 1.2;
+    if (s.sick) q *= 1.6;
+    if (s.stats.happy < 15) q *= 1.25;
+    return clamp(q, 0, 0.95);
+  };
+
+  function deathCause(s) {
+    if (s.sick) return s.sick.name;
+    if (s.age >= 85) return pick(s, ['노환으로 잠든 채', '가족들 곁에서 평온하게', '노환']);
+    if (s.flags.heart_hidden && s.age < 50) return '숨겨 왔던 심장 질환';
+    if (s.flags.smoker && s.age > 45) return '폐암';
+    if (s.age < 30) return pick(s, ['교통사고', '불의의 사고', '갑작스러운 심장마비']);
+    return pick(s, ['심장마비', '뇌졸중', '암', '폐렴', '갑작스러운 사고']);
+  }
+
+  E.checkDeath = function (s, onlyHealth) {
+    if (!s.alive) return true;
+    var dead = s.stats.health <= 0;
+    if (!dead && !onlyHealth) dead = rnd(s) < E.mortality(s) || s.age >= 122;
+    if (dead) {
+      s.alive = false;
+      s.cause = s.stats.health <= 0 ? (s.sick ? s.sick.name : '건강 악화') : deathCause(s);
+      s.queue = [];
+      if (s.job) endJob(s, '사망');
+      addLog(s, s.age + '세, ' + s.cause + '(으)로 세상을 떠났다.', 'death');
+      E.checkAchievements(s);
+    }
+    return dead;
+  };
+
+  function yearlyStats(s) {
+    var a = s.age, st = s.stats;
+    // health drift by age
+    var hd = a < 18 ? 1 : a < 35 ? 0 : a < 50 ? -1 : a < 65 ? -1.6 : a < 80 ? -2.4 : -3.2;
+    hd += rnd(s) * 3 - 1.5;
+    if (s.sick) hd -= s.sick.sev;
+    if (s.flags.smoker) hd -= 1;
+    if (s.flags.drinker) hd -= 0.7;
+    if (st.happy < 20) hd -= 1;
+    if (st.grit > 70 && a > 30) hd += 0.5;
+    addStat(s, 'health', hd);
+    // happiness regresses to 55
+    addStat(s, 'happy', (55 - st.happy) / 12 + (rnd(s) * 4 - 2));
+    // smarts grow in childhood and school
+    if (a <= 18) addStat(s, 'smarts', rint(s, 1, 3) + (s.edu.stage !== 'none' ? 1 : 0));
+    else if (a > 70) addStat(s, 'smarts', -rint(s, 0, 2));
+    // looks
+    if (a >= 12 && a <= 18) addStat(s, 'looks', rint(s, -2, 3));
+    if (a > 45) addStat(s, 'looks', -rint(s, 0, 2));
+    // grit grows with age a little
+    if (a < 25 && rnd(s) < 0.5) addStat(s, 'grit', 1);
+    // fame fades if not working in a famous job
+    if (st.fame > 0 && !(s.job && careerById(s.job.id).fame) && s.fb.stage !== 'pro') addStat(s, 'fame', -Math.max(1, Math.round(st.fame * 0.04)));
+    // football natural drift
+    E.Football.yearlySkill(s);
+  }
+
+  function yearlyMoney(s) {
+    if (s.age < 18 || s.jail > 0) return;
+    if ((s.edu.stage === 'univ' || s.edu.stage === 'grad') && s.age < 26) { s.money -= Math.round(2000 * wage(s)); return; }
+    var cost = s.job || s.pension ? 9000 : 5000; // without income people live leaner (family, benefits)
+    if (s.flags.homeowner) cost *= 0.6;
+    if (person(s, 'spouse')) cost += 4000;
+    cost += peopleByRel(s, 'children').filter(function (p) { return p.age < 22; }).length * 5000;
+    if (s.flags.car_owner) cost += 1200;
+    cost = Math.round(cost * wage(s));
+    // lifestyle grows with income (rent, food, family, taxes not withheld)
+    cost += Math.round((s.y.income || 0) * 0.5);
+    // the rich spend more
+    if (s.money > cost * 50) cost += Math.round(s.money * 0.01);
+    s.money -= cost;
+    // savings interest / debt interest
+    if (s.money > 0) s.money += Math.round(s.money * 0.01);
+    else {
+      s.money += Math.round(s.money * 0.05); addStat(s, 'happy', -3); s.flags.in_debt = s.age;
+      if (s.money < -60000 * wage(s) && (!s.flags.bankrupt || s.age - s.flags.bankrupt >= 10)) {
+        s.money = 0; s.flags.bankrupt = s.age; addStat(s, 'happy', -10);
+        addLog(s, '빚을 감당할 수 없어 개인 파산을 신청했다. 모든 걸 잃었지만, 다시 시작할 수 있다.', 'bad');
+      }
+    }
+    if (s.money > 0 && s.flags.in_debt) delete s.flags.in_debt;
+  }
+
+  function yearlyPeople(s) {
+    var c = country(s);
+    s.people.forEach(function (p) {
+      if (!p.alive) return;
+      p.age = (p.age || 0) + 1;
+      // relationships fade without contact
+      if (p.role !== 'child' || p.age > 12) p.rel = clamp(p.rel - rint(s, 0, 2), 0, 100);
+      if (p.role === 'father' && s.flags.father_drinking && !s.flags.father_sober) return; // father handled in arc
+      var q = p.age < 40 ? 0.001 : 0.00012 * Math.exp(0.082 * p.age) * 0.8;
+      if (p.role === 'child' && p.age < 40) q = 0.0005;
+      if (rnd(s) < q || p.age > 105) personDies(s, p, p.age > 75 ? '노환' : '병');
+    });
+    // father's drinking arc
+    var dad = person(s, 'father');
+    if (dad && dad.alive && s.flags.father_drinking && !s.flags.father_sober) {
+      dad.recovery = clamp((dad.recovery || 0) - 3, 0, 100);
+      dad.liver = (dad.liver || 70) - Math.max(1, rint(s, 3, 6) - Math.floor(dad.recovery / 30));
+      if (dad.liver < 30 && !s.flags.father_ill) { s.flags.father_ill = s.age; E.queueSys(s, 'canon_father_hospital'); }
+      if (dad.liver <= 0) personDies(s, dad, '간 질환');
+    } else if (dad && dad.alive && s.flags.father_sober) {
+      dad.liver = Math.min(70, (dad.liver || 40) + 2);
+    }
+    // partner drift
+    var pt = person(s, 'partner');
+    if (pt && pt.rel < 12) { addLog(s, displayName(s, pt) + '와(과) 헤어졌다. 연락이 점점 뜸해지더니 결국…', 'bad'); pt.role = 'ex'; addStat(s, 'happy', -6); }
+    var sp = person(s, 'spouse');
+    if (sp && sp.rel < 8 && rnd(s) < 0.5) { E.FX.divorce(s); }
+  }
+
+  function personDies(s, p, cause) {
+    p.alive = false; p.diedAt = s.age;
+    var nm = displayName(s, p);
+    var roleTxt = { father: '아버지', mother: '어머니', sibling: '형제', spouse: '배우자', child: '자식', friend: '친구', partner: '연인', coach: '은사' }[p.role] || '지인';
+    if (p.role === 'father') {
+      s.flags.father_dead = s.age;
+      addLog(s, '아버지 ' + nm + '께서 ' + cause + '(으)로 세상을 떠나셨다. 마지막까지 막내의 경기를 이야기하셨다고 한다.', 'death');
+      addStat(s, 'happy', -18);
+      E.queueSys(s, 'canon_father_farewell');
+    } else if (p.role === 'mother') {
+      s.flags.mother_dead = s.age;
+      addLog(s, '어머니 ' + nm + '께서 세상을 떠나셨다. 집 안에 그 음식 냄새가 아직 남아 있는 것 같다.', 'death');
+      addStat(s, 'happy', -18);
+    } else if (p.role !== 'ex') {
+      addLog(s, roleTxt + ' ' + nm + '(이)가 세상을 떠났다 (' + p.age + '세).', 'death');
+      addStat(s, 'happy', p.rel > 60 ? -12 : -5);
+    }
+    if ((p.role === 'father' || p.role === 'mother') && s.age >= 18) {
+      var inh = Math.round(rint(s, 2000, 12000) * wage(s));
+      s.money += inh;
+    }
+    if (p.id === s.bestFriend) s.bestFriend = null;
+  }
+  E.personDies = personDies;
+
+  function yearlyKids(s) {
+    peopleByRel(s, 'children').forEach(function (k) {
+      if (k.age === 18) addLog(s, displayName(s, k) + '(이)가 성인이 됐다.', 'info');
+    });
+  }
+
+  function yearlyHealth(s) {
+    if (s.sick) {
+      s.sick.years++;
+      if (s.sick.years > 2 && rnd(s) < 0.3) { addLog(s, s.sick.name + '에서 자연스럽게 회복됐다.', 'good'); s.sick = null; }
+    }
+    if (s.jail > 0) {
+      s.jail--;
+      addStat(s, 'happy', -4);
+      if (s.jail === 0) { delete s.flags.jailed; addLog(s, '출소했다. 바깥 공기가 이렇게 달 줄이야.', 'milestone'); }
+    }
+  }
+
+  // Advance one year. Returns {events: ids}
+  E.ageUp = function (s) {
+    if (!s.alive) return null;
+    if (s.queue.length) throw new Error('resolve pending events first');
+    s.age++; s.year++;
+    s.ap = AP_PER_YEAR;
+    var prevY = s.y; s.y = {};
+    s.hist.push({ age: s.age, money: Math.round(s.money), fame: s.stats.fame, happy: s.stats.happy, health: s.stats.health });
+    if (s.hist.length > 130) s.hist.shift();
+    addLog(s, '— ' + s.age + '세 (' + s.year + '년) —', 'year');
+    yearlyHealth(s);
+    yearlyStats(s);
+    E.updateEducation(s);
+    progressUniversity(s);
+    if (s.edu.stage === 'high' && s.age === country(s).school.exam.age) E.prepareExam(s);
+    yearlyCareer(s);
+    E.Football.yearly(s, prevY);
+    yearlyMoney(s);
+    yearlyPeople(s);
+    yearlyKids(s);
+    if (E.checkDeath(s)) return { events: [] };
+    var ids = E.selectEvents(s);
+    E.checkAchievements(s);
+    return { events: ids };
+  };
+
+  E.prepareExam = function (s) {
+    var st = s.stats;
+    var score = clamp(Math.round(st.smarts * 0.75 + s.edu.grades * 0.25 + rint(s, -12, 12) + (s.y.studied || 0) * 3), 0, 100);
+    s.edu.examScore = score;
+    E.queueSys(s, 'sys_exam');
+  };
+
+  // ---------------------------------------------------------------- achievements
+  E.unlock = function (s, id) {
+    if (s.achievements[id]) return false;
+    var a = (RA.data.achievements || []).filter(function (x) { return x.id === id; })[0];
+    if (!a) return false;
+    s.achievements[id] = s.age || 1;
+    addLog(s, '🏅 업적 달성: ' + a.name, 'achieve');
+    s.y.newAchievements = (s.y.newAchievements || []).concat([id]);
+    return true;
+  };
+  E.checkAchievements = function (s) {
+    (RA.data.achievements || []).forEach(function (a) {
+      if (!s.achievements[a.id] && a.test && a.test(s, E)) E.unlock(s, a.id);
+    });
+  };
+
+  // ---------------------------------------------------------------- scene selection
+  E.sceneFor = function (s, ev) {
+    if (s.jail > 0) return 'prison';
+    if (ev && ev.id) {
+      if (/^fb_|^canon_(join|regional|academy|youth|pro|late)/.test(ev.id)) return s.fb.stage === 'pro' ? 'stadium' : 'pitch';
+      if (/heart|hospital/.test(ev.id)) return 'hospital';
+    }
+    return E.homeScene(s);
+  };
+  E.homeScene = function (s) {
+    if (!s.alive) return 'grave';
+    if (s.jail > 0) return 'prison';
+    if (s.fb.stage === 'pro') return 'stadium';
+    if (s.sick) return 'hospital';
+    if (['elem', 'middle', 'high', 'univ', 'grad'].indexOf(s.edu.stage) >= 0) return s.fb.stage !== 'none' && s.fb.stage !== 'retired' && s.age % 2 ? 'pitch' : 'school';
+    if (s.job) {
+      var sec = careerById(s.job.id).sector;
+      if (sec === 'sports') return 'pitch';
+      if (sec === 'medical') return 'hospital';
+      if (sec === 'agri') return 'farm';
+      return 'office';
+    }
+    return 'home';
+  };
+
+  // ---------------------------------------------------------------- outfit
+  E.outfit = function (s) {
+    if (s.jail > 0) return 'prison';
+    if (s.fb.stage === 'pro' || (['local', 'regional', 'academy', 'youth'].indexOf(s.fb.stage) >= 0 && s.age % 3 !== 0)) return 'kit';
+    if (s.job) return careerById(s.job.id).outfit || 'casual';
+    if (['elem', 'middle', 'high'].indexOf(s.edu.stage) >= 0) return 'uniform';
+    return s.age < 6 ? 'casual' : (s.age % 2 ? 'casual' : 'hoodie');
+  };
+
+  E.AP_PER_YEAR = AP_PER_YEAR;
+})(typeof globalThis !== 'undefined' ? globalThis : this);
