@@ -256,7 +256,7 @@
     var s = app.s, box = $('#stats');
     if (!box.children.length) {
       C.STATS.forEach(function (k) {
-        box.appendChild(h('<div class="stat" data-k="' + k + '"><span>' + STAT_ICONS[k] + ' ' + C.STAT_LABELS[k] + '</span><div class="bar"><i></i></div><span class="v"></span></div>'));
+        box.appendChild(h('<div class="stat" data-k="' + k + '" title="' + C.STAT_LABELS[k] + '"><span>' + STAT_ICONS[k] + ' ' + SHORT[k] + '</span><div class="bar"><i></i></div><span class="v"></span></div>'));
       });
     }
     C.STATS.forEach(function (k) {
@@ -285,7 +285,7 @@
     items.forEach(function (e) {
       if (e.k === 'year' || !cur) { cur = []; groups.push(cur); }
       if (e.k === 'year') cur.push('<div class="yr">' + esc(e.t.replace(/—/g, '').trim()) + '</div>');
-      else cur.push('<div class="e ' + esc(e.k) + '">' + esc(e.t) + '</div>');
+      else cur.push('<div class="e k-' + esc(e.k) + '">' + esc(e.t) + '</div>');
     });
     if (newestFirst) groups.reverse();
     return groups.map(function (g) { return g.join(''); }).join('');

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* Validates all data packs against docs/SCHEMA.md. Usage: node tools/validate-data.js
+/* Validates all data packs against docs/DESIGN.md (section 4). Usage: node tools/validate-data.js
  * Exits 1 on errors. Also exported for tests. */
 'use strict';
 const fs = require('fs');

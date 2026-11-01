@@ -334,6 +334,16 @@
       legacy: { parentName: E.fullName(c, s.hero.surname, s.hero.given), parentAge: s.age, parentTitle: E.lifeTitles(s)[0].name, estate: estate, generation: s.generation }
     });
     ns.flags.heir = 1;
+    // an heir who is already grown up has a plausible education and adult stats
+    var sc = c.school;
+    if (ns.age > sc.high.to) {
+      ns.edu.stage = 'none'; ns.edu.degree = 'high';
+      if (ns.age >= sc.high.to + 5 && E.chance(ns, 0.3 + ns.stats.smarts / 200)) {
+        ns.edu.degree = 'bachelor'; ns.edu.major = E.pick(ns, Object.keys(C.MAJORS)); ns.edu.univ = sc.univMid;
+      }
+      ns.stats.smarts = Math.max(ns.stats.smarts, E.rint(ns, 45, 70));
+      ns.stats.grit = Math.max(ns.stats.grit, E.rint(ns, 40, 65));
+    } else E.updateEducation(ns, true);
     E.addLog(ns, '부모님 ' + ns.legacy.parentName + '의 뒤를 이어 ' + ns.age + '세의 ' + given + '(으)로 삶을 이어 간다. 유산 ' + T.money(estate, c) + '.', 'milestone');
     return ns;
   };
@@ -402,6 +412,6 @@
     if (ach.length) out.push('업적: ' + ach.map(function (a) { return a.name; }).join(', ') + '.');
     out.push(s.age + '세에 ' + s.cause + '(으)로 눈을 감았다. 남긴 재산 ' + T.money(s.money, c) + '.');
     out.push('#호날두의모험 시드 ' + s.seed);
-    return out.join('\n');
+    return out.map(T.fixJosa).join('\n');
   };
 })(typeof globalThis !== 'undefined' ? globalThis : this);
