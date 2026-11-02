@@ -723,7 +723,7 @@
       '<div style="font-size:20px;font-weight:700">' + esc(sum.name) + '</div>' +
       '<div class="muted">' + sum.born + ' – ' + sum.died + ' · ' + sum.age + '세 · ' + esc(sum.cause) + '</div>' +
       '<div class="titles" style="margin:10px 0">' + sum.titles.slice(0, 4).map(function (t, i) { return '<span class="ribbon' + (i ? ' sub' : '') + '" title="' + esc(t.desc) + '">' + esc(t.name) + '</span>'; }).join('') + '</div>' +
-      '<dl class="kv"><dt>남긴 재산</dt><dd class="money">' + esc(sum.moneyText) + '</dd><dt>명성</dt><dd>' + sum.fame + '</dd><dt>최종 학력</dt><dd>' + esc(sum.degree) + '</dd>' +
+      '<dl class="kv"><dt>남긴 재산</dt><dd class="money' + (sum.money < 0 ? ' neg' : '') + '">' + esc(sum.moneyText) + (sum.money < 0 ? ' (빚)' : '') + '</dd><dt>명성</dt><dd>' + sum.fame + '</dd><dt>최종 학력</dt><dd>' + esc(sum.degree) + '</dd>' +
       (sum.football ? '<dt>축구</dt><dd>' + sum.football.apps + '경기 ' + sum.football.goals + '골 · 발롱도르 ' + sum.football.trophies.ballon + ' · 월드컵 ' + sum.football.trophies.wc + '</dd>' : '') +
       (sum.bestJob ? '<dt>최고 경력</dt><dd>' + esc(sum.bestJob.name) + ' · ' + esc(sum.bestJob.title) + '</dd>' : '') +
       '<dt>자녀</dt><dd>' + sum.children + '명</dd><dt>시드</dt><dd>' + esc(sum.seed) + (sum.generation > 1 ? ' · ' + sum.generation + '대째' : '') + '</dd></dl>' +
@@ -805,7 +805,7 @@
     var cur = s.job ? E.jobTitle(s) : (s.fb.stage !== 'none' && s.fb.stage !== 'retired' ? C.FB_STAGE_LABELS[s.fb.stage] : eduLabel(s));
     var PATHS = { path_study: '📚 공부 올인', path_football: '⚽ 축구 올인', path_arts: '🎨 예체능', path_trade: '🔧 기술·장사', path_free: '🛹 자유로운 영혼', path_creator: '📹 내 길(창작)' };
     var item = function (x, open) {
-      return '<div class="path ' + (open ? 'open' : 'locked') + '"><div class="pn">' + (open ? '🔓 ' : '🔒 ') + esc(x.name) + ' <span class="muted">· ' + esc(C.SECTORS[x.sector] || '') + '</span></div>' +
+      return '<div class="path ' + (open ? 'open' : 'locked') + '"><div class="pn">' + (open ? '🔓 ' : '🔒 ') + esc(x.name) + ' <span class="muted">· ' + esc(C.SECTORS[x.sector] || '') + (open && x.minAge > s.age ? ' · ' + x.minAge + '세부터' : '') + '</span></div>' +
         '<div class="pl">' + x.ladder.map(esc).join(' → ') + '</div>' + (open ? '' : '<div class="ph">해금 조건: ' + esc(x.hint || '조건 미달') + '</div>') + '</div>';
     };
     var m = modal('<div class="card-h">🧭 진로 <button class="btn btn-sm btn-ghost" id="x">닫기</button></div><div class="card-b">' +

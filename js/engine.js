@@ -449,6 +449,9 @@
     health: { label: '건강', icon: '🏥', color: '#ff8a65', pic: 'health' },
     money: { label: '돈', icon: '💰', color: '#34d399', pic: 'money' },
     social: { label: '친구·관계', icon: '🤝', color: '#14b8a6', pic: 'social' },
+    gamble: { label: '도박', icon: '🎲', color: '#e879f9', pic: 'gamble' },
+    mischief: { label: '악동', icon: '😈', color: '#fb923c', pic: 'mischief' },
+    career: { label: '진로', icon: '🧭', color: '#facc15', pic: 'career' },
     country: { label: '고향·명절', icon: '🎉', color: '#38bdf8', pic: 'country' },
     life: { label: '일상', icon: '🌱', color: '#8e9ac0', pic: 'life' }
   };
@@ -459,6 +462,9 @@
     var refs = E.eventRefs(ev);
     var fbCanon = /^canon_(join|regional|academy|first_night|accent|warning|homesick|work_ethic|youth|pro|late|kitroom)/.test(id);
     if (ev.pick || /^sys_(prenatal|edu|exam|major|grad|phd|retire)/.test(id)) k = 'pick';
+    else if (/^gam_/.test(id) || (ev.choices || []).some(function (ch) { return ch.bet; })) k = 'gamble';
+    else if (/^path_/.test(id)) k = 'career';
+    else if (/^mis_/.test(id)) k = 'mischief';
     else if (refs.isMemorial || id === 'sys_grief') k = 'memorial';
     else if ((c.flags || []).indexOf('jailed') >= 0 || (c.sector || []).indexOf('crime') >= 0 || /crime|fraud|shoplift|theft|steal|jail|prison|police_raid|loan_shark/.test(id)) k = 'crime';
     else if (/^fb_/.test(id) || fbCanon || c.fb) k = 'football';
