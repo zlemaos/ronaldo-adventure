@@ -137,7 +137,7 @@ test('진로 고민 decisions come at 13-14, 16-17 and 19-20', () => {
   let seen = { path_13: 0, path_16: 0, path_19: 0 }, n = 40;
   for (let i = 0; i < n; i++) {
     const s = autoplay(RA, { country: COUNTRIES[i % COUNTRIES.length], seed: 'path-' + i, bot: 'model' });
-    for (const id in seen) if (s.fired[id]) seen[id]++;
+    for (const id in seen) if (s.fired[id] || (id === 'path_16' && s.fired.path_16_football) || (id === 'path_19' && (s.fired.path_19_football || s.fired.path_19_plans))) seen[id]++;
   }
   for (const id in seen) assert.ok(seen[id] >= n * 0.8, id + ' fired in ' + seen[id] + '/' + n + ' lives');
   const ev = E.eventIndex().path_19;

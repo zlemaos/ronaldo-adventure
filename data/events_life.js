@@ -781,6 +781,7 @@
     },
     {
       id: 'life_ya_friend_drift', age: [24, 45], cooldown: 6,
+      when: function (s) { var p = RA.Engine.person(s, 'friend'); return !!(p && p.lastContactAt != null && s.age - p.lastContactAt >= 2); },
       cond: { rel: { friend: 'yes' } },
       text: '{friend}에게서 마지막으로 연락 온 게 언제였더라. 단톡방이 몇 달째 조용하다.',
       choices: [
@@ -793,20 +794,21 @@
       cond: { rel: { friend: 'yes' }, money: [2000, 99999999] },
       text: '{friend}[이/가] 사업이 급하다며 돈을 빌려 달라고 한다. "딱 석 달만."',
       choices: [
-        { text: '빌려준다', effects: { money: -2000, rel: { friend: 5 }, flags: ['lent_friend'] }, log: '{friend}[은/는] 몇 번이나 고맙다고 했다.', schedule: { id: 'life_ya_friend_loan_back', years: 3 } },
+        { text: '빌려준다', effects: { money: -2000, rel: { friend: 5 }, flags: ['lent_friend'], fx: ['recordFriendLoan'] }, log: '{friend}[은/는] 몇 번이나 고맙다고 했다.', schedule: { id: 'life_ya_friend_loan_back', years: 3 } },
         { text: '정중히 거절한다', effects: { rel: { friend: -4 } }, log: '어색한 침묵이 흘렀다. 그래도 통장은 지켰다.' },
         { text: '조금만 보태 준다', effects: { money: -300, rel: { friend: 2 } }, log: '"갚지 않아도 돼." 마음 편한 선택이었다.' }
       ]
     },
     {
-      id: 'life_ya_friend_loan_back', age: [23, 70], weight: 1, once: true,
-      cond: { flags: ['lent_friend'] },
-      text: '3년 전 돈을 빌려 간 친구 소식이 들려왔다.',
+      id: 'life_ya_friend_loan_back', age: [23, 70], weight: 1, cooldown: 1,
+      cond: { rel: { friend: 'yes' } },
+      when: function (s) { var p = RA.Engine.person(s, 'friend'); return !!(p && (s.friendLoans || []).some(function (loan) { return loan.personId === p.id; })); },
+      text: '{friend}에게 빌려준 돈을 어떻게 할지 생각했다.',
       choices: [
         { text: '연락해 본다', check: { stat: 'happy', diff: 45 },
-          success: { effects: { money: 2600, happy: 6, unflags: ['lent_friend'] }, log: '사업이 잘 풀렸다며 이자까지 얹어 갚았다. 소고기도 샀다.' },
-          fail: { effects: { happy: -6, fx: ['loseFriend'], unflags: ['lent_friend'] }, log: '번호가 바뀌어 있었다. 돈과 친구를 한꺼번에 잃었다.' } },
-        { text: '잊기로 한다', effects: { grit: 2, happy: -1, unflags: ['lent_friend'] }, log: '수업료라 생각하기로 했다.' }
+          success: { effects: { fx: ['repayFriendLoan'], happy: 6, unflags: ['lent_friend'] }, log: '사업이 잘 풀렸다며 이자까지 얹어 갚았다. 소고기도 샀다.' },
+          fail: { effects: { happy: -6, fx: ['friendDebtLost'], unflags: ['lent_friend'] }, log: '번호가 바뀌어 있었다. 돈과 친구를 한꺼번에 잃었다.' } },
+        { text: '잊기로 한다', effects: { grit: 2, happy: -1, fx: ['forgetFriendLoan'], unflags: ['lent_friend'] }, log: '수업료라 생각하기로 했다.' }
       ]
     },
     {
@@ -1770,7 +1772,7 @@
       text: '{bro}[이/가] 가게를 열고 싶다며 조심스럽게 투자를 부탁한다.',
       choices: [
         { text: '투자한다', effects: { money: -3000, rel: { bro: 8 }, flags: ['bro_shop'] }, log: '{bro}[은/는] 간판에 {name}의 이름 한 글자를 넣겠다고 했다.', schedule: { id: 'life_any_sibling_shop', years: 3 } },
-        { text: '어렵다고 말한다', effects: { rel: { bro: -5 } }, log: '{bro}[은/는] "이해해"라고 했지만 한동안 연락이 뜸했다.' }
+        { text: '어렵다고 말한다', effects: { rel: { bro: -5 } }, log: '{bro}[은/는] "이해해"라고 했지만 목소리에는 서운함이 묻어났다.' }
       ]
     },
     {
@@ -1899,7 +1901,7 @@
     },
     {
       id: 'life_any_siblings_reunion', age: [30, 90], cooldown: 7,
-      text: '{siblings}[과/와] 오랜만에 한자리에 모였다. 다들 흰머리가 늘었다.',
+      text: '{siblings}[과/와] 한자리에 모였다. 다들 흰머리가 늘었다.',
       effects: { happy: 6, rel: { siblings: 6 } },
       log: '{house} 시절 이불 쟁탈전 이야기에 {siblingsAll} 다 눈물이 나도록 웃었다.'
     }

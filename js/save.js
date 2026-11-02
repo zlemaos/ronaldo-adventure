@@ -77,6 +77,31 @@
     s.edu = s.edu || { stage: 'none', degree: 'none', grades: 50 };
     s.ap = s.ap == null ? 3 : s.ap;
     s.jail = s.jail || 0;
+    // Older saves did not identify the borrower. Never assign that debt to today's friend.
+    if (s.flags.lent_friend && !s.friendLoan && !s.friendLoans) {
+      s.friendLoan = { personId: null, amount: 2000, legacy: true };
+      delete s.flags.lent_friend;
+      s.queue = (s.queue || []).filter(function (id) { return id !== 'life_ya_friend_loan_back'; });
+      s.pending = (s.pending || []).filter(function (p) { return p.id !== 'life_ya_friend_loan_back'; });
+    }
+    // Pre-fix debt values were nominal effect units, not balance currency.
+    var wage = RA.data.countries[s.country].wage;
+    if (s.friendLoan) {
+      (s.friendLoans = s.friendLoans || []).push(s.friendLoan);
+      delete s.friendLoan;
+    }
+    (s.friendLoans || []).forEach(function (loan) {
+      if (loan.amountUnit !== 'balance') {
+        loan.amount = -Math.round(-loan.amount * wage);
+        loan.amountUnit = 'balance';
+      }
+    });
+    (s.people || []).forEach(function (p) {
+      if (p.unpaidDebt && p.unpaidDebtUnit !== 'balance') {
+        p.unpaidDebt = -Math.round(-p.unpaidDebt * wage);
+        p.unpaidDebtUnit = 'balance';
+      }
+    });
     return s;
   }
 

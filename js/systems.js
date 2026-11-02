@@ -105,12 +105,48 @@
     var g = E.chance(s, 0.6) ? 'm' : 'f';
     var p = E.addPerson(s, { role: 'friend', name: E.freshName(s, g), gender: g, age: Math.max(1, s.age + E.rint(s, -2, 2)), rel: E.rint(s, 55, 75) });
     s.bestFriend = p.id;
+    p.lastContactAt = s.age;
     return dn(s, p) + '와(과) 단짝이 됐다.';
   };
   FX.loseFriend = function (s) {
     var p = E.person(s, 'friend'); if (!p) return null;
+    p.estrangedAt = s.age;
+    p.estrangedReason = '연락 단절 또는 갈등';
     p.role = 'oldfriend'; p.rel = Math.min(p.rel, 25); s.bestFriend = null;
     return dn(s, p) + '와(과) 멀어졌다.';
+  };
+  FX.recordFriendLoan = function (s) {
+    var p = E.person(s, 'friend');
+    if (p) (s.friendLoans = s.friendLoans || []).push({ personId: p.id, age: s.age, amount: -Math.round(-2000 * W(s)), amountUnit: 'balance' });
+  };
+  function takeFriendLoans(s, p) {
+    var amount = 0;
+    s.friendLoans = (s.friendLoans || []).filter(function (loan) {
+      if (!p || loan.personId !== p.id) return true;
+      amount += loan.amount; return false;
+    });
+    return amount;
+  }
+  FX.repayFriendLoan = function (s) {
+    s.money += Math.round(takeFriendLoans(s, E.person(s, 'friend')) * 1.3);
+  };
+  FX.forgetFriendLoan = function (s) { takeFriendLoans(s, E.person(s, 'friend')); };
+  FX.acceptFriendReturn = function (s) {
+    var p = s.people.filter(function (p) { return p.alive && p.role === 'oldfriend' && p.estrangedAt != null; })[0];
+    if (!p) return;
+    if (p.unpaidDebt) { s.money += p.unpaidDebt; p.unpaidDebt = 0; }
+    p.role = 'friend'; p.rel = 40; delete p.estrangedAt;
+    p.lastContactAt = s.age; s.bestFriend = p.id;
+    return dn(s, p) + '에게 다시 기회를 주기로 했다.';
+  };
+  FX.friendDebtLost = function (s) {
+    var p = E.person(s, 'friend');
+    if (!p) return null;
+    var msg = FX.loseFriend(s);
+    p.estrangedReason = '갚지 않은 빚';
+    p.unpaidDebt = (p.unpaidDebt || 0) + takeFriendLoans(s, p);
+    p.unpaidDebtUnit = 'balance';
+    return msg;
   };
   FX.newPartner = function (s) {
     if (E.person(s, 'spouse') || E.person(s, 'partner')) return null;

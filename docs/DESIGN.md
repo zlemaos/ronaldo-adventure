@@ -68,6 +68,22 @@ Failbetter Games' StoryNexus/"storylet" design diaries, Choice of Games "End Gam
 
 ## 2b. Narrative-consistency rules (review round 1)
 
+- **Football continuity (round 6).** Academy, youth and pro players cannot receive generic
+  career-changing storylets or apply for unrelated jobs until they leave football.
+  `careerStoryOk` checks career assignments and job-changing effects in all outcome branches.
+  At 19–20 they receive a football-specific crossroads instead.
+- **Live preconditions.** Queued events recheck conditions and `when` before display, without
+  rechecking their already-consumed once/cooldown counters. A pro contract invalidates queued
+  youth-only counselling and release notices. Company-specific stories require a suitable employed
+  sector; students and employed young adults receive planning rather than first-job crossroads.
+- **Contact and returns.** Relationship interactions timestamp contact; friend-drift requires two
+  years without recorded contact. Estranged returns name the person and acknowledge the rupture,
+  offering refusal or reconciliation (including full repayment of recorded debt). Legacy loans with
+  no borrower identity remain recorded as unassigned, not attributed to the current friend.
+- **Estrangement (round 6).** Losing a friend clears the active friend and records the age and reason
+  on the person. Loan betrayal also records unpaid debt. Ordinary friend lookup rejects estranged
+  people even if an older save retains a stale bestFriend pointer.
+
 - **Person gating.** Before an event can fire, the engine collects every person it names: the tokens
   `{father} {mother} {bro} {sis1} {sis2} {spouse} {partner} {child} {friend} {coach} {siblings}`, plus the plain
   words 아버지/아빠 and 어머니/엄마. Words like 할아버지 or 시어머니 are removed first, and events about the hero's

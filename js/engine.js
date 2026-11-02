@@ -69,7 +69,7 @@
   }
   function person(s, key) {
     var ps = s.people, i;
-    if (key === 'friend') { for (i = 0; i < ps.length; i++) if (ps[i].id === s.bestFriend && ps[i].alive) return ps[i]; return null; }
+    if (key === 'friend') { for (i = 0; i < ps.length; i++) if (ps[i].id === s.bestFriend && ps[i].alive && ps[i].role === 'friend' && !ps[i].estrangedAt) return ps[i]; return null; }
     if (key === 'child') { for (i = 0; i < ps.length; i++) if (ps[i].role === 'child' && ps[i].alive) return ps[i]; return null; }
     if (key === 'bro' || key === 'sis1' || key === 'sis2') { for (i = 0; i < ps.length; i++) if (ps[i].key === key) return ps[i]; return null; }
     if (key === 'father' || key === 'mother') { for (i = 0; i < ps.length; i++) if (ps[i].role === key) return ps[i]; return null; }
@@ -277,7 +277,11 @@
       var m = Math.round(eff.money * wage(s));
       s.money += m; out.push({ k: 'money', d: m });
     }
-    if (eff.rel) Object.keys(eff.rel).forEach(function (r) { changeRel(s, r, eff.rel[r]); out.push({ k: 'rel', who: r, d: eff.rel[r] }); });
+    if (eff.rel) Object.keys(eff.rel).forEach(function (r) {
+      changeRel(s, r, eff.rel[r]);
+      peopleByRel(s, r).forEach(function (p) { p.lastContactAt = s.age; });
+      out.push({ k: 'rel', who: r, d: eff.rel[r] });
+    });
     (eff.flags || []).forEach(function (f) { s.flags[f] = s.age || 1; });
     (eff.unflags || []).forEach(function (f) { delete s.flags[f]; });
     var fx = eff.fx ? (Array.isArray(eff.fx) ? eff.fx : [eff.fx]) : [];
@@ -419,6 +423,7 @@
 
   E.eventMatches = function (s, ev) {
     if (!s.alive) return false;
+    if (!E.careerStoryOk(s, ev)) return false;
     if (ev.cond && ev.cond.jailed && !(s.jail > 0)) return false;
     var age = ev.age || [1, 120];
     if (s.age < age[0] || s.age > age[1]) return false;
@@ -432,6 +437,33 @@
     if (!E.condMatches(s, ev.cond)) return false;
     if (!E.personsOk(s, ev)) return false;
     if (ev.when && !ev.when(s)) return false;
+    return true;
+  };
+
+  E.activeFootball = function (s) { return ['academy', 'youth', 'pro'].indexOf(s.fb.stage) >= 0; };
+  // Career transitions are checked across every branch, not only the visible default outcome.
+  E.careerStoryOk = function (s, ev) {
+    var companyEvents = ['path_job_offer', 'path_startup_itch', 'path_abroad_post', 'path_union',
+      'path_promotion_exam', 'life_ya_burnout', 'life_ya_promotion_party', 'life_mid_layoff',
+      'rl_job_offer', 'rl_quit_job_dream', 'rl_office_gossip', 'rl_overtime',
+      'mis_bribe_envelope', 'mis_company_card', 'soc_office_cold'];
+    if (companyEvents.indexOf(ev.id) >= 0) {
+      var k = s.job && careerById(s.job.id);
+      if (!k || ['business', 'finance', 'tech', 'trade', 'government', 'media'].indexOf(k.sector) < 0 ||
+          ['entrepreneur', 'restaurant_owner', 'street_vendor'].indexOf(k.id) >= 0) return false;
+    }
+    var changes = false;
+    function visit(node) {
+      if (!node) return;
+      if (node.career && node.career !== 'footballer') changes = true;
+      if (node.effects && (node.effects.fx || []).some(function (fx) {
+        return ['quickJob', 'quitJob', 'enlist'].indexOf(fx) >= 0;
+      })) changes = true;
+      visit(node.success); visit(node.fail);
+    }
+    visit(ev); (ev.choices || []).forEach(visit);
+    if (E.activeFootball(s) && (changes || ['path_19', 'path_16', 'path_abroad_post', 'path_union', 'path_promotion_exam'].indexOf(ev.id) >= 0 ||
+        (ev.cond && ev.cond.career === 'any'))) return false;
     return true;
   };
 
@@ -496,7 +528,8 @@
   E.currentEvent = function (s) {
     if (!s.queue.length) return null;
     var ev = E.eventIndex()[s.queue[0]];
-    if (!ev || (s.jail > 0 && !E.jailOk(ev)) || (!ev.manual && !E.personsOk(s, ev))) { s.queue.shift(); return E.currentEvent(s); }
+    if (!ev || !E.careerStoryOk(s, ev) || (s.jail > 0 && !E.jailOk(ev)) ||
+        (!ev.manual && (!E.personsOk(s, ev) || !E.condMatches(s, ev.cond) || (ev.when && !ev.when(s))))) { s.queue.shift(); return E.currentEvent(s); }
     var text = E.eventText(s, ev);
     var cat = E.eventCategory(ev);
     return {
@@ -774,6 +807,7 @@
   // Requirement check; returns list of unmet reasons (Korean)
   E.jobMissing = function (s, k) {
     var r = k.req || {}, miss = [];
+    if (E.activeFootball(s) && k.id !== 'footballer') miss.push('축구 진로를 먼저 마무리해야 함');
     if (s.age < r.minAge) miss.push(r.minAge + '세 이상');
     if (s.age > r.maxAge) miss.push(r.maxAge + '세 이하');
     if (r.degree && degreeRank(s.edu.degree) < degreeRank(r.degree)) miss.push(C.DEGREE_LABELS[r.degree] + ' 이상');

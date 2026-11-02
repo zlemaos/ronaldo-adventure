@@ -398,7 +398,7 @@
       choices: [
         { text: '선뜻 빌려준다', check: { odds: 0.55 },
           success: { effects: { rel: { friend: 8 }, social: 1 }, log: '석 달 뒤 {friend}[이/가] 이자까지 얹어 갚았다.' },
-          fail: { effects: { money: -2000, rel: { friend: -10 }, happy: -4 }, log: '연락이 점점 뜸해졌다. 돈도 우정도 잃었다.' } },
+          fail: { effects: { money: -2000, rel: { friend: -10 }, happy: -4, fx: ['recordFriendLoan', 'friendDebtLost'] }, log: '연락이 점점 뜸해졌다. 돈도 우정도 잃었다.' } },
         { text: '갚지 않아도 될 만큼만 준다', effects: { money: -300, rel: { friend: 4 }, social: 1 }, log: '"이건 선물이야." 부담 없는 액수였다.' },
         { text: '정중히 거절한다', effects: { rel: { friend: -4 } }, log: '{friend}[은/는] 알겠다고 했지만 서운해 보였다.' }
       ] },
@@ -742,7 +742,7 @@
         { text: '노인 대학에 등록한다', effects: { smarts: 2, social: 2, money: -100 }, log: '스마트폰 사진 찍는 법을 배웠다.' }
       ] },
     { id: 'rl_old_reunion', age: [60, 95], decision: true, cooldown: 4,
-      text: '수십 년 만에 동창회 연락이 왔다.',
+      text: '학창 시절 반 친구들이 모이는 동창회 초대장이 왔다.',
       choices: [
         { text: '나간다', effects: { happy: 4, social: 2, money: -100 }, log: '다들 늙었지만 웃음소리는 그대로였다.' },
         { text: '은근히 자랑하러 간다', risky: true, check: { stat: 'fame', diff: 40 },

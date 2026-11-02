@@ -54,7 +54,7 @@
       'quitFootball', 'retireFootball', 'injury', 'seriousInjury', 'transferAbroad',
       'nationalCallup', 'heartProcedure', 'heartIgnore',
       'fatherSeekHelp', 'fatherRelapse', 'fatherRecover',
-      'newFriend', 'loseFriend', 'newPartner', 'breakup', 'marry', 'divorce', 'haveChild',
+      'newFriend', 'loseFriend', 'recordFriendLoan', 'repayFriendLoan', 'forgetFriendLoan', 'friendDebtLost', 'acceptFriendReturn', 'newPartner', 'breakup', 'marry', 'divorce', 'haveChild',
       'jail', 'fired', 'promote', 'demote', 'quitJob', 'getSick', 'cure', 'adoptPet',
       'buyHouse', 'buyCar', 'lottery', 'scam', 'moveAbroad', 'becomeMonk', 'leaveMonastery',
       // round 5: failure routes and life decisions

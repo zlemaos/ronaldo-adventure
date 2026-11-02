@@ -9,9 +9,173 @@ const assert = require('node:assert');
 const { load, autoplay } = require('../tools/sim-helpers.js');
 const RA = load();
 const E = RA.Engine, T = RA.Text;
-const LIVES = Number(process.env.NARRATIVE_LIVES || 100);
+const LIVES = Number(process.env.BOT_LIVES || process.env.NARRATIVE_LIVES || 100);
 const COUNTRIES = ['pt', 'kr', 'jp', 'cn', 'us', 'br', 'ar', 'za', 'in'];
 const POLICIES = [null, (s, acts) => acts.find(a => a.id === 'football') || null, (s, acts) => acts.find(a => a.id === 'family') || null];
+const currentEvent = E.currentEvent;
+E.currentEvent = function (s) {
+  const ev = currentEvent(s);
+  if (!ev) return ev;
+  if (['academy', 'youth', 'pro'].includes(s.fb.stage)) {
+    assert.ok(!['path_16', 'path_19', 'path_restaurant', 'path_job_offer', 'path_startup_itch',
+      'path_union', 'path_abroad_post', 'rl_start_business', 'rl_volunteer_service'].includes(ev.id), ev.id);
+    const raw = E.eventIndex()[ev.id];
+    for (const ch of raw.choices || []) assert.ok(!ch.career || ch.career === 'footballer', ev.id);
+  }
+  const friend = E.person(s, 'friend');
+  if (friend) assert.ok(friend.role === 'friend' && !friend.estrangedAt && !friend.unpaidDebt);
+  if (ev.id === 'life_ya_friend_wedding') assert.ok(friend, 'wedding requires an active friend');
+  return ev;
+};
+
+test('football crossroads preserve the player path and betrayal removes the active friend', () => {
+  const s = E.newGame({ country: 'pt', seed: 'coherence-r6' });
+  s.age = 20;
+  for (const stage of ['academy', 'youth', 'pro']) {
+    s.fb.stage = stage;
+    assert.ok(!E.eventMatches(s, E.eventIndex().path_19));
+    assert.ok(E.eventMatches(s, E.eventIndex().path_19_football));
+    assert.ok(!E.eventMatches(s, E.eventIndex().path_restaurant));
+    assert.ok(E.jobList(s).every(j => !j.ok));
+  }
+  E.FX.newFriend(s);
+  const p = E.person(s, 'friend');
+  E.applyEffects(s, E.eventIndex().life_ya_friend_loan.choices[0].effects);
+  E.FX.friendDebtLost(s);
+  assert.strictEqual(E.person(s, 'friend'), null);
+  assert.strictEqual(p.unpaidDebt, 1000);
+  assert.ok(!E.eventMatches(s, E.eventIndex().life_ya_friend_wedding));
+  s.bestFriend = p.id; // stale save pointer must not resurrect an estranged person
+  assert.strictEqual(E.person(s, 'friend'), null);
+});
+
+test('queued youth choices expire after signing; contact, debt and reconciliation keep identity', () => {
+  const s = E.newGame({country: 'pt', seed: 'memory-r6'});
+  s.age = 19; s.fb.stage = 'pro'; s.queue = ['path_16_football', 'fb_released'];
+  assert.strictEqual(E.currentEvent(s), null);
+  E.FX.newFriend(s);
+  const p = E.person(s, 'friend');
+  assert.ok(!E.eventMatches(s, E.eventIndex().life_ya_friend_drift));
+  s.age = 26; p.lastContactAt = 23;
+  assert.ok(E.eventMatches(s, E.eventIndex().life_ya_friend_drift));
+  E.applyEffects(s, E.eventIndex().life_ya_friend_loan.choices[0].effects);
+  E.FX.friendDebtLost(s);
+  assert.ok(!E.eventMatches(s, E.eventIndex().path_friend_return));
+  s.age += 2;
+  assert.ok(E.eventMatches(s, E.eventIndex().path_friend_return));
+  const money = s.money;
+  E.FX.acceptFriendReturn(s);
+  assert.strictEqual(E.person(s, 'friend').id, p.id);
+  assert.strictEqual(s.money, money + 1000);
+  const legacy = E.newGame({seed: 'legacy-debt'});
+  legacy.flags.lent_friend = 20;
+  const restored = RA.Save.deserialize(RA.Save.serialize(legacy));
+  assert.strictEqual(restored.friendLoans[0].personId, null);
+  assert.strictEqual(restored.friendLoans[0].amount, 1000);
+  assert.ok(!restored.flags.lent_friend);
+});
+
+test('country-adjusted loan principal survives default, repayment and legacy loading', () => {
+  for (const [country, principal] of [['pt', 1000], ['in', 300]]) {
+    const s = E.newGame({country, seed: 'principal-' + country});
+    s.age = 24; s.money = 10000;
+    E.FX.newFriend(s);
+    const p = E.person(s, 'friend');
+    s.queue = ['life_ya_friend_loan'];
+    E.choose(s, 0);
+    assert.strictEqual(s.money, 10000 - principal);
+    assert.strictEqual(s.friendLoans[0].amount, principal);
+    const lent = RA.Save.serialize(s);
+    E.applyEffects(s, E.eventIndex().life_ya_friend_loan_back.choices[0].fail.effects);
+    assert.strictEqual(p.unpaidDebt, principal);
+    s.age += 3; s.queue = ['path_friend_return'];
+    E.choose(s, 0);
+    assert.strictEqual(s.money, 10000);
+    E.FX.acceptFriendReturn(s);
+    assert.strictEqual(s.money, 10000, 'no double collection');
+    const paid = RA.Save.deserialize(lent);
+    paid.country = 'us'; // moving must not change the amount owed
+    E.applyEffects(paid, E.eventIndex().life_ya_friend_loan_back.choices[0].success.effects);
+    assert.strictEqual(paid.money, 10000 + Math.round(principal * 0.3));
+    const old = RA.Save.deserialize(lent);
+    old.country = country;
+    delete old.friendLoans;
+    old.friendLoan = {personId: p.id, amount: 2000};
+    const migrated = RA.Save.deserialize(RA.Save.serialize(old));
+    assert.strictEqual(migrated.friendLoans[0].amount, principal);
+    const legacyPaid = RA.Save.deserialize(RA.Save.serialize(migrated));
+    E.applyEffects(legacyPaid, E.eventIndex().life_ya_friend_loan_back.choices[0].success.effects);
+    assert.strictEqual(legacyPaid.money, 10000 + Math.round(principal * 0.3));
+    const debtor = migrated.people.find(x => x.id === p.id);
+    migrated.friendLoans = [];
+    debtor.role = 'oldfriend'; debtor.estrangedAt = 24; debtor.unpaidDebt = 2000;
+    const twice = RA.Save.deserialize(RA.Save.serialize(migrated));
+    assert.strictEqual(twice.people.find(x => x.id === p.id).unpaidDebt, principal);
+    E.FX.acceptFriendReturn(twice);
+    assert.strictEqual(twice.money, 10000);
+    const anonymous = E.newGame({country, seed: 'anonymous-' + country});
+    anonymous.flags.lent_friend = 20;
+    const loaded = RA.Save.deserialize(RA.Save.serialize(anonymous));
+    assert.strictEqual(loaded.friendLoans[0].amount, principal);
+    assert.strictEqual(loaded.friendLoans[0].personId, null);
+    const instant = E.newGame({country, seed: 'instant-' + country});
+    instant.age = 24; instant.money = 10000;
+    E.FX.newFriend(instant);
+    E.applyEffects(instant, E.eventIndex().rl_lend_friend.choices[0].fail.effects);
+    E.FX.acceptFriendReturn(instant);
+    assert.strictEqual(instant.money, 10000);
+  }
+});
+
+test('overlapping loans retain every principal and settle only the selected borrower', () => {
+  const idx = E.eventIndex();
+  for (const differentBorrower of [false, true]) {
+    const s = E.newGame({country: 'pt', seed: 'overlap-' + differentBorrower});
+    s.age = 24; s.money = 10000;
+    E.FX.newFriend(s);
+    const first = E.person(s, 'friend');
+    E.applyEffects(s, idx.life_ya_friend_loan.choices[0].effects);
+    if (differentBorrower) E.FX.newFriend(s);
+    const second = E.person(s, 'friend');
+    E.applyEffects(s, idx.rl_lend_friend.choices[0].fail.effects);
+    assert.strictEqual(s.money, 8000);
+    s.age += 3;
+    E.FX.acceptFriendReturn(s);
+    assert.strictEqual(s.money, differentBorrower ? 9000 : 10000);
+    E.FX.acceptFriendReturn(s);
+    assert.strictEqual(s.money, differentBorrower ? 9000 : 10000);
+    const loaded = RA.Save.deserialize(RA.Save.serialize(s));
+    if (differentBorrower) {
+      loaded.bestFriend = first.id;
+      assert.ok(E.eventMatches(loaded, idx.life_ya_friend_loan_back));
+      E.applyEffects(loaded, idx.life_ya_friend_loan_back.choices[0].success.effects);
+      assert.strictEqual(loaded.money, 10300);
+      E.FX.repayFriendLoan(loaded);
+      assert.strictEqual(loaded.money, 10300);
+    }
+    assert.strictEqual(second.unpaidDebt, 0);
+  }
+  const s = E.newGame({country: 'pt', seed: 'multiple-pending'});
+  s.age = 24; s.money = 10000;
+  E.FX.newFriend(s);
+  const first = E.person(s, 'friend');
+  E.applyEffects(s, idx.life_ya_friend_loan.choices[0].effects);
+  E.applyEffects(s, idx.life_ya_friend_loan.choices[0].effects);
+  E.FX.newFriend(s);
+  const second = E.person(s, 'friend');
+  E.applyEffects(s, idx.life_ya_friend_loan.choices[0].effects);
+  assert.strictEqual(s.money, 7000);
+  E.FX.forgetFriendLoan(s); // explicitly write off only the second borrower's loan
+  s.bestFriend = first.id;
+  E.FX.friendDebtLost(s);
+  assert.strictEqual(first.unpaidDebt, 2000);
+  s.age += 3;
+  E.FX.acceptFriendReturn(s);
+  assert.strictEqual(s.money, 9000);
+  s.bestFriend = second.id;
+  E.FX.repayFriendLoan(s);
+  assert.strictEqual(s.money, 9000, 'written-off principal cannot be collected');
+});
 
 function namesOf(s, p) {
   const out = new Set([p.name, E.displayName(s, p)]);

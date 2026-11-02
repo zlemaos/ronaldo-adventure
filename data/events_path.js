@@ -4,6 +4,14 @@
   var RA = G.RA = G.RA || {}; RA.data = RA.data || {};
   var EV = RA.data.events = RA.data.events || [];
   function E(ev) { EV.push(ev); }
+  E({ id: 'path_friend_return', age: [18, 90], cooldown: 8, decision: true,
+    text: '연락을 끊었던 친구가 지난 일을 사과하고 다시 만나고 싶다고 한다.',
+    when: function (s) { return !RA.Engine.person(s, 'friend') && s.people.some(function (p) { return p.alive && p.role === 'oldfriend' && p.estrangedAt != null && s.age - p.estrangedAt >= 2; }); },
+    textFn: function (s) { var p = s.people.filter(function (p) { return p.alive && p.role === 'oldfriend' && p.estrangedAt != null; })[0]; return p.name + '에게 연락이 왔다. ' + (p.unpaidDebt ? '빌린 돈을 갚지 않아 멀어진 사이였다. 이제 전액을 갚고 사과하고 싶다고 한다.' : '갈등 끝에 연락을 끊었던 친구다. 지난 일을 사과하고 다시 만나고 싶다고 한다.'); },
+    choices: [
+      { text: '사과를 받아들이고 천천히 다시 알아간다', effects: { fx: ['acceptFriendReturn'] }, log: '지난 일을 없던 일로 하지는 않기로 했다.' },
+      { text: '다시 연락하지 않겠다고 말한다', effects: { grit: 1 }, log: '거리를 유지하기로 했다.' }
+    ] });
   // two events per unusual career: (id, ages, text, choices)
   function C2(career, list) { list.forEach(function (ev, i) { ev.id = 'path_' + career + '_' + (i + 1); ev.cond = Object.assign({ career: [career] }, ev.cond || {}); ev.cooldown = ev.cooldown || 4; EV.push(ev); }); }
 
@@ -33,6 +41,7 @@
       { text: '축구를 그만두고 공부한다', effects: { smarts: 4, fx: ['quitFootball'], flags: ['path_study'] }, log: '어려운 결정이었다. 그래도 내가 고른 길이다.' }
     ] });
   E({ id: 'path_19', age: [19, 20], once: true, priority: true,
+    cond: { career: 'none', edu: ['none'] },
     text: '스무 살 문턱. 인생의 첫 큰 결정을 내려야 한다.',
     choices: [
       { text: '💼 바로 취업한다', effects: { grit: 2, fx: ['quickJob'] }, log: '첫 출근길, 넥타이가 어색했다.' },
@@ -41,6 +50,21 @@
         fail: { effects: { money: -4000, happy: -5 }, log: '석 달 만에 문을 닫았다. 빚과 경험이 남았다.' } },
       { text: '🎖️ 군에 입대한다', effects: { fx: ['enlist'] }, log: '머리를 짧게 깎고 거울을 봤다. 낯선 얼굴이었다.' },
       { text: '✈️ 해외로 떠난다', req: { money: 3000 }, effects: { money: -3000, smarts: 2, fx: ['moveAbroad'] }, log: '공항에서 가족들이 손을 흔들었다. 새로운 세계가 기다린다.' }
+    ] });
+  E({ id: 'path_19_football', age: [19, 20], once: true, priority: true,
+    cond: { fb: ['academy', 'youth', 'pro'] },
+    text: '스무 살을 앞두고 감독과 다음 시즌을 의논했다. 지금은 축구 안에서 내 자리를 찾을 때다.',
+    choices: [
+      { text: '주전 경쟁에 집중한다', effects: { football: 3, grit: 2 }, log: '출전 기회는 보장되지 않는다. 훈련으로 보여 주기로 했다.' },
+      { text: '학업을 병행하며 준비한다', effects: { smarts: 3, football: 1, health: -1 }, log: '훈련이 끝나면 책을 폈다. 축구 이후의 삶도 천천히 준비한다.' },
+      { text: '감독과 출전 계획을 상담한다', effects: { football: 1, social: 2, grit: 2 }, log: '당장 이적을 약속받지는 못했다. 먼저 부족한 부분부터 보완하기로 했다.' }
+    ] });
+  E({ id: 'path_19_plans', age: [19, 20], once: true, priority: true,
+    when: function (s) { return !RA.Engine.activeFootball(s) && (!!s.job || s.edu.stage !== 'none'); },
+    text: '스무 살을 앞두고 지금 하는 일과 앞으로의 계획을 돌아봤다.',
+    choices: [
+      { text: '지금의 길에서 실력을 쌓는다', effects: { smarts: 2, grit: 2 }, log: '당장 진로를 바꾸기보다 지금의 경험을 쌓기로 했다.' },
+      { text: '미래를 위해 조금씩 저축한다', effects: { grit: 2, happy: 1 }, log: '작은 목표부터 세웠다. 서두르지 않아도 된다.' }
     ] });
   E({ id: 'path_19_family_trade', age: [19, 30], once: true, weight: 20,
     cond: { career: 'none', rel: { father: 'alive' }, flags: ['!heir'] },
@@ -129,7 +153,7 @@
       { text: '지금 자리를 지킨다', effects: { grit: 2, rep: 2 }, log: '상사가 소식을 듣고 처음으로 고맙다고 했다.' }
     ] });
   E({ id: 'path_startup_itch', age: [28, 55], cooldown: 7, decision: true, cond: { career: 'any' },
-    text: '퇴근길에 문득 생각한다. "평생 남의 일만 할 거야?"',
+    text: '일을 마치고 문득 생각한다. "내 사업을 시작해 보면 어떨까?"',
     choices: [
       { text: '사표 내고 창업한다', risky: true, career: 'entrepreneur', effects: { money: -5000, happy: 3, grit: 2 }, log: '작은 사무실 열쇠를 받았다. 두렵고 설렌다.' },
       { text: '주말에 부업으로 시작해 본다', effects: { money: 500, health: -1, grit: 1 }, log: '주말이 사라졌지만 통장에 작은 숫자가 늘었다.' },
