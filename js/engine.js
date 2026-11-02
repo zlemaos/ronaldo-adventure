@@ -999,7 +999,8 @@
     if (s.flags.car_owner) cost += 1200;
     cost = Math.round(cost * wage(s));
     // lifestyle grows with income (rent, food, family, taxes not withheld)
-    cost += Math.round((s.y.income || 0) * 0.5);
+    // in debt, people tighten their belts and repay part of it from their income
+    cost += Math.round((s.y.income || 0) * (s.money < 0 ? 0.2 : 0.5));
     // the rich spend more
     if (s.money > cost * 50) cost += Math.round(s.money * 0.01);
     s.money -= cost;

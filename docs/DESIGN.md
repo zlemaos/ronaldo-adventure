@@ -200,6 +200,75 @@ Failbetter Games' StoryNexus/"storylet" design diaries, Choice of Games "End Gam
   - event categories, the 공감 stat and triumph cues;
   - a full life played end to end.
 
+## 2e. Round 5: decisions, the 악동 route, gambling, failure endings, careers
+
+Owner's ask: mischievous choices, routes that can fail, 오락실 뽑기 → 도박 중독 → 겜블러, and real career
+choices. The full schema for content writers is in `docs/SCHEMA-r5.md`.
+
+- 올해의 결정 (decision quota). Events marked `decision: true` form a pool. After the normal storylets run,
+  `selectEvents` tops up the year until it reaches `E.decisionTarget`: at least 1 a year at ages 5–12,
+  2–3 for teens, 1–2 for adults. `s.dec[age]` counts what the player actually chose. Auto-play stops at
+  every choice, as before. A "🧭 올해의 결정" badge marks them.
+- Traits (`s.traits`): 😈 악동, 🗣️ 평판 (starts at 50 and drifts back toward it), 🎲 도박, 🍺 음주, ⛓️ 전과
+  (each jail sentence adds 1). They show as a strip under the stats and as chips on choices. Drinking at 50+
+  drains health every year. Gambling at 45+ eats 8–15% of savings every year. A habit of 20+ no longer decays.
+  Both raise mortality.
+- Risk is visible. Choices show "⚠️ 위험한 선택" when the author flags them, when they bet, when they use a
+  failure FX, when they raise a bad trait, or when they schedule a bad follow-up (`E.isRisky`). Fixed-odds
+  checks show "성공 35%".
+- Gambling (`data/events_gamble.js`, 28 events). A `bet` has odds, a payout multiplier and a stake size
+  (tiny / small / medium / big / all). The choice shows "40% · 💰×2.5", the stake and the payout before the
+  player picks, and the result line appends the amount. The path runs from childhood claw machines, gacha
+  and ddakji, through teen toto, lottery, racetrack, casino and online betting, to debt, loan sharks,
+  losing a job, family intervention, treatment (`rehab`) and relapse. Addiction stages are 재미 삼아 → 1단계
+  습관 (20) → 2단계 중독 (45, unlocks 겜블러) → 3단계 심각 (75). Gambling events come more often as the
+  habit grows (`E.habitWeight`).
+- 악동 route (`data/events_mischief.js`, 59 events): pranks, lies, fights, shoplifting, skipping class,
+  forged signatures, street racing, scams. Risky options often pay off with money, fame, friends or fun, so
+  the route is a real choice and not just a trap.
+- Failure FX: `suspend` (정학), `expel` (퇴학), `holdBack` (유급), `dropOut` (자퇴), `careerEndingInjury`,
+  `deport`, `bankrupt`, `rehab`, `fbBan`, `quickJob`, `enlist`. Bankruptcy is not triggered by student
+  debt while studying, within 4 years after graduating, or while the hero has a job.
+- Endings (`data/endings.js`, 31 endings: 18 win and 13 fall). The first match in list order wins, from
+  `young_death` and `goat` down to `ordinary`, the catch-all. The summary shows an ending card. The 📖 엔딩
+  도감 (menu and summary) lists every ending, with a hint for the ones not yet seen. It is stored in
+  localStorage (`ronaldo-adventure.endings`) per browser.
+- Careers. There are 17 unusual careers in `data/careers_r5.js`: 겜블러, 야바위꾼, 밀수꾼, 사이비 교주, 점술가,
+  용병, 현상금 사냥꾼, 심마니, 스트리머, 먹방 크리에이터, 해적 방송 DJ, 노점상, 전당포, 골동품상, 기수, 스턴트 드라이버
+  and 대리기사. Each has 2+ events of its own. A row can be locked by a trait (`req.traits`) and show an
+  `unlockHint`.
+- Career discovery (`data/events_path.js`, 59 events):
+  - 진로 고민 milestones at 13–14, 16–17 (plus a football version) and 19–20;
+  - talent-discovery events;
+  - part-time job offers;
+  - adult career changes, including a dark offer;
+  - 가업 (the family trade).
+
+  A choice with `career: 'id'` starts that career straight away. The 🧭 진로 panel (menu and career tab)
+  shows the current path, the number of jobs open now, the open special paths (with "N세부터" when the hero
+  is too young) and the locked ones with their hints.
+- Real-life texture (`data/events_reallife.js`, 92 events): rent and moving, loans, insurance, health
+  check-ups, friendships and fallings-out, dating and breakups, inheritance, and military service
+  (`enlist`).
+- Save v5 (migration 4→5 adds traits, the decision counter, the gamble log and the ending; a past jail
+  sentence becomes 전과 1).
+
+Bots (`test/rascal.test.js`, 500 lives each across 9 countries):
+- The 악동 bot always takes the risky option, then a bet, then the lowest-odds option.
+- The 모범생 bot takes safe options and studies.
+
+The test checks:
+- no ending is above 60%;
+- each bot reaches 6+ endings;
+- the decision quota is met;
+- 겜블러 is unlocked and taken in some 악동 lives;
+- the 악동 bot has more prison and more failure endings than the 모범생 bot.
+
+Results are in section 7.
+
+Phone screenshots: `docs/screenshots/phone-r5-bet.png` (a bet with odds and chips), `phone-r5-bet-result.png`,
+`phone-r5-traits.png`, `phone-r5-paths.png` (진로 panel), `phone-r5-ending.png` and `phone-r5-hall.png` (엔딩 도감).
+
 ## 3. Architecture
 
 ```
@@ -475,7 +544,10 @@ add a test that loads a fabricated old save.
 
 - Storylets: **595** (round 3 added 9 공감 `soc_` events and 17 Portugal events) and 30 early-childhood milestones; earlier counts: (canon 28, football 37, shared life 203, country-specific 141 — kr 19, jp 17, cn 17,
   us 19, br 18, ar 17, za 17, in 17 — career-specific 161) + 6 engine system events.
-- Careers: **156** across 21 sectors (each ≥ 4 careers, each covered by events).
+- Round 5: **843** storylets in total, adding 59 악동 (`mis_`), 92 real-life (`rl_`), 28 gambling (`gam_`) and
+  59 진로 (`path_`) events. 158 events are decisions and 24 have bets.
+- Careers: **173** (156 + 17 unusual round-5 careers) across 21+ sectors (each ≥ 4 careers, each covered by events).
+- Endings: 31 (13 failure endings).
 - Achievements: 38; ribbons/titles: 20; activities: 27.
 
 ## 7. Simulation test output
@@ -488,26 +560,26 @@ finite, or any life throws. Latest output:
 
 | country | avgDeath | median | min | max | pro | natTeam | ballon | worldCup | topOfCareer | degree | married | kidsAvg | jailed | fatherSober | fatherDiedAtAvg | achievementsAvg | sectorsUsed |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| pt | 70.5 | 72 | 3 | 96 | 21.4% | 18.2% | 4.8% | 3.0% | 70.0% | 56.2% | 48.8% | 0.54 | 16.4% | 6.8% | 25.2 | 6.9 | 22 |
-| kr | 71.5 | 73 | 1 | 98 | 24.6% | 20.0% | 4.8% | 2.8% | 72.6% | 53.2% | 36.8% | 0.42 | 18.6% | 3.6% | 23.9 | 7.0 | 21 |
-| jp | 71.5 | 74 | 1 | 96 | 22.0% | 17.6% | 4.2% | 1.4% | 75.0% | 54.8% | 35.8% | 0.45 | 20.2% | 3.2% | 23.9 | 6.8 | 22 |
-| cn | 70.8 | 72 | 3 | 102 | 25.6% | 23.0% | 5.2% | 0.4% | 71.8% | 51.2% | 33.6% | 0.37 | 21.0% | 4.4% | 24.2 | 7.1 | 21 |
-| us | 71.1 | 72 | 12 | 99 | 21.2% | 17.8% | 4.6% | 2.2% | 72.2% | 55.6% | 35.6% | 0.38 | 18.2% | 3.0% | 24.1 | 6.8 | 22 |
-| br | 69.8 | 72 | 2 | 98 | 25.2% | 21.8% | 5.0% | 5.2% | 69.0% | 54.6% | 35.2% | 0.43 | 20.4% | 3.0% | 23.9 | 7.0 | 22 |
-| ar | 69.2 | 71 | 1 | 97 | 21.6% | 16.8% | 6.4% | 5.0% | 75.0% | 49.8% | 35.8% | 0.45 | 18.8% | 2.8% | 23.8 | 6.7 | 21 |
-| za | 68.9 | 70 | 4 | 99 | 23.6% | 19.6% | 5.6% | 0.6% | 70.6% | 54.0% | 33.6% | 0.35 | 19.4% | 3.2% | 23.9 | 6.7 | 21 |
-| in | 70.5 | 73 | 2 | 102 | 21.6% | 18.6% | 5.4% | 0.2% | 70.6% | 54.4% | 40.4% | 0.46 | 21.6% | 3.6% | 24.0 | 6.9 | 22 |
+| pt | 69.6 | 70 | 3 | 97 | 14.4% | 12.4% | 2.8% | 0.6% | 62.2% | 43.4% | 46.4% | 0.40 | 42.6% | 4.0% | 24.0 | 5.3 | 20 |
+| kr | 69.1 | 70 | 1 | 99 | 14.8% | 11.8% | 3.2% | 0.2% | 62.6% | 41.0% | 39.6% | 0.27 | 45.8% | 0.4% | 22.7 | 5.3 | 22 |
+| jp | 69.5 | 70 | 1 | 100 | 13.4% | 10.0% | 2.4% | 0.4% | 63.8% | 41.4% | 40.4% | 0.31 | 48.6% | 2.4% | 23.3 | 5.3 | 21 |
+| cn | 69.8 | 71 | 3 | 100 | 15.4% | 12.2% | 2.8% | 0.4% | 60.6% | 44.2% | 37.0% | 0.27 | 44.6% | 0.6% | 23.2 | 5.3 | 21 |
+| us | 68.2 | 69 | 6 | 99 | 13.6% | 10.4% | 1.6% | 0.6% | 59.4% | 40.2% | 39.6% | 0.27 | 47.0% | 0.4% | 22.9 | 5.2 | 19 |
+| br | 68.8 | 71 | 2 | 100 | 13.4% | 10.8% | 3.2% | 2.0% | 62.4% | 42.0% | 40.8% | 0.32 | 40.4% | 1.2% | 23.0 | 5.3 | 21 |
+| ar | 69.2 | 70 | 1 | 98 | 15.6% | 11.4% | 2.6% | 2.0% | 66.0% | 41.6% | 38.4% | 0.28 | 45.2% | 0.6% | 23.1 | 5.3 | 21 |
+| za | 68.5 | 70 | 4 | 95 | 16.4% | 12.2% | 2.2% | 0.0% | 63.0% | 40.8% | 36.4% | 0.26 | 44.0% | 0.4% | 22.9 | 5.3 | 21 |
+| in | 70.1 | 71 | 2 | 100 | 12.6% | 10.4% | 3.4% | 0.0% | 59.4% | 42.4% | 42.8% | 0.32 | 47.0% | 0.4% | 22.8 | 5.2 | 18 |
 
 Top career sectors by country:
-- pt: sports 23.4%, entertainment 8.0%, service 7.8%, trade 7.2%, parttime 7.0%, arts 6.0%
-- kr: sports 24.8%, trade 9.2%, entertainment 8.0%, parttime 7.0%, service 7.0%, arts 5.2%
-- jp: sports 24.4%, trade 10.4%, entertainment 7.4%, agri 7.0%, service 6.4%, parttime 5.6%
-- cn: sports 25.2%, trade 8.4%, parttime 7.8%, entertainment 7.6%, service 7.6%, arts 6.4%
-- us: sports 22.4%, entertainment 9.4%, service 9.2%, trade 8.4%, parttime 7.0%, agri 5.4%
-- br: sports 26.6%, trade 8.0%, service 7.6%, parttime 7.0%, transport 5.8%, entertainment 5.6%
-- ar: sports 22.2%, trade 10.0%, entertainment 7.2%, agri 6.8%, parttime 6.6%, arts 6.2%
-- za: sports 24.0%, parttime 7.4%, service 7.0%, entertainment 6.8%, trade 6.8%, arts 6.6%
-- in: sports 22.4%, service 8.2%, trade 8.0%, entertainment 7.4%, parttime 7.2%, transport 7.0%
+- pt: service 18.8%, business 17.8%, sports 13.4%, parttime 13.0%, entertainment 5.8%, trade 4.8%
+- kr: business 19.8%, service 16.4%, sports 12.8%, parttime 10.8%, entertainment 7.6%, agri 5.4%
+- jp: business 18.0%, service 17.0%, parttime 13.0%, sports 10.4%, trade 6.8%, entertainment 6.4%
+- cn: business 19.6%, sports 14.8%, service 14.6%, parttime 12.6%, entertainment 7.4%, agri 4.6%
+- us: business 18.6%, service 15.8%, parttime 13.8%, sports 12.6%, entertainment 7.6%, trade 6.4%
+- br: business 17.8%, service 15.2%, parttime 13.2%, sports 11.2%, entertainment 7.4%, agri 6.6%
+- ar: service 17.0%, business 16.0%, parttime 13.6%, sports 12.4%, entertainment 8.2%, agri 6.2%
+- za: business 18.8%, sports 14.2%, service 13.6%, parttime 13.2%, trade 6.2%, entertainment 6.0%
+- in: business 19.0%, parttime 15.8%, service 14.0%, sports 13.0%, entertainment 6.4%, trade 6.2%
 
 Reading: about a quarter of lives turn pro (higher for the football-focused archetype), roughly one in five
 pros wins a Ballon d'Or, and World Cups are realistic by country (Brazil/Argentina ≈ 4–5 %, India ≈ 0.4 %).
@@ -518,9 +590,31 @@ chance clamped (it fired in ~10 % of lives), debt spiral replaced by bankruptcy,
 income, stat soft cap (stats had saturated at ~95 by 40), top-rung promotion gate, Ballon d'Or and World
 Cup odds lowered, fraud-offer event made once-per-life.
 
+Round 5 changes these numbers. The random archetype now meets 1–3 decisions a year, and about half of them
+have a risky option, so it goes to prison in about 45 % of lives (20 % before). It also turns pro less often
+(13–16 %), because the 악동 and gambling routes pull it away from football. Business and service careers
+grew because of the new part-time and 진로 events. A deliberate player still controls the outcome; the two
+bots below show the range.
+
+Round 5 bots (`test/rascal.test.js`, 500 lives each, 9 countries):
+
+| bot | top endings | kinds | decisions/yr (5–12 / 13–19 / 20+) | jailed | bankrupt | fall endings | 겜블러 unlocked / taken |
+|---|---|---|---|---|---|---|---|
+| 악동 | fallen_genius 40.6 %, jailbird 38.4 %, legend 7 %, broke_gambler 4.8 %, kingpin 2.2 %, casino_king 2.2 % | 15 | 1.85 / 2.84 / 1.72 | 95 % | 42 % | 90 % | 47 / 25 |
+| 모범생 | top_career 34.6 %, local_legend 13.2 %, comeback 11.4 %, star 10.2 %, ordinary 7.6 %, tycoon 5 % | 19 | 1.83 / 2.92 / 1.79 | 2.6 % | 13 % | 16 % | 0 / 0 |
+
+Balance changes made from these runs:
+- the 겜블러 habit no longer decays above 20, and gambling events come more often as the habit grows;
+- `fallen_genius` was tightened, and the endings were reordered so no ending is above 60 %;
+- student debt has a grace period;
+- people with a job are not declared bankrupt;
+- people in debt cut lifestyle spending (20 % of income instead of 50 %). This alone cut 모범생 bankruptcies
+  from 22 % to 13 %. Most of the rest come right after retirement, when the pension no longer covers old
+  debt.
+
 ## 8. Verification
 
-- `npm test` → all tests pass (now including the narrative-consistency suite) (schema, volume, conditions, age-up, checks, careers/promotion, 8-country
+- `npm test` → all tests pass (66 tests, including the narrative-consistency suite and the round-5 bot suite) (schema, volume, conditions, age-up, checks, careers/promotion, 8-country
   family generation, particles, save round trip, v1 migration, deterministic replay, delayed events,
   generations, football route, 8 × 500-life simulation).
 - Headless Chromium (Playwright) at 1280×800 and 390×844 from `file://`: country select → age 1 → events
