@@ -544,7 +544,7 @@ add a test that loads a fabricated old save.
 
 - Storylets: **595** (round 3 added 9 공감 `soc_` events and 17 Portugal events) and 30 early-childhood milestones; earlier counts: (canon 28, football 37, shared life 203, country-specific 141 — kr 19, jp 17, cn 17,
   us 19, br 18, ar 17, za 17, in 17 — career-specific 161) + 6 engine system events.
-- Round 5: **843** storylets in total, adding 59 악동 (`mis_`), 92 real-life (`rl_`), 28 gambling (`gam_`) and
+- Round 5: **833** data storylets (843 with the engine system events), adding 59 악동 (`mis_`), 92 real-life (`rl_`), 28 gambling (`gam_`) and
   59 진로 (`path_`) events. 158 events are decisions and 24 have bets.
 - Careers: **173** (156 + 17 unusual round-5 careers) across 21+ sectors (each ≥ 4 careers, each covered by events).
 - Endings: 31 (13 failure endings).
