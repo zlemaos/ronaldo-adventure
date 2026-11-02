@@ -7,7 +7,7 @@ const assert = require('node:assert');
 const { load } = require('../tools/sim-helpers.js');
 const RA = load();
 const E = RA.Engine, T = RA.Text;
-const COUNTRIES = ['kr', 'jp', 'cn', 'us', 'br', 'ar', 'za', 'in'];
+const COUNTRIES = ['pt', 'kr', 'jp', 'cn', 'us', 'br', 'ar', 'za', 'in'];
 
 function templates() {
   const out = [];
@@ -18,6 +18,7 @@ function templates() {
     (ev.choices || []).forEach((ch, i) => { add(ev.id + '#' + i, ch.text); add(ev.id + '#' + i, ch.log); (ch.logVariants || []).forEach(t => add(ev.id + '#' + i + 'v', t)); if (ch.success) add(ev.id + '#' + i + 's', ch.success.log); if (ch.fail) add(ev.id + '#' + i + 'f', ch.fail.log); });
   }
   for (const k of RA.data.careers) { add('career ' + k.id, k.desc); k.ladder.forEach(l => add('career ' + k.id, l)); }
+  for (const m of RA.data.milestones) add('milestone ' + m.id, m.text);
   for (const [key, list] of Object.entries(E.ACTIVITY_LINES)) list.forEach(t => add('line ' + key, t));
   return out;
 }

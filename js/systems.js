@@ -40,6 +40,7 @@
     E.startJob(s, 'footballer', 0);
     s.fb.proSince = s.age;
     E.unlock(s, 'pro');
+    E.triumph(s, 'pro');
     return c.clubs.big + '와(과) 첫 프로 계약서에 사인했다!';
   };
   FX.quitFootball = function (s) {
@@ -69,10 +70,11 @@
     s.fb.club = s.fb.abroadClub; s.fb.clubs.push(s.fb.club);
     s.abroadCity = E.ABROAD_CITIES[s.fb.club] || '외국';
     E.addStat(s, 'fame', 10);
+    E.triumph(s, 'transfer');
     return '이적료 신기록! ' + s.fb.club + '(으)로 이적했다.';
   };
   FX.nationalCallup = function (s) {
-    if (!s.flags.nat_team) { s.flags.nat_team = s.age; E.unlock(s, 'national'); }
+    if (!s.flags.nat_team) { s.flags.nat_team = s.age; E.unlock(s, 'national'); E.triumph(s, 'national'); }
     return E.country(s).nationalTeam + ' 소집 명단에 이름이 올랐다!';
   };
   FX.heartProcedure = function (s) {
@@ -172,6 +174,7 @@
     s.job.level++; s.job.atLevel = 0; s.job.perf = 50;
     E.addStat(s, 'happy', 5);
     var msg = '승진했다! 이제 "' + E.ladderTitle(s, k, s.job.level) + '"이다.';
+    E.triumph(s, 'promote');
     if (auto === true) log(s, msg, 'good');
     if (s.job.level === k.ladder.length - 1) E.unlock(s, 'top_career');
     return auto === true ? null : msg;
@@ -221,6 +224,7 @@
     var prize = Math.round(E.rint(s, 200000, 3000000) * W(s));
     s.money += prize; E.addStat(s, 'happy', 15); s.flags.lottery_winner = s.age;
     E.unlock(s, 'lottery');
+    E.triumph(s, 'lottery');
     return '복권 1등 당첨! ' + T.money(prize, E.country(s)) + '을(를) 받았다.';
   };
   FX.scam = function (s) {
@@ -275,8 +279,60 @@
     ]
   };
 
+  // ---------------------------------------------------------------- early picks
+  E.PRENATAL = [
+    { id: 'music', label: '클래식 음악', icon: '🎼', desc: '배 속에서 들은 선율로 마음이 차분하고 똑똑하게.', effects: { smarts: 2, happy: 3 } },
+    { id: 'story', label: '동화 읽어 주기', icon: '📖', desc: '매일 밤 들은 이야기로 말귀가 일찍 트인다.', effects: { smarts: 4, social: 1 } },
+    { id: 'walk', label: '산책·운동', icon: '🚶', desc: '엄마와 함께 걸은 길이 튼튼한 몸이 된다.', effects: { health: 4, grit: 2 } },
+    { id: 'talk', label: '태담(말 걸기)', icon: '💬', desc: '가족 목소리에 익숙해 사람을 좋아하는 아이로.', effects: { social: 4, happy: 2 } },
+    { id: 'rest', label: '잘 먹고 푹 쉬기', icon: '🍲', desc: '든든하게 먹고 쉬어 건강하고 뽀얀 아기로.', effects: { health: 3, looks: 3 } }
+  ];
+  E.EDU_FOCUS = {
+    lang: { label: '언어', icon: '🗣️', desc: '그림책과 말놀이로 어휘력과 지능이 자란다.', effects: { smarts: 3 },
+      lines: ['그림책을 함께 읽었다.', '처음으로 두 단어를 이어 말했다.', '동요 가사를 통째로 외웠다.', '간판 글자를 손가락으로 짚으며 읽는다.', '"왜?"를 하루에 백 번 묻는다.', '자기 이름을 삐뚤빼뚤 썼다.', '그림책 속 글자를 혼자 읽어 냈다.'] },
+    music: { label: '음악', icon: '🎵', desc: '노래와 리듬으로 감정을 표현하고 말 감각이 자란다.', effects: { happy: 3, smarts: 1 },
+      lines: ['냄비 뚜껑을 두드리며 박자를 맞췄다.', '자장가를 따라 흥얼거렸다.', '실로폰으로 첫 곡을 쳤다.', '노래하며 춤추다 넘어져도 웃었다.', '동네 합창 교실에 갔다.', '기쁠 땐 신나는 노래, 슬플 땐 느린 노래를 고른다.', '가족 앞에서 작은 공연을 했다.'] },
+    play: { label: '소꿉놀이', icon: '🧸', desc: '역할 놀이로 친구 마음을 읽는 공감·사교성이 자란다.', effects: { social: 3 },
+      lines: ['인형에게 밥을 먹여 줬다.', '가게 놀이에서 손님 역할을 맡았다.', '우는 친구에게 장난감을 건넸다.', '병원 놀이에서 의사가 됐다.', '놀이터에서 처음 보는 아이와 금세 친해졌다.', '싸운 친구와 먼저 화해했다.', '소꿉놀이 규칙을 친구들과 함께 정했다.'] },
+    sports: { label: '스포츠', icon: '⚽', desc: '뛰고 구르며 체력이 자라고 공과 친해진다.', effects: { health: 3, football: 1 },
+      lines: ['마당을 열 바퀴 뛰었다.', '공을 따라 아장아장 달렸다.', '세발자전거를 탔다.', '줄넘기를 처음 넘었다.', '골목 축구에서 첫 골을 넣었다.', '수영 교실에서 물에 떴다.', '달리기 시합에서 1등을 했다.'] }
+  };
+
+  function previewOf(effects) { return effects; }
+  var PRENATAL_EVENT = {
+    id: 'sys_prenatal', manual: true, pick: true, scene: 'home', pic: 'prenatal',
+    text: '{mother}[이/가] {name}[을/를] 품은 지 일곱 달째. 어떤 태교를 할까요?',
+    choicesFn: function () {
+      return E.PRENATAL.map(function (o) {
+        return { text: o.icon + ' ' + o.label, desc: o.desc, preview: previewOf(o.effects), effects: o.effects,
+          run: function (s) { s.prenatal = o.id; E.birth(s); return o.label + ' 태교를 했다. 그리고 마침내 ' + C.HERO_NAME + '(이)가 태어났다!'; } };
+      });
+    }
+  };
+  function focusChoices(s, exclude) {
+    return Object.keys(E.EDU_FOCUS).filter(function (k) { return k !== exclude; }).map(function (k) {
+      var f = E.EDU_FOCUS[k];
+      return { text: f.icon + ' ' + f.label, desc: f.desc + ' (매년, 7살까지)', preview: f.effects,
+        run: function (s) { var first = !s.eduFocus; s.eduFocus = k; if (!first) s.eduFocusChanged = true; if (first) E.applyEduFocus(s); return '조기 교육은 "' + f.label + '"에 집중하기로 했다.'; } };
+    });
+  }
+  var EDU_FOCUS_EVENT = {
+    id: 'sys_edu_focus', manual: true, pick: true, scene: 'home', pic: 'focus_all',
+    text: '첫 돌이 지났다. 7살까지 무엇에 가장 공을 들일까요?',
+    choicesFn: function (s) { return focusChoices(s); }
+  };
+  var EDU_CHANGE_EVENT = {
+    id: 'sys_edu_change', manual: true, pick: true, scene: 'school', pic: 'focus_all',
+    textFn: function (s) { var f = E.EDU_FOCUS[s.eduFocus]; return '다섯 살. 지금까지 "' + (f ? f.label : '') + '"에 집중했다. 7살까지 한 번만 바꿀 수 있어요.'; },
+    choicesFn: function (s) {
+      var f = E.EDU_FOCUS[s.eduFocus];
+      return [{ text: '✅ 그대로 ' + (f ? f.label : ''), desc: '지금 방식을 이어 간다.', preview: f ? f.effects : null, run: function () { return '하던 대로 이어 가기로 했다.'; } }]
+        .concat(focusChoices(s, s.eduFocus));
+    }
+  };
+
   E.SYS_EVENTS = [
-    GRIEF_EVENT,
+    GRIEF_EVENT, PRENATAL_EVENT, EDU_FOCUS_EVENT, EDU_CHANGE_EVENT,
     {
       id: 'sys_exam', manual: true, scene: 'school',
       textFn: function (s) {
@@ -349,6 +405,9 @@
   }
 
   // ---------------------------------------------------------------- generations
+  // Every generation's hero is 호날두; later generations are told apart as "2대 호날두", "3대 호날두"…
+  E.genName = function (gen) { return gen > 1 ? gen + '대 ' + C.HERO_NAME : C.HERO_NAME; };
+
   E.heirs = function (s) {
     return s.people.filter(function (p) { return p.role === 'child' && p.alive; });
   };
@@ -367,7 +426,7 @@
       given: given, surname: s.hero.surname, nick: given, gender: kid.gender,
       birthYear: s.birthYear + kid.bornAt, startAge: Math.max(1, kid.age), inheritMoney: estate,
       parentState: s, kid: kid,
-      legacy: { parentName: E.fullName(c, s.hero.surname, s.hero.given), parentAge: s.age, parentTitle: E.lifeTitles(s)[0].name, estate: estate, generation: s.generation }
+      legacy: { parentName: E.genName(s.generation), parentAge: s.age, parentTitle: E.lifeTitles(s)[0].name, estate: estate, generation: s.generation }
     });
     ns.flags.heir = 1;
     // an heir who is already grown up has a plausible education and adult stats
@@ -380,14 +439,14 @@
       ns.stats.smarts = Math.max(ns.stats.smarts, E.rint(ns, 45, 70));
       ns.stats.grit = Math.max(ns.stats.grit, E.rint(ns, 40, 65));
     } else E.updateEducation(ns, true);
-    E.addLog(ns, '부모님 ' + ns.legacy.parentName + '의 뒤를 이어 ' + ns.age + '세의 ' + given + '(으)로 삶을 이어 간다. 유산 ' + T.money(estate, c) + '.', 'milestone');
+    E.addLog(ns, '부모님 ' + ns.legacy.parentName + '의 뒤를 이어 ' + ns.age + '세의 ' + E.genName(ns.generation) + '(으)로 삶을 이어 간다. 유산 ' + T.money(estate, c) + '.', 'milestone');
     return ns;
   };
 
   E.buildHeirFamily = function (s, opts) {
     var ps = opts.parentState, kid = opts.kid;
     var off = kid.bornAt; // parent's age when kid was born
-    E.addPerson(s, { role: ps.hero.gender === 'm' ? 'father' : 'mother', key: ps.hero.gender === 'm' ? 'father' : 'mother', name: E.fullName(E.country(ps), ps.hero.surname, ps.hero.given), gender: ps.hero.gender, bornAt: -off, alive: false, rel: 80, diedAt: kid.age });
+    E.addPerson(s, { role: ps.hero.gender === 'm' ? 'father' : 'mother', key: ps.hero.gender === 'm' ? 'father' : 'mother', name: E.genName(ps.generation), gender: ps.hero.gender, bornAt: -off, alive: false, rel: 80, diedAt: kid.age });
     var sp = ps.people.filter(function (p) { return p.role === 'spouse'; })[0];
     if (sp) E.addPerson(s, { role: ps.hero.gender === 'm' ? 'mother' : 'father', key: ps.hero.gender === 'm' ? 'mother' : 'father', name: sp.name, gender: sp.gender, bornAt: -(sp.age - kid.age), alive: sp.alive, rel: 75 });
     ps.people.filter(function (p) { return p.role === 'child' && p.id !== kid.id && p.alive; }).forEach(function (sib) {
@@ -417,7 +476,7 @@
     var kids = s.people.filter(function (p) { return p.role === 'child'; });
     var spouseEver = s.people.filter(function (p) { return p.role === 'spouse' || (p.role === 'ex' && s.marriedAt); }).length;
     return {
-      name: E.fullName(c, s.hero.surname, s.hero.given), country: c.name, age: s.age, cause: s.cause,
+      name: E.genName(s.generation), country: c.name, age: s.age, cause: s.cause,
       born: s.birthYear, died: s.year, money: s.money, moneyText: T.money(s.money, c), fame: s.stats.fame,
       titles: titles, achievements: ach,
       football: fb.seasons ? { apps: fb.apps, goals: fb.goals, caps: fb.caps, natGoals: fb.natGoals, trophies: fb.trophies, clubs: fb.clubs } : null,
@@ -429,7 +488,7 @@
 
   E.lifeStory = function (s, titles, ach) {
     var c = E.country(s), v = E.vars(s), fb = s.fb, out = [];
-    var nm = E.fullName(c, s.hero.surname, s.hero.given);
+    var nm = E.genName(s.generation);
     out.push('【' + nm + ' (' + s.birthYear + '–' + s.year + ')】 ' + titles[0].name);
     if (s.generation > 1 && s.legacy) out.push(s.legacy.parentName + '의 자녀로, ' + s.generation + '대째 이어진 이야기.');
     else out.push(c.places.hometown + '에서 ' + v.fatherJob + '인 아버지와 ' + v.motherJob + '인 어머니 사이에서 사남매의 막내로 태어났다.');

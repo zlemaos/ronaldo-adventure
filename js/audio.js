@@ -39,7 +39,37 @@
     achieve: function () { seq([N.C6, N.G5, N.C6], 0.06, 'square', 0.04); }
   };
 
+  // SIUU celebration: a real recording played with an HTMLAudioElement (works from file://, no fetch).
+  // Phones only allow audio after a user gesture, so the element is created and "unlocked" on the first tap.
+  var siuuEl = null, unlocked = false, realPlay = false;
+  function siuuElement() {
+    if (!siuuEl && G.Audio) {
+      try { siuuEl = new G.Audio('assets/audio/siuu.mp3'); siuuEl.preload = 'auto'; siuuEl.volume = 0.9; } catch (e) { siuuEl = null; }
+    }
+    return siuuEl;
+  }
+  function unlock() {
+    if (unlocked) return;
+    unlocked = true;
+    ac();
+    var el = siuuElement();
+    if (el && !muted) {
+      try { el.muted = true; var pr = el.play(); if (pr && pr.then) pr.then(function () { if (!realPlay) { el.pause(); el.currentTime = 0; } el.muted = false; }, function () { el.muted = false; }); } catch (e) { el.muted = false; }
+    }
+  }
+  if (G.document && G.addEventListener) {
+    G.addEventListener('pointerdown', unlock, { once: false, passive: true });
+    G.addEventListener('keydown', unlock, { passive: true });
+  }
+
   RA.Audio = {
+    siuu: function () {
+      if (muted || !unlocked) return false;
+      var el = siuuElement(); if (!el) return false;
+      try { realPlay = true; el.muted = false; el.currentTime = 0; var pr = el.play(); if (pr && pr.catch) pr.catch(function () { /* blocked: ignore */ }); } catch (e) { return false; }
+      return true;
+    },
+    unlock: unlock,
     play: function (name) { if (muted || !SFX[name]) return; try { SFX[name](); } catch (e) { /* audio is optional */ } },
     isMuted: function () { return muted; },
     toggle: function () {

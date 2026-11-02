@@ -35,6 +35,20 @@
       if (!s.fb.stage) s.fb.stage = 'none';
       s.saveVersion = 3;
       return s;
+    },
+    // v3: hero is always 호날두; new 공감/사교 stat; early-childhood picks and montage cards
+    3: function (s) {
+      s.hero = s.hero || {};
+      s.hero.given = C.HERO_NAME; s.hero.nick = C.HERO_NAME;
+      s.stats = s.stats || {};
+      if (s.stats.social == null) s.stats.social = 40;
+      if (s.prenatal === undefined) s.prenatal = null;
+      if (s.eduFocus === undefined) s.eduFocus = null;
+      if (s.eduFocusChanged == null) s.eduFocusChanged = !!s.eduFocus;
+      s.cards = s.cards || [];
+      s.born = true;
+      s.saveVersion = 4;
+      return s;
     }
   };
 

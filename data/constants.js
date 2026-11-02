@@ -6,11 +6,19 @@
   RA.data = RA.data || {};
 
   RA.C = {
-    SAVE_VERSION: 3,
-    STATS: ['health', 'happy', 'smarts', 'looks', 'football', 'grit', 'fame'],
+    SAVE_VERSION: 4,
+    HERO_NAME: '호날두',          // the hero is always 호날두 (male or female)
+    STATS: ['health', 'happy', 'smarts', 'looks', 'football', 'grit', 'social', 'fame'],
     STAT_LABELS: {
       health: '건강', happy: '행복', smarts: '지능', looks: '외모',
-      football: '축구 실력', grit: '체력/근성', fame: '명성', money: '돈'
+      football: '축구 실력', grit: '체력/근성', social: '공감/사교', fame: '명성', money: '돈'
+    },
+    STAT_SHORT: {
+      health: '건강', happy: '행복', smarts: '지능', looks: '외모', football: '축구', grit: '근성', social: '공감', fame: '명성', money: '돈'
+    },
+    // the same icons are used for stat bars, change chips and pick previews
+    STAT_ICONS: {
+      health: '❤️', happy: '😊', smarts: '🧠', looks: '✨', football: '⚽', grit: '💪', social: '🤝', fame: '⭐', money: '💰'
     },
     // School stages (ages per country live in data/countries.js)
     EDU_STAGES: ['none', 'elem', 'middle', 'high', 'univ', 'grad'],
@@ -56,6 +64,11 @@
       'localClub', 'regionalClub', 'academy', 'bigClub', 'rivalClub', 'league', 'nationalTeam',
       'abroadClub', 'food', 'food2', 'holiday', 'holiday2', 'school', 'exam', 'univ', 'job',
       'fatherJob', 'fatherJob2', 'motherJob', 'currency', 'leader', 'country', 'sportsClub', 'houseLong', 'siblings', 'siblingsAll'],
+    // pixel pictures for milestone cards (drawn in js/pixel.js → Pixel.drawMilestone)
+    MILESTONE_PICS: ['birth', 'smile', 'steps', 'word', 'ball', 'move', 'sibling', 'birthday', 'ceremony', 'festival',
+      'preschool', 'prenatal', 'focus_lang', 'focus_music', 'focus_play', 'focus_sports'],
+    MILESTONE_PROPS: ['doljabi', 'zhuazhou', 'mochi', 'smash', 'cake', 'baekseolgi', 'redeggs', 'okuizome', 'baptism',
+      'imbeleko', 'shichigosan', 'halloween', 'carnival', 'asado', 'beach', 'fireworks'],
     REL_KEYS: ['father', 'mother', 'siblings', 'bro', 'sis1', 'sis2', 'friend', 'partner',
       'spouse', 'children', 'coach', 'family']
   };

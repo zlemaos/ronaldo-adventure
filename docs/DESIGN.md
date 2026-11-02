@@ -131,6 +131,75 @@ Failbetter Games' StoryNexus/"storylet" design diaries, Choice of Games "End Gam
 - The South African flag is drawn pixel by pixel from its geometry: green Y bands, white edges outside the Y, gold
   edges inside, and the black hoist triangle.
 
+## 2d. Round 3: mobile-first, early childhood, auto-play, SIUU, Portugal
+
+- **Mobile-first.** The main target is a phone held upright, 360–430 px wide.
+  - Every button is at least 44 px tall and wide; the browser test checks this.
+  - The primary actions (+1살, ▶ 자동 진행, 1x/2x) sit in a fixed bottom bar inside the safe area. Event cards open as
+    bottom sheets, so the choices are within thumb reach.
+  - Base text is 15 px, Korean wraps between words (`word-break: keep-all`), there is no horizontal scrolling, and no
+    information is available only on hover.
+  - Landscape works: the event picture hides and montage cards sit side by side.
+  - On desktop the same action bar sits in the side column.
+- **Home screen.** `manifest.webmanifest` sets fullscreen, the icons are rendered from the game's own pixel art, and
+  Apple meta tags are included. The manifest link is added by JavaScript only over http(s), because a manifest cannot
+  load from `file://` and would log an error there. Double-clicking `index.html` still works.
+- **SIUU.** `assets/audio/siuu.mp3` plays through one `HTMLAudioElement`; no `fetch`, so it works from `file://`. It is
+  created and unlocked on the first tap, as phones require.
+  - It plays on "인생 시작하기" and whenever the engine sets the presentation-only cue `s.y.triumph`: turning pro, a
+    transfer, a national call-up, trophies and the Ballon d'Or, a successful football moment that raises fame by 3 or
+    more, any promotion, a Nobel prize, becoming head of state, and a lottery win.
+  - Sad events never set it, and the mute button covers it too.
+- **Fixed name.** The hero is always 호날두, for both male and female heroes; the name input is gone. Later
+  generations are shown as "2대 호날두", while family members keep their own names. Save migration v3→v4 sets the
+  name on old saves and fills in the new fields.
+- **Prenatal care (태교).** A life starts at age 0 with one pick (`sys_prenatal`) from 5 options, each with a different
+  head start shown as icon chips. Birth happens right after the pick.
+- **Ages 0–4 montage.** There are no storylets and no activities. Each year, `Engine.selectMilestones` turns matching
+  entries of `data/milestones.js` into cards: a picture type drawn by `Pixel.drawMilestone`, one short sentence (60
+  characters at most, checked by the validator) and stat chips. Countries add their own ceremonies, birthdays and
+  festivals. The UI shows the cards full-screen, advancing every 1.7 s (1.0 s at 2x); tapping skips ahead. The only
+  decisions before age 5 are the prenatal pick and the early-education pick.
+- **Early-education focus.** Picked at age 1 (`sys_edu_focus`): 언어 🧠, 음악 😊🧠, 소꿉놀이 🤝, 스포츠 ❤️⚽. Each comes with
+  a one-line plain explanation. The effect applies every year through age 7 and is shown as a card (ages 1–4) or a log
+  line with chips (5–7). It can be changed once, at age 5 (`sys_edu_change`).
+- **New stat 공감/사교 (`social`).** It affects:
+  - making friends and dating;
+  - job performance, strongly in people-facing sectors and slightly everywhere else;
+  - football team chemistry (season rating);
+  - 9 `soc_` storylets about friendship, teammates, coworkers and romance, plus checks on `social` in other events.
+- **Event categories.** `Engine.eventCategory` gives every event an icon, colour and label: 선택, 추모, 범죄·사건, 축구,
+  일, 학교, 사랑, 가족, 건강, 돈, 친구·관계, 고향·명절, 일상. Event cards show it as a coloured badge and coloured top
+  border, together with the scene picture. Stat changes are always shown as icon chips such as "🧠 +3", in results,
+  pick previews, log lines and montage cards.
+- **Auto-play.** `Engine.autoStep(s)` ages one year, or returns `'choose'` without advancing while anything waits in the
+  queue. The UI toggle (▶ 자동 진행 / ⏸ 자동 진행 중, 1x/2x) advances every 1.8 s or 0.9 s. It pauses at every choice
+  (event choices, career picks, the two early picks) and continues after the player chooses. It can be stopped at any
+  time from the bar or from the "⏸ 자동 진행 끄기" button inside an open card.
+- **Portugal (`pt`), 원작 루트.** A 9th country, first and selected by default on the start screen, shown as a wide card
+  with a "원작 루트" badge. It follows the canon closely:
+  - Madeira (Funchal) and a poor family of six on a steep stairway lane;
+  - a father who is a park gardener and kit man at the parody club 안도리뉴 푼샬;
+  - island club 이줄라르 FC, then alone at 12 to 사자단 유스 아카데미 in Lisbon;
+  - the heart scare at 15 and the father's illness.
+
+  It has full country data (€, 총리, a national exam at 18, foods, holidays, school ages), 17 storylets (`data/events_pt.js`),
+  3 milestones, a pixel flag, a national-team strength and 유럽 선수권. Portugal is included in every test loop.
+  The other 8 countries are unchanged.
+- **New data fields.** `RA.data.milestones[]` holds `{ id, age 0..4, pic, props?, countries?, cond?, chance?, text,
+  effects }`; `pic` comes from `C.MILESTONE_PICS` and `props` from `C.MILESTONE_PROPS`. Events can carry `pick: true`
+  and `pic`. Choices can carry `desc` and `preview`, which drive the pick screens. `C.STAT_ICONS` and `C.STAT_SHORT`
+  are shared by the UI. To add a milestone, push an entry; to add a picture type, add a function to `MS` in
+  `js/pixel.js` and its name to `C.MILESTONE_PICS`.
+- **Tests (round 3).** `test/early.test.js` covers:
+  - the fixed name and josa (호날두가/를/는/와/로), plus migration of old saves;
+  - the prenatal pick and the montage (only two decisions before age 5, no storylets or activities, a
+    country-specific card in every country);
+  - the early-education focus (applied every year from 1 to 7, changed once at 5);
+  - auto-play stopping at choices and continuing after them;
+  - event categories, the 공감 stat and triumph cues;
+  - a full life played end to end.
+
 ## 3. Architecture
 
 ```
@@ -404,14 +473,14 @@ add a test that loads a fabricated old save.
 
 ## 6. Content volume (v1)
 
-- Storylets: **570** (canon 28, football 37, shared life 203, country-specific 141 — kr 19, jp 17, cn 17,
+- Storylets: **595** (round 3 added 9 공감 `soc_` events and 17 Portugal events) and 30 early-childhood milestones; earlier counts: (canon 28, football 37, shared life 203, country-specific 141 — kr 19, jp 17, cn 17,
   us 19, br 18, ar 17, za 17, in 17 — career-specific 161) + 6 engine system events.
 - Careers: **156** across 21 sectors (each ≥ 4 careers, each covered by events).
 - Achievements: 38; ribbons/titles: 20; activities: 27.
 
 ## 7. Simulation test output
 
-`npm test` runs `test/simulation.test.js`: 500 full lives per country (4,000 lives), rotating three
+`npm test` runs `test/simulation.test.js`: 500 full lives per country (4,500 lives, 9 countries), rotating three
 player archetypes (random, football-focused, study-focused). Seeds are fixed, so the numbers are
 reproducible. Guards fail the build if average death age leaves 55–92, pro share leaves 5–70 %, Ballon
 d'Or share exceeds 20 %, fewer than 12 career sectors are used, any stat leaves 0–100, money is not
@@ -419,24 +488,26 @@ finite, or any life throws. Latest output:
 
 | country | avgDeath | median | min | max | pro | natTeam | ballon | worldCup | topOfCareer | degree | married | kidsAvg | jailed | fatherSober | fatherDiedAtAvg | achievementsAvg | sectorsUsed |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| kr | 69.9 | 72 | 7 | 98 | 28.2% | 24.4% | 5.0% | 1.0% | 71.0% | 51.4% | 41.4% | 0.42 | 18.8% | 3.4% | 24.1 | 7.2 | 22 |
-| jp | 70.1 | 72 | 4 | 100 | 27.0% | 21.4% | 6.0% | 0.6% | 71.6% | 53.0% | 34.4% | 0.38 | 22.0% | 4.4% | 23.9 | 7.1 | 21 |
-| cn | 70.5 | 72 | 3 | 100 | 26.2% | 21.2% | 6.2% | 0.4% | 72.6% | 54.4% | 34.0% | 0.38 | 19.4% | 3.0% | 24.1 | 7.1 | 21 |
-| us | 69.6 | 71 | 11 | 95 | 28.0% | 24.2% | 8.0% | 2.0% | 73.0% | 53.2% | 36.6% | 0.40 | 20.0% | 2.8% | 23.7 | 7.3 | 21 |
-| br | 70.3 | 72 | 4 | 99 | 27.8% | 23.0% | 4.2% | 6.4% | 72.0% | 52.4% | 38.0% | 0.38 | 16.8% | 3.6% | 24.2 | 7.2 | 22 |
-| ar | 69.8 | 71 | 12 | 98 | 24.8% | 21.2% | 6.4% | 5.2% | 70.8% | 54.4% | 32.8% | 0.42 | 22.4% | 3.6% | 23.8 | 7.0 | 22 |
-| za | 70.0 | 71 | 9 | 95 | 24.4% | 20.6% | 5.2% | 0.4% | 72.0% | 51.0% | 34.0% | 0.46 | 21.0% | 3.6% | 23.8 | 6.9 | 22 |
-| in | 71.2 | 73 | 11 | 99 | 25.2% | 21.8% | 4.2% | 0.0% | 70.8% | 50.6% | 42.6% | 0.41 | 22.0% | 4.6% | 24.1 | 7.1 | 21 |
+| pt | 70.5 | 72 | 3 | 96 | 21.4% | 18.2% | 4.8% | 3.0% | 70.0% | 56.2% | 48.8% | 0.54 | 16.4% | 6.8% | 25.2 | 6.9 | 22 |
+| kr | 71.5 | 73 | 1 | 98 | 24.6% | 20.0% | 4.8% | 2.8% | 72.6% | 53.2% | 36.8% | 0.42 | 18.6% | 3.6% | 23.9 | 7.0 | 21 |
+| jp | 71.5 | 74 | 1 | 96 | 22.0% | 17.6% | 4.2% | 1.4% | 75.0% | 54.8% | 35.8% | 0.45 | 20.2% | 3.2% | 23.9 | 6.8 | 22 |
+| cn | 70.8 | 72 | 3 | 102 | 25.6% | 23.0% | 5.2% | 0.4% | 71.8% | 51.2% | 33.6% | 0.37 | 21.0% | 4.4% | 24.2 | 7.1 | 21 |
+| us | 71.1 | 72 | 12 | 99 | 21.2% | 17.8% | 4.6% | 2.2% | 72.2% | 55.6% | 35.6% | 0.38 | 18.2% | 3.0% | 24.1 | 6.8 | 22 |
+| br | 69.8 | 72 | 2 | 98 | 25.2% | 21.8% | 5.0% | 5.2% | 69.0% | 54.6% | 35.2% | 0.43 | 20.4% | 3.0% | 23.9 | 7.0 | 22 |
+| ar | 69.2 | 71 | 1 | 97 | 21.6% | 16.8% | 6.4% | 5.0% | 75.0% | 49.8% | 35.8% | 0.45 | 18.8% | 2.8% | 23.8 | 6.7 | 21 |
+| za | 68.9 | 70 | 4 | 99 | 23.6% | 19.6% | 5.6% | 0.6% | 70.6% | 54.0% | 33.6% | 0.35 | 19.4% | 3.2% | 23.9 | 6.7 | 21 |
+| in | 70.5 | 73 | 2 | 102 | 21.6% | 18.6% | 5.4% | 0.2% | 70.6% | 54.4% | 40.4% | 0.46 | 21.6% | 3.6% | 24.0 | 6.9 | 22 |
 
 Top career sectors by country:
-- kr: sports 29.2%, trade 8.2%, parttime 7.0%, agri 6.8%, transport 5.8%, service 5.6%
-- jp: sports 27.2%, service 9.2%, entertainment 8.8%, parttime 7.4%, trade 7.4%, agri 6.2%
-- cn: sports 24.8%, trade 9.2%, service 8.2%, parttime 8.0%, entertainment 7.0%, agri 5.8%
-- us: sports 27.2%, trade 8.2%, entertainment 8.0%, service 7.6%, parttime 6.6%, arts 6.6%
-- br: sports 24.4%, service 9.8%, entertainment 7.8%, trade 7.6%, parttime 7.2%, arts 6.6%
-- ar: sports 25.0%, trade 8.6%, agri 7.8%, parttime 7.4%, entertainment 6.8%, service 6.2%
-- za: sports 25.8%, trade 10.0%, parttime 7.8%, entertainment 7.6%, service 6.4%, agri 5.8%
-- in: sports 25.0%, trade 11.8%, entertainment 8.0%, parttime 7.4%, arts 6.6%, service 6.4%
+- pt: sports 23.4%, entertainment 8.0%, service 7.8%, trade 7.2%, parttime 7.0%, arts 6.0%
+- kr: sports 24.8%, trade 9.2%, entertainment 8.0%, parttime 7.0%, service 7.0%, arts 5.2%
+- jp: sports 24.4%, trade 10.4%, entertainment 7.4%, agri 7.0%, service 6.4%, parttime 5.6%
+- cn: sports 25.2%, trade 8.4%, parttime 7.8%, entertainment 7.6%, service 7.6%, arts 6.4%
+- us: sports 22.4%, entertainment 9.4%, service 9.2%, trade 8.4%, parttime 7.0%, agri 5.4%
+- br: sports 26.6%, trade 8.0%, service 7.6%, parttime 7.0%, transport 5.8%, entertainment 5.6%
+- ar: sports 22.2%, trade 10.0%, entertainment 7.2%, agri 6.8%, parttime 6.6%, arts 6.2%
+- za: sports 24.0%, parttime 7.4%, service 7.0%, entertainment 6.8%, trade 6.8%, arts 6.6%
+- in: sports 22.4%, service 8.2%, trade 8.0%, entertainment 7.4%, parttime 7.2%, transport 7.0%
 
 Reading: about a quarter of lives turn pro (higher for the football-focused archetype), roughly one in five
 pros wins a Ballon d'Or, and World Cups are realistic by country (Brazil/Argentina ≈ 4–5 %, India ≈ 0.4 %).

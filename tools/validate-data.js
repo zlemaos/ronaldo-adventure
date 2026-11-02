@@ -32,7 +32,7 @@ function validate(RA) {
     const bad = t.match(/\[[^\]/]*\/[^\]]*\]/g) || [];
     bad.forEach(b => { if (!['[이/가]', '[은/는]', '[을/를]', '[과/와]', '[으로/로]', '[아/야]', '[이/]'].includes(b)) err(where + ': unknown particle ' + b); });
   };
-  const COUNTRIES = ['kr', 'jp', 'cn', 'us', 'br', 'ar', 'za', 'in'];
+  const COUNTRIES = ['pt', 'kr', 'jp', 'cn', 'us', 'br', 'ar', 'za', 'in'];
 
   // Countries
   const cs = D.countries || {};
@@ -161,9 +161,28 @@ function validate(RA) {
     [ch, ch.success, ch.fail].forEach(o => { if (o && o.schedule && !eids.has(o.schedule.id)) err('event ' + ev.id + ': schedule target missing ' + o.schedule.id); });
   });
 
+  // Milestones (ages 0-4 montage)
+  const ms = D.milestones || [];
+  const mids = new Set();
+  for (const m of ms) {
+    const w = 'milestone ' + m.id;
+    if (!m.id || mids.has(m.id) || eids.has(m.id)) err(w + ': missing/duplicate id');
+    mids.add(m.id);
+    const ages = Array.isArray(m.age) ? m.age : [m.age, m.age];
+    if (!(ages[0] >= 0 && ages[1] <= 4)) err(w + ': age must be 0..4');
+    if (!C.MILESTONE_PICS.includes(m.pic)) err(w + ': bad pic ' + m.pic);
+    if (m.props && !C.MILESTONE_PROPS.includes(m.props)) err(w + ': bad props ' + m.props);
+    (m.countries || []).forEach(c => { if (!COUNTRIES.includes(c)) err(w + ': bad country ' + c); });
+    checkText(w, m.text);
+    checkEffects(w, m.effects);
+    if (m.text && m.text.length > 60) err(w + ': keep milestone sentences short (<= 60 chars)');
+  }
+  if (Object.keys(cs).length && ms.length < 10) err('need at least 10 milestones');
+  for (const c of COUNTRIES) if (!ms.some(m => (m.countries || []).includes(c))) err('milestones: no country-specific milestone for ' + c);
+
   const byPrefix = {};
   events.forEach(e => { const p = e.id.split('_')[0]; byPrefix[p] = (byPrefix[p] || 0) + 1; });
-  return { errors, warns, counts: { events: events.length, careers: careers.length, countries: Object.keys(cs).length, byPrefix } };
+  return { errors, warns, counts: { milestones: ms.length, events: events.length, careers: careers.length, countries: Object.keys(cs).length, byPrefix } };
 }
 
 module.exports = { loadAll, validate };

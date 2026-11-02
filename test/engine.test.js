@@ -4,7 +4,7 @@ const assert = require('node:assert');
 const { load, autoplay } = require('../tools/sim-helpers.js');
 const RA = load();
 const E = RA.Engine, S = RA.Save;
-const COUNTRIES = ['kr', 'jp', 'cn', 'us', 'br', 'ar', 'za', 'in'];
+const COUNTRIES = ['pt', 'kr', 'jp', 'cn', 'us', 'br', 'ar', 'za', 'in'];
 
 function fresh(country, seed) { return E.newGame({ country: country || 'kr', seed: seed || 'unit' }); }
 // Resolve every pending event by picking the first enabled choice
@@ -46,9 +46,10 @@ test('event condition matching: age, country, stats, flags, fb stage, relationsh
 test('age-up advances time, applies drift, schools the child and fires storylets', () => {
   const s = fresh('jp', 'ageup');
   const y0 = s.year;
-  for (let i = 0; i < 7; i++) { resolve(s); E.ageUp(s); }
+  assert.strictEqual(s.age, 0, 'a life starts before birth (prenatal pick)');
+  for (let i = 0; i < 8; i++) { resolve(s); E.ageUp(s); }
   assert.strictEqual(s.age, 8);
-  assert.strictEqual(s.year, y0 + 7);
+  assert.strictEqual(s.year, y0 + 8);
   assert.strictEqual(s.edu.stage, 'elem');
   assert.ok(s.log.some(l => l.k === 'year'));
   assert.strictEqual(s.ap, E.AP_PER_YEAR);
@@ -60,7 +61,7 @@ test('age-up advances time, applies drift, schools the child and fires storylets
 
 test('choice with check uses seeded chance and applies success/fail effects', () => {
   const s = fresh('br', 'check');
-  s.age = 15; s.queue.push('canon_heart');
+  resolve(s); s.age = 15; s.queue = ['canon_heart'];
   const ev = E.currentEvent(s);
   assert.ok(ev.text.length > 10);
   const r = E.choose(s, 0);
@@ -100,6 +101,7 @@ test('career requirements, hiring and promotion ladder', () => {
 test('family generation is localized for all 8 countries', () => {
   for (const c of COUNTRIES) {
     const s = fresh(c, 'fam');
+    resolve(s); // prenatal pick → birth
     const cd = RA.data.countries[c];
     const dad = E.person(s, 'father'), mom = E.person(s, 'mother');
     assert.strictEqual(dad.name, cd.family.father.name);

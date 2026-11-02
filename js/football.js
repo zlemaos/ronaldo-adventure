@@ -5,8 +5,8 @@
   var F = E.Football = {};
 
   // Rough national-team strength (chance to win a World Cup with an average squad)
-  F.NAT_STRENGTH = { br: 0.06, ar: 0.055, us: 0.015, jp: 0.015, kr: 0.012, za: 0.006, cn: 0.004, in: 0.002 };
-  F.CONT_CUP = { kr: '아시안컵', jp: '아시안컵', cn: '아시안컵', in: '아시안컵', br: '코파 대회', ar: '코파 대회', us: '골드컵', za: '아프리카 네이션스컵' };
+  F.NAT_STRENGTH = { pt: 0.04, br: 0.06, ar: 0.055, us: 0.015, jp: 0.015, kr: 0.012, za: 0.006, cn: 0.004, in: 0.002 };
+  F.CONT_CUP = { pt: '유럽 선수권', kr: '아시안컵', jp: '아시안컵', cn: '아시안컵', in: '아시안컵', br: '코파 대회', ar: '코파 대회', us: '골드컵', za: '아프리카 네이션스컵' };
   F.ACTIVE = ['local', 'regional', 'academy', 'youth', 'pro'];
 
   function cap(s) { return Math.min(99, s.fb.talent + Math.floor(s.stats.grit / 12)); }
@@ -36,7 +36,7 @@
     if (fb.stage !== 'pro' || !s.job || s.job.id !== 'footballer') return;
     var c = E.country(s);
     fb.seasons++;
-    var rating = st.football * 0.72 + st.grit * 0.14 + st.health * 0.14 + E.rint(s, -6, 6) + (prevY && prevY.trainedFb ? 2 : 0);
+    var rating = st.football * 0.72 + st.grit * 0.14 + st.health * 0.14 + E.rint(s, -6, 6) + (prevY && prevY.trainedFb ? 2 : 0) + ((st.social || 40) - 50) / 25; // team chemistry
     var apps = fb.injury > 0 ? E.rint(s, 3, 18) : E.rint(s, 24, 52);
     if (fb.injury > 0) fb.injury--;
     if (st.health < 40) apps = Math.round(apps * 0.6);
@@ -90,7 +90,7 @@
       }
     }
     E.addLog(s, parts.join(' '), anim ? 'trophy' : 'fb');
-    if (anim) s.y.anim = anim;
+    if (anim) { s.y.anim = anim; E.triumph(s, anim); }
     // retirement
     var retireP = s.age < 33 ? 0 : (s.age - 32) * 0.1 - (st.grit > 80 ? 0.1 : 0) - (rating > 80 ? 0.1 : 0);
     if (s.age >= 41 || st.health < 25 || E.rnd(s) < retireP) {

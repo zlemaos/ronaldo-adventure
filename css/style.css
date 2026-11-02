@@ -51,7 +51,7 @@ canvas.px { image-rendering: pixelated; image-rendering: crisp-edges; display: b
   padding: 8px 16px; background: rgba(11, 16, 32, 0.92); border-bottom: 2px solid var(--line);
   backdrop-filter: blur(4px);
 }
-.logo { display: flex; align-items: center; gap: 8px; background: none; border: 0; padding: 0; font-weight: 700; font-size: 16px; color: var(--gold); letter-spacing: 1px; }
+.logo { display: flex; align-items: center; gap: 8px; min-height: 44px; background: none; border: 0; padding: 0; font-weight: 700; font-size: 16px; color: var(--gold); letter-spacing: 1px; }
 .logo-ball { display: inline-block; animation: spin 6s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .top-actions { display: flex; align-items: center; gap: 8px; }
@@ -277,7 +277,7 @@ input[type=text]:focus { outline: none; border-color: var(--gold); }
   .who .age { font-size: 18px; }
   .stats { grid-template-columns: 1fr 1fr; gap: 6px 12px; }
   .stat { grid-template-columns: 54px 1fr 24px; gap: 4px; font-size: 11px; }
-  .age-dock { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); background: rgba(11,16,32,.95); border-top: 2px solid var(--line); }
+  .age-dock-unused { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); background: rgba(11,16,32,.95); border-top: 2px solid var(--line); }
   .age-btn { padding: 12px; font-size: 18px; }
   .log { max-height: none; }
   .countries { grid-template-columns: repeat(4, 1fr); }
@@ -294,3 +294,110 @@ input[type=text]:focus { outline: none; border-color: var(--gold); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
+
+
+/* =================================================================== round 3: mobile-first */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body { font-size: 15px; overflow-x: hidden; }
+.btn, .tab, .country, .act, .choice, .slot .btn, .seg button, .filter button { min-height: 44px; }
+.icon-btn { width: 44px; height: 44px; }
+.btn-sm { min-height: 40px; padding: 8px 12px; }
+.tab { padding: 10px 12px; font-size: 14px; }
+.hero-name { font-size: 18px; font-weight: 700; color: var(--gold); padding: 6px 0; }
+.hero-name .muted { font-size: 12px; font-weight: 400; }
+.topbar { padding-top: calc(8px + env(safe-area-inset-top)); padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
+
+/* action bar: next year, auto-play, speed */
+.actionbar { display: grid; grid-template-columns: auto auto 1fr; gap: 8px; align-items: stretch; }
+.actionbar .age-btn { min-height: 56px; }
+.ab-auto, .ab-speed {
+  min-height: 56px; min-width: 56px; padding: 6px 10px; border-radius: var(--radius);
+  border: 2px solid #070b17; background: var(--panel3); color: var(--text); font-weight: 700; font-size: 14px;
+  box-shadow: inset 0 -3px 0 rgba(0,0,0,.35);
+}
+.ab-auto span { display: block; font-size: 11px; font-weight: 400; }
+.ab-auto.on { background: var(--gold); color: #1d1600; animation: autoPulse 1.4s ease-in-out infinite; }
+@keyframes autoPulse { 50% { box-shadow: inset 0 -3px 0 rgba(0,0,0,.35), 0 0 0 4px rgba(245,197,24,.35); } }
+body.auto-on .topbar { border-bottom-color: var(--gold); }
+
+/* chips with stat icons */
+.chip { font-size: 12px; padding: 3px 8px; white-space: nowrap; }
+.log .e .chips { margin: 4px 0 0; }
+
+/* event card: category colour, icon, picture, choices with previews */
+.ev-card { border-top: 4px solid var(--cat, var(--line)); }
+.ev-cat { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--cat); border: 2px solid var(--cat); border-radius: 99px; padding: 2px 10px 2px 4px; margin-bottom: 8px; }
+.ev-cat-ic { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 99px; background: var(--cat); font-size: 13px; }
+.ev-pic canvas { width: 100%; height: auto; aspect-ratio: 160 / 96; border-bottom: 2px solid var(--line); display: block; }
+.choice { min-height: 52px; font-size: 15px; align-items: center; }
+.choice .ct { display: grid; gap: 4px; text-align: left; }
+.choice .desc { font-size: 12px; color: var(--muted); font-weight: 400; }
+.choice .chips { margin: 0; }
+.choice[aria-disabled="true"] { opacity: .45; }
+.ev-card.is-pick .choice { border-color: var(--gold); }
+.btn-big { min-height: 52px; font-size: 16px; }
+.auto-hint { text-align: center; color: var(--gold); }
+
+/* montage of early-childhood milestones */
+.montage { position: fixed; inset: 0; z-index: 75; display: grid; place-items: center; padding: 16px; background: rgba(5, 8, 18, .82); pointer-events: auto; cursor: pointer; animation: fade .2s ease; }
+.mt-card { width: min(460px, 100%); padding: 14px; display: grid; gap: 10px; text-align: center; }
+.mt-card.pop { animation: pop .35s cubic-bezier(.2,.9,.3,1.3); }
+.mt-age { color: var(--gold); font-size: 20px; font-weight: 700; }
+.mt-pic canvas { width: 100%; height: auto; aspect-ratio: 160 / 96; box-shadow: 0 0 0 2px #070b17; display: block; }
+.mt-text { font-size: 17px; margin: 0; line-height: 1.5; }
+.mt-chips .chips { justify-content: center; margin: 0; }
+.mt-dots { display: flex; gap: 6px; justify-content: center; }
+.mt-dots i { width: 10px; height: 10px; background: var(--line2); display: block; }
+.mt-dots i.on { background: var(--gold); }
+.mt-hint { font-size: 12px; color: var(--muted); margin: 0; }
+
+@media (max-width: 860px) {
+  body { font-size: 15px; }
+  .game { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+  .actionbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+    padding: 8px max(12px, env(safe-area-inset-left)) calc(8px + env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-right));
+    background: rgba(11,16,32,.96); border-top: 2px solid var(--line); }
+  body.auto-on .actionbar { border-top-color: var(--gold); }
+  .actionbar .age-btn { font-size: 18px; padding: 8px; }
+  .stats { grid-template-columns: 1fr 1fr; }
+  .stat { grid-template-columns: 54px 1fr 26px; font-size: 12px; }
+  .log .e { font-size: 15px; }
+  .modal-wrap.sheet { align-items: end; padding: 0; }
+  .modal-wrap.sheet .modal { width: 100%; max-height: 92vh; border-radius: 12px 12px 0 0; padding-bottom: env(safe-area-inset-bottom); }
+  .modal-wrap.sheet .ev-pic canvas { max-height: 26vh; object-fit: cover; }
+  .ev-text { font-size: 16px; }
+  .toast-wrap { bottom: calc(96px + env(safe-area-inset-bottom)); }
+  .acts { grid-template-columns: repeat(3, 1fr); }
+  .act { min-height: 72px; font-size: 13px; }
+}
+@media (max-width: 860px) and (orientation: landscape) {
+  .modal-wrap.sheet .ev-pic { display: none; }
+  .mt-card { width: min(640px, 100%); grid-template-columns: 1fr 1fr; align-items: center; text-align: left; }
+  .mt-age, .mt-dots, .mt-hint { grid-column: 1 / -1; text-align: center; }
+  .mt-pic canvas { max-height: 58vh; }
+}
+@media (max-width: 400px) {
+  .stats { grid-template-columns: 1fr 1fr; }
+  .ab-auto span { font-size: 10px; }
+}
+
+.auto-stop { width: 100%; margin-top: 8px; border-color: var(--gold); color: var(--gold); }
+
+/* Korean wraps between words, not inside them */
+body, .mt-text, .ev-text, .log .e, .choice, .toast { word-break: keep-all; overflow-wrap: anywhere; }
+
+/* start screen: the canon route card */
+.country.canon { grid-column: 1 / -1; grid-template-columns: auto 1fr; justify-items: start; align-items: center; text-align: left; padding: 10px 12px; column-gap: 12px; }
+.country.canon canvas { grid-row: 1 / span 2; width: 60px; height: 40px; }
+.canon-badge { font-style: normal; font-size: 11px; font-weight: 700; color: #1d1600; background: var(--gold); padding: 1px 6px; border-radius: 99px; margin-left: 6px; vertical-align: middle; }
+.canon-note { color: var(--muted); font-size: 12px; }
+/* desktop / tablet: the action bar sits in the side column — big button on top, auto and speed below */
+@media (min-width: 861px) {
+  .actionbar { grid-template-columns: 1fr auto; }
+  .actionbar .age-btn { grid-column: 1 / -1; grid-row: 1; }
+  .actionbar .ab-auto { grid-row: 2; }
+  .actionbar .ab-speed { grid-row: 2; }
+  .ab-auto span { display: inline; font-size: 13px; margin-left: 4px; }
+}
+/* the top bar (mute, menu) stays reachable while an event card is open */
+.topbar { z-index: 55; }

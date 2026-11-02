@@ -12,8 +12,8 @@ test('content volume targets are met', () => {
   const { counts } = validate(loadAll());
   assert.ok(counts.events >= 300, 'events: ' + counts.events);
   assert.ok(counts.careers >= 120, 'careers: ' + counts.careers);
-  assert.strictEqual(counts.countries, 8);
-  for (const c of ['kr', 'jp', 'cn', 'us', 'br', 'ar', 'za', 'in']) assert.ok(counts.byPrefix[c] >= 10, c + ' country events: ' + counts.byPrefix[c]);
+  assert.strictEqual(counts.countries, 9);
+  for (const c of ['pt', 'kr', 'jp', 'cn', 'us', 'br', 'ar', 'za', 'in']) assert.ok(counts.byPrefix[c] >= 10, c + ' country events: ' + counts.byPrefix[c]);
 });
 
 test('every career sector has at least 4 careers and every sector is covered by events', () => {

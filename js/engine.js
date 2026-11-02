@@ -7,7 +7,7 @@
 
   var BIRTH_YEAR = 1985;
   var AP_PER_YEAR = 3;
-  var MAX_LOG = 600;
+  var MAX_LOG = 1200;
 
   // ---------------------------------------------------------------- helpers
   function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
@@ -55,6 +55,9 @@
     return given + ' ' + surname;
   }
   E.fullName = fullName;
+  E.heroName = function (s) { return C.HERO_NAME; };
+  // UI cue for a big triumph (goal, trophy, promotion, big win). Presentation only: never affects outcomes.
+  E.triumph = function (s, why) { if (s && s.y) s.y.triumph = why || true; };
 
   // ---------------------------------------------------------------- people
   function addPerson(s, p) {
@@ -103,7 +106,7 @@
   // ---------------------------------------------------------------- new game
   E.newGame = function (opts) {
     opts = opts || {};
-    var cid = opts.country || 'kr';
+    var cid = opts.country || 'pt';
     var c = RA.data.countries[cid];
     if (!c) throw new Error('unknown country ' + cid);
     var seed = opts.seed != null && String(opts.seed).trim() ? String(opts.seed).trim() : R.randomSeedString();
@@ -113,9 +116,9 @@
       country: cid, generation: opts.generation || 1,
       birthYear: opts.birthYear || BIRTH_YEAR, age: 0, year: 0, alive: true, cause: null,
       hero: {
-        given: opts.given || c.hero.given,
+        given: C.HERO_NAME,                       // always 호날두
         surname: opts.surname != null ? opts.surname : (c.hero.surname || ''),
-        nick: opts.nick || c.hero.nick,
+        nick: C.HERO_NAME,
         gender: opts.gender || 'm', hair: 0, skin: 0
       },
       stats: {}, money: 0, flags: {}, cd: {}, fired: {}, log: [], people: [], nextPid: 1,
@@ -128,7 +131,8 @@
         talent: 0, abroadClub: null, bestSeason: 0
       },
       achievements: {}, pending: [], queue: [], ap: AP_PER_YEAR, jail: 0, sick: null,
-      y: {}, hist: [], legacy: opts.legacy || null
+      y: {}, hist: [], legacy: opts.legacy || null,
+      prenatal: null, eduFocus: null, eduFocusChanged: false, cards: []
     };
     s.year = s.birthYear;
     s.hero.skin = rint(s, 0, (c.skin || [1]).length - 1);
@@ -136,18 +140,19 @@
     var st = s.stats;
     st.health = rint(s, 75, 95); st.happy = rint(s, 65, 90); st.smarts = rint(s, 15, 40);
     st.looks = rint(s, 35, 80); st.football = rint(s, 2, 8); st.grit = rint(s, 25, 50); st.fame = 0;
+    st.social = rint(s, 25, 45);
     s.fb.talent = rint(s, 55, 100);
     s.fb.abroadClub = pick(s, E.ABROAD_CLUBS);
     s.money = opts.inheritMoney || 0;
 
     if (opts.parentState) E.buildHeirFamily(s, opts);
     else buildCanonFamily(s, c);
-    s.age = opts.startAge || 1;
+    s.age = opts.parentState ? Math.max(1, opts.startAge || 1) : 0;
     s.year = s.birthYear + s.age;
     s.people.forEach(function (p) { if (p.bornAt != null) p.age = s.age - p.bornAt; });
-    if (!opts.parentState) {
-      addLog(s, T.render('{hometown}의 {houseLong}에서 사남매의 막내로 태어났다.', vars(s)), 'milestone');
-    }
+    // a new life starts before birth with the one prenatal pick (태교); heirs start at their current age
+    if (!opts.parentState) s.queue.push('sys_prenatal');
+    else if (s.age >= 1 && s.age <= 6) E.queueSys(s, 'sys_edu_focus');
     E.updateEducation(s, true);
     return s;
   };
@@ -413,6 +418,45 @@
     return true;
   };
 
+  // ---------------------------------------------------------------- event categories
+  // Every event card shows a category icon, colour and label so it can be read at a glance.
+  E.CATEGORIES = {
+    pick: { label: '선택', icon: '✨', color: '#f5c518', pic: 'pick' },
+    memorial: { label: '추모', icon: '🕯️', color: '#9aa3b5', pic: 'memorial' },
+    crime: { label: '범죄·사건', icon: '🚨', color: '#ff5470', pic: 'crime' },
+    football: { label: '축구', icon: '⚽', color: '#2fd171', pic: 'football' },
+    work: { label: '일', icon: '💼', color: '#60a5fa', pic: 'work' },
+    school: { label: '학교', icon: '📚', color: '#a78bfa', pic: 'school' },
+    love: { label: '사랑', icon: '💘', color: '#f472b6', pic: 'love' },
+    family: { label: '가족', icon: '🏠', color: '#f5a524', pic: 'family' },
+    health: { label: '건강', icon: '🏥', color: '#ff8a65', pic: 'health' },
+    money: { label: '돈', icon: '💰', color: '#34d399', pic: 'money' },
+    social: { label: '친구·관계', icon: '🤝', color: '#14b8a6', pic: 'social' },
+    country: { label: '고향·명절', icon: '🎉', color: '#38bdf8', pic: 'country' },
+    life: { label: '일상', icon: '🌱', color: '#8e9ac0', pic: 'life' }
+  };
+  E.eventCategory = function (ev) {
+    if (!ev) return E.CATEGORIES.life;
+    if (ev._cat) return E.CATEGORIES[ev._cat];
+    var id = ev.id || '', c = ev.cond || {}, k = 'life';
+    var refs = E.eventRefs(ev);
+    var fbCanon = /^canon_(join|regional|academy|first_night|accent|warning|homesick|work_ethic|youth|pro|late|kitroom)/.test(id);
+    if (ev.pick || /^sys_(prenatal|edu|exam|major|grad|phd|retire)/.test(id)) k = 'pick';
+    else if (refs.isMemorial || id === 'sys_grief') k = 'memorial';
+    else if ((c.flags || []).indexOf('jailed') >= 0 || (c.sector || []).indexOf('crime') >= 0 || /crime|fraud|shoplift|theft|steal|jail|prison|police_raid|loan_shark/.test(id)) k = 'crime';
+    else if (/^fb_/.test(id) || fbCanon || c.fb) k = 'football';
+    else if (c.sector || c.career || c.level || /^car_/.test(id)) k = 'work';
+    else if (/heart|hospital|sick|health|checkup|ill|injur|smok|drink/.test(id) || (c.stats && c.stats.health)) k = 'health';
+    else if (c.edu || /school|exam|class|teacher|study|univ|homework/.test(id)) k = 'school';
+    else if ((c.rel && (c.rel.partner || c.rel.spouse)) || /love|date|crush|wedding|propos|romance|marri/.test(id) || refs.refs.partner || refs.refs.spouse) k = 'love';
+    else if (/^soc_/.test(id) || (c.stats && c.stats.social) || refs.refs.friend) k = 'social';
+    else if (c.money || /money|lotter|invest|debt|wallet|crypto|bubble|loan|salary/.test(id)) k = 'money';
+    else if (refs.refs.father || refs.refs.mother || refs.refs.bro || refs.refs.sis1 || refs.refs.sis2 || refs.refs.siblings || refs.refs.child || /^canon_/.test(id)) k = 'family';
+    else if (ev.countries) k = 'country';
+    ev._cat = k;
+    return E.CATEGORIES[k];
+  };
+
   // ---------------------------------------------------------------- event presentation
   E.choiceAvailable = function (s, ch) {
     if (ch.reqFn && !ch.reqFn(s)) return false;
@@ -431,11 +475,14 @@
     var ev = E.eventIndex()[s.queue[0]];
     if (!ev || (s.jail > 0 && !E.jailOk(ev)) || (!ev.manual && !E.personsOk(s, ev))) { s.queue.shift(); return E.currentEvent(s); }
     var text = E.eventText(s, ev);
+    var cat = E.eventCategory(ev);
     return {
-      id: ev.id, text: E.render(s, text), scene: ev.scene || E.sceneFor(s, ev),
+      id: ev.id, text: E.render(s, text), scene: ev.scene || E.sceneFor(s, ev), pick: !!ev.pick, pic: ev.pic || null,
+      category: { key: ev._cat, label: cat.label, icon: cat.icon, color: cat.color, pic: cat.pic },
       choices: eventChoices(s, ev).map(function (ch, i) {
         var chance = ch.check ? E.checkChance(s, ch.check) : null;
-        return { i: i, text: E.render(s, ch.text), enabled: E.choiceAvailable(s, ch), chance: chance };
+        return { i: i, text: E.render(s, ch.text), enabled: E.choiceAvailable(s, ch), chance: chance,
+          desc: ch.desc ? E.render(s, ch.desc) : null, preview: ch.preview || null };
       })
     };
   };
@@ -463,11 +510,14 @@
       res.outcome = ok ? 'success' : 'fail';
     }
     applyEffects(s, branch.effects, res.changes);
+    if (res.outcome !== 'fail' && branch.effects && (branch.effects.fame || 0) >= 3 && E.eventCategory(ev).key === 'football') E.triumph(s, 'goal');
     var log = variant(s, ev, branch.logVariants, branch.log);
     if (branch.run) log = branch.run(s, res) || log;
     var sch = branch.schedule || ch.schedule;
     if (sch) s.pending.push({ age: s.age + (sch.years || 1), id: sch.id });
     res.log = E.render(s, log || '');
+    mem.chg = compactChanges(res.changes);
+    res.category = E.eventCategory(ev);
     if (res.log) addLog(s, res.log, res.outcome === 'fail' ? 'bad' : res.outcome === 'success' ? 'good' : 'event', mem);
     res.changes.forEach(function (c) { if (c.k === 'msg') addLog(s, c.t, 'info'); });
     dropJailBlocked(s);
@@ -485,7 +535,7 @@
     var changes = applyEffects(s, ev.effects, []);
     var text = E.eventText(s, ev), evLog = E.eventLog(s, ev);
     var log = ev.run ? ev.run(s) : null;
-    addLog(s, E.render(s, text) + (evLog ? ' ' + E.render(s, evLog) : '') + (log ? ' ' + log : ''), ev.kind || 'event', { mem: E.eventRefs(ev).isMemorial ? 1 : null, ev: ev.id, j: wasJailed });
+    addLog(s, E.render(s, text) + (evLog ? ' ' + E.render(s, evLog) : '') + (log ? ' ' + log : ''), ev.kind || 'event', { mem: E.eventRefs(ev).isMemorial ? 1 : null, ev: ev.id, j: wasJailed, chg: compactChanges(changes) });
     changes.forEach(function (c) { if (c.k === 'msg') addLog(s, c.t, 'info'); });
   }
   E.fireEvent = fireEvent;
@@ -683,7 +733,8 @@
     var j = s.job;
     j.years++; j.atLevel++;
     var st = s.stats[k.keyStat] || 0;
-    j.perf = clamp(j.perf + (st - 55) / 10 + (rnd(s) * 10 - 5) + (s.y.workHard ? 8 : 0) - (s.y.slack ? 10 : 0), 0, 100);
+    var people = ['service', 'education', 'medical', 'entertainment', 'business', 'government', 'media', 'religion', 'public'].indexOf(k.sector) >= 0;
+    j.perf = clamp(j.perf + (st - 55) / 10 + ((s.stats.social || 40) - 50) / (people ? 15 : 40) + (rnd(s) * 10 - 5) + (s.y.workHard ? 8 : 0) - (s.y.slack ? 10 : 0), 0, 100);
     var n = k.ladder.length - 1;
     var gate = j.level < n - 1 || st >= 72; // the top rung needs real excellence
     if (k.special === 'politics' && j.level >= n - 2) gate = gate && s.stats.fame >= 45 && rnd(s) < 0.4; // elections are hard to win
@@ -704,12 +755,12 @@
       if (k.special === 'crime' && rnd(s) < 0.03 * k.risk) { E.FX.jail(s); return; }
       if (k.special !== 'crime' && rnd(s) < 0.006 * k.risk) { addStat(s, 'health', -rint(s, 5, 20)); addLog(s, '업무 중 사고로 다쳤다.', 'bad'); }
     }
-    if (k.special === 'politics' && j.level === n) E.unlock(s, 'leader');
+    if (k.special === 'politics' && j.level === n && E.unlock(s, 'leader')) E.triumph(s, 'leader');
     if (k.special === 'space' && j.level >= 1) E.unlock(s, 'astronaut');
     if ((k.sector === 'science' || k.id === 'professor') && j.level >= n - 1 && s.stats.smarts >= 92 && rnd(s) < 0.04) {
       addLog(s, '스톡홀름에서 전화가 왔다. 노벨상 수상자로 선정됐다!', 'milestone');
       addStat(s, 'fame', 25); s.money += Math.round(1000000 * wage(s)); E.unlock(s, 'nobel');
-      s.y.anim = 'trophy';
+      s.y.anim = 'trophy'; E.triumph(s, 'nobel');
     }
     // mandatory retirement prompt
     if (s.age >= 65 && k.sector !== 'crime' && k.special !== 'politics') E.queueSys(s, 'sys_retire', 5);
@@ -913,6 +964,7 @@
     s.age++; s.year++;
     s.ap = AP_PER_YEAR;
     var prevY = s.y; s.y = {};
+    s.cards = [];
     s.hist.push({ age: s.age, money: Math.round(s.money), fame: s.stats.fame, happy: s.stats.happy, health: s.stats.health });
     if (s.hist.length > 130) s.hist.shift();
     addLog(s, '— ' + s.age + '세 (' + s.year + '년) —', 'year');
@@ -927,9 +979,77 @@
     yearlyPeople(s);
     yearlyKids(s);
     if (E.checkDeath(s)) return { events: [] };
-    var ids = E.selectEvents(s);
+    E.applyEduFocus(s);
+    if (s.age === 1 && !s.eduFocus) E.queueSys(s, 'sys_edu_focus');
+    if (s.age === E.MONTAGE_UNTIL && s.eduFocus && !s.eduFocusChanged && !s.fired.sys_edu_change) E.queueSys(s, 'sys_edu_change');
+    var ids;
+    if (E.isMontage(s)) ids = E.selectMilestones(s);   // ages 0-4: a montage of milestone cards, no storylets
+    else ids = E.selectEvents(s);
     E.checkAchievements(s);
     return { events: ids };
+  };
+
+  // ---------------------------------------------------------------- early childhood (ages 0-4)
+  E.MONTAGE_UNTIL = 5;           // ages below this play as a montage of milestone cards
+  E.EDU_FOCUS_UNTIL = 7;         // the early-education focus applies every year up to this age
+  E.isMontage = function (s) { return s.alive && s.age < E.MONTAGE_UNTIL; };
+
+  // A milestone card: big picture + one short sentence + stat chips. Also logged.
+  E.addCard = function (s, card) {
+    var text = T.fixJosa(card.text);
+    s.cards = s.cards || [];
+    s.cards.push({ id: card.id, pic: card.pic, text: text, chg: card.chg || [], age: s.age });
+    addLog(s, text, 'card', { pic: card.pic, chg: compactChanges(card.chg), ev: card.id, mem: card.mem ? 1 : null });
+  };
+  function compactChanges(chg) {
+    var out = [];
+    (chg || []).forEach(function (c) { if (c.k !== 'msg' && c.k !== 'rel' && c.d) out.push({ k: c.k, d: c.d }); });
+    return out.length ? out : null;
+  }
+  E.compactChanges = compactChanges;
+
+  E.selectMilestones = function (s) {
+    var ids = [];
+    (RA.data.milestones || []).forEach(function (m) {
+      if (m.age !== s.age && !(Array.isArray(m.age) && s.age >= m.age[0] && s.age <= m.age[1])) return;
+      if (s.fired[m.id]) return;
+      if (m.countries && m.countries.indexOf(s.country) < 0) return;
+      if (m.cond && !E.condMatches(s, m.cond)) return;
+      if (!E.personsOk(s, m)) return;
+      if (m.chance != null && rnd(s) >= m.chance) return;
+      s.fired[m.id] = 1;
+      var chg = applyEffects(s, m.effects, []);
+      E.addCard(s, { id: m.id, pic: m.pic, text: E.render(s, m.text), chg: chg });
+      ids.push(m.id);
+    });
+    return ids;
+  };
+
+  // Birth happens right after the prenatal pick
+  E.birth = function (s) {
+    s.born = true;
+    addLog(s, T.render('{hometown}의 {houseLong}에서 사남매의 막내로 태어났다.', vars(s)), 'milestone');
+    E.selectMilestones(s);
+  };
+
+  E.applyEduFocus = function (s) {
+    var f = s.eduFocus && E.EDU_FOCUS[s.eduFocus];
+    if (!f || s.age < 1 || s.age > E.EDU_FOCUS_UNTIL || s.y.focusApplied) return;
+    s.y.focusApplied = true;
+    var chg = applyEffects(s, f.effects, []);
+    var line = f.lines[(s.age - 1) % f.lines.length];
+    var text = f.icon + ' 조기 교육(' + f.label + '): ' + line;
+    if (E.isMontage(s)) E.addCard(s, { id: 'focus_' + s.eduFocus, pic: 'focus_' + s.eduFocus, text: text, chg: chg });
+    else addLog(s, text, 'focus', { chg: compactChanges(chg) });
+  };
+
+  // Auto-play: one step. Stops (returns 'choose') whenever the player has to decide something.
+  E.autoStep = function (s) {
+    if (!s.alive) return 'dead';
+    if (s.queue.length) return 'choose';
+    E.ageUp(s);
+    if (!s.alive) return 'dead';
+    return s.queue.length ? 'choose' : 'aged';
   };
 
   E.prepareExam = function (s) {

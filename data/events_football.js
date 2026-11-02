@@ -7,10 +7,7 @@
 
   EV.push(
     // ---------------------------------------------------------------- canon: early childhood
-    { id: 'canon_first_ball', age: [2, 3], once: true, priority: true, cond: { flags: ['!heir'], rel: { father: 'alive' } },
-      text: '{father}[이/가] {localClub} 창고에서 바람 빠진 공 하나를 들고 왔다. "우리 막내 거다."',
-      effects: { football: 2, happy: 4, rel: { father: 5 } }, log: '그날부터 공을 안고 잤다.' },
-    { id: 'canon_kitroom', age: [4, 6], once: true, weight: 30, cond: { flags: ['!heir'], rel: { father: 'alive' } },
+    { id: 'canon_kitroom', age: [5, 6], once: true, weight: 30, cond: { flags: ['!heir'], rel: { father: 'alive' } },
       text: '{fatherJob2}인 {father}[을/를] 따라 {localClub}의 장비실에 갔다. 땀 냄새 나는 유니폼이 산더미다.',
       choices: [
         { text: '유니폼 개는 걸 돕는다', effects: { grit: 2, rel: { father: 6 } }, log: '{father}[이/가] 머리를 쓰다듬으며 "넌 일을 야무지게 하는구나" 했다.' },

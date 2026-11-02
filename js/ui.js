@@ -7,8 +7,9 @@
 
   var app = {
     s: null, slot: 1, tab: 'acts', screen: 'start', mood: null, moodUntil: 0,
-    sel: { country: 'kr', gender: 'm', name: '', seed: '' },
-    canvases: [], jobFilter: 'ok'
+    sel: { country: 'pt', gender: 'm', seed: '' },
+    canvases: [], jobFilter: 'ok',
+    auto: false, speed: 1, autoTimer: null, cardsShown: 0, cardsAge: -1, montageOpen: false, busy: false
   };
   G.__app = app; // handy for debugging / headless checks
 
@@ -17,9 +18,9 @@
   function country() { return RA.data.countries[app.s ? app.s.country : app.sel.country]; }
   function money(v) { return T.money(v, country()); }
 
-  var STAT_COLORS = { health: '#ff5470', happy: '#f5c518', smarts: '#60a5fa', looks: '#f472b6', football: '#2fd171', grit: '#f97316', fame: '#a78bfa' };
-  var SHORT = { health: '건강', happy: '행복', smarts: '지능', looks: '외모', football: '축구', grit: '근성', fame: '명성' };
-  var STAT_ICONS = { health: '❤', happy: '☺', smarts: '✎', looks: '✦', football: '⚽', grit: '▲', fame: '★' };
+  var STAT_COLORS = { health: '#ff5470', happy: '#f5c518', smarts: '#60a5fa', looks: '#f472b6', football: '#2fd171', grit: '#f97316', social: '#14b8a6', fame: '#a78bfa' };
+  var SHORT = C.STAT_SHORT;
+  var STAT_ICONS = C.STAT_ICONS;
 
   // ---------------------------------------------------------------- animation loop (≈12 fps)
   function addCanvas(el, draw) { app.canvases.push({ el: el, draw: draw }); draw(performance.now()); }
@@ -41,6 +42,7 @@
     var c = RA.data.countries[s.country];
     var m = mood || (performance.now() < app.moodUntil ? app.mood : null) || (s.stats.happy < 28 ? 'sad' : null);
     return {
+      hidden: !s.born && s.age === 0 && !s.legacy,
       age: s.age, skin: c.skin[s.hero.skin % c.skin.length], hairColor: c.hair, hair: s.hero.hair,
       outfit: E.outfit(s), gender: s.hero.gender, number: s.flags.number7 ? 7 : 28, sick: !!s.sick, mood: m
     };
@@ -50,7 +52,7 @@
     addCanvas(cv, function (t) {
       var ctx = cv.getContext('2d'); ctx.imageSmoothingEnabled = false;
       var sc = sceneFn(); P.drawScene(ctx, sc, t, country());
-      var lk = lookFn && lookFn(); if (lk && sc !== 'grave') P.drawHero(ctx, heroX || 80, 88, Object.assign({ t: t }, lk));
+      var lk = lookFn && lookFn(); if (lk && !lk.hidden && sc !== 'grave') P.drawHero(ctx, heroX || 80, 88, Object.assign({ t: t }, lk));
     });
     return cv;
   }
@@ -65,17 +67,19 @@
     while (wrap.children.length > 3) wrap.removeChild(wrap.firstChild);
     setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, ms || 3200);
   }
-  function chipsHtml(changes) {
-    if (!changes || !changes.length) return '';
-    var agg = {};
-    changes.forEach(function (c) { if (c.k === 'msg' || c.k === 'rel') return; agg[c.k] = (agg[c.k] || 0) + c.d; });
-    var out = Object.keys(agg).filter(function (k) { return agg[k]; }).map(function (k) {
-      var v = agg[k], lab = C.STAT_LABELS[k] || k;
-      var txt = k === 'money' ? (v > 0 ? '+' : '') + money(v) : (v > 0 ? '+' : '') + v;
-      return '<span class="chip ' + (v > 0 ? 'up' : 'down') + '">' + esc(lab) + ' ' + esc(txt) + '</span>';
-    });
-    changes.filter(function (c) { return c.k === 'rel'; }).forEach(function (c) {
-      out.push('<span class="chip ' + (c.d > 0 ? 'up' : 'down') + '">관계 ' + (c.d > 0 ? '♥' : '♡') + '</span>');
+  // Stat changes as icon chips: "🧠 +3", "💰 +12만 원", "❤️ 관계"
+  function chipsHtml(changes, preview) {
+    if (!changes) return '';
+    var list = Array.isArray(changes) ? changes : Object.keys(changes).filter(function (k) { return typeof changes[k] === 'number'; }).map(function (k) { return { k: k, d: changes[k] }; });
+    if (!Array.isArray(changes) && changes.rel) list.push({ k: 'rel', d: 1 });
+    var agg = {}, order = [];
+    list.forEach(function (c) { if (c.k === 'msg' || !c.d) return; if (!(c.k in agg)) { agg[c.k] = 0; order.push(c.k); } agg[c.k] += c.d; });
+    var out = order.filter(function (k) { return agg[k]; }).map(function (k) {
+      var v = agg[k];
+      if (k === 'rel') return '<span class="chip ' + (v > 0 ? 'up' : 'down') + '" title="관계">' + (v > 0 ? '💞' : '💔') + ' 관계</span>';
+      var txt = k === 'money' ? (v > 0 ? '+' : '') + (preview ? '' : money(v)) : (v > 0 ? '+' : '') + v;
+      if (k === 'money' && preview) txt = v > 0 ? '+' : '−';
+      return '<span class="chip ' + (v > 0 ? 'up' : 'down') + '" title="' + esc(C.STAT_LABELS[k] || k) + '">' + (STAT_ICONS[k] || '') + ' ' + esc(txt) + '</span>';
     });
     return out.length ? '<div class="chips">' + out.join('') + '</div>' : '';
   }
@@ -84,9 +88,9 @@
     doc.body.appendChild(el);
     setTimeout(function () { el.remove(); }, 1000);
   }
-  function celebrate(kind) {
+  function celebrate(kind, siuuPlayed) {
     var label = { trophy: '우승!', ballon: '발롱도르!', worldcup: '월드컵 우승!', goal: '골!!', achieve: '업적 달성!' }[kind] || '축하해요!';
-    A.play(kind === 'achieve' ? 'achieve' : 'trophy');
+    if (!siuuPlayed) A.play(kind === 'achieve' ? 'achieve' : 'trophy');
     app.mood = 'celebrate'; app.moodUntil = performance.now() + 3000;
     var root = $('#fx-root');
     var conf = doc.createElement('canvas'); conf.width = 160; conf.height = 96; conf.className = 'px';
@@ -107,9 +111,10 @@
 
   // ---------------------------------------------------------------- modal
   function closeModal() { $('#modal-root').innerHTML = ''; }
+  function closeModalAndGo() { closeModal(); proceed(); }
   function modal(inner, opts) {
     opts = opts || {};
-    var wrap = h('<div class="modal-wrap" role="dialog" aria-modal="true"><div class="modal card"></div></div>');
+    var wrap = h('<div class="modal-wrap' + (opts.sheet ? ' sheet' : '') + '" role="dialog" aria-modal="true"><div class="modal card"></div></div>');
     var m = wrap.firstChild;
     if (typeof inner === 'string') m.innerHTML = inner; else m.appendChild(inner);
     if (opts.dismiss) wrap.addEventListener('click', function (e) { if (e.target === wrap) closeModal(); });
@@ -132,7 +137,7 @@
       '<section class="card"><div class="card-h">새 인생 시작</div><div class="card-b">' +
       '<div class="field"><label>태어날 나라를 고르세요</label><div class="countries" id="countries"></div></div>' +
       '<div class="family-preview" id="family"></div>' +
-      '<div class="field"><label>이름 (비워 두면 기본 이름)</label><input type="text" id="in-name" maxlength="12" placeholder="' + esc(c.hero.given) + '"></div>' +
+      '<div class="field"><label>주인공</label><div class="hero-name">' + esc(C.HERO_NAME) + ' <span class="muted">(남녀 모두 이름은 호날두)</span></div></div>' +
       '<div class="field"><label>성별</label><div class="seg" id="seg-g"><button data-g="m">남</button><button data-g="f">여</button></div></div>' +
       '<div class="field"><label>시드 (같은 시드 + 같은 선택 = 같은 인생)</label><div class="row"><input type="text" class="grow" id="in-seed" maxlength="24" placeholder="비우면 무작위"><button class="btn btn-sm" id="btn-dice" title="무작위 시드">🎲</button></div></div>' +
       '<div class="field"><button class="btn btn-green" id="btn-start" style="width:100%;font-size:17px;padding:14px">인생 시작하기 ▶</button></div>' +
@@ -146,9 +151,11 @@
     banner.appendChild(h('<div class="title-over"><h1>호날두의 모험</h1><p>도트 인생 시뮬레이션 · 비공식 팬 패러디</p></div>'));
     // countries
     var grid = $('#countries', el);
-    Object.keys(RA.data.countries).forEach(function (id) {
+    // the canon route (Portugal) comes first, as a wide card
+    var ids = Object.keys(RA.data.countries).sort(function (a, b) { return (RA.data.countries[b].canon ? 1 : 0) - (RA.data.countries[a].canon ? 1 : 0); });
+    ids.forEach(function (id) {
       var cc = RA.data.countries[id];
-      var b = h('<button class="country' + (id === app.sel.country ? ' sel' : '') + '" data-id="' + id + '"><canvas class="px" width="24" height="16"></canvas><span>' + esc(cc.name) + '</span></button>');
+      var b = h('<button class="country' + (cc.canon ? ' canon' : '') + (id === app.sel.country ? ' sel' : '') + '" data-id="' + id + '"><canvas class="px" width="24" height="16"></canvas><span>' + esc(cc.name) + (cc.canon ? ' <em class="canon-badge">원작 루트</em>' : '') + '</span>' + (cc.canon ? '<small class="canon-note">실제 이야기와 가장 가까운 길 · 마데이라섬 → 리스본</small>' : '') + '</button>');
       P.drawFlag(b.querySelector('canvas').getContext('2d'), id, 0, 0, 1);
       b.addEventListener('click', function () { A.play('click'); app.sel.country = id; renderStart(); });
       grid.appendChild(b);
@@ -162,16 +169,14 @@
         return word + ' <b>' + esc(x.name) + '</b>';
       }).join(', ') + '<br>' +
       '<span class="muted">동네 클럽 ' + esc(c.clubs.local) + ' → ' + esc(c.clubs.regional) + ' → ' + esc(c.places.bigcity) + '의 ' + esc(c.clubs.academy) + '</span>';
-    $('#in-name', el).value = app.sel.name;
     $('#in-seed', el).value = app.sel.seed;
-    $('#in-name', el).addEventListener('input', function (e) { app.sel.name = e.target.value; });
     $('#in-seed', el).addEventListener('input', function (e) { app.sel.seed = e.target.value; });
     $('#btn-dice', el).addEventListener('click', function () { app.sel.seed = RA.RNG.randomSeedString(); $('#in-seed').value = app.sel.seed; });
     Array.prototype.forEach.call(el.querySelectorAll('#seg-g button'), function (b) {
       if (b.dataset.g === app.sel.gender) b.classList.add('on');
       b.addEventListener('click', function () { app.sel.gender = b.dataset.g; renderStart(); });
     });
-    $('#btn-start', el).addEventListener('click', function () { startGame(); });
+    $('#btn-start', el).addEventListener('click', function () { A.unlock(); A.siuu(); startGame(); });
     // slots
     var sl = $('#slots', el);
     list.slots.forEach(function (x) {
@@ -188,16 +193,16 @@
 
   function startGame(opts) {
     opts = opts || {};
-    A.play('age');
     var seed = opts.seed || app.sel.seed || RA.RNG.randomSeedString();
-    app.s = E.newGame({ country: opts.country || app.sel.country, seed: seed, given: opts.given || (app.sel.name.trim() || undefined), gender: opts.gender || app.sel.gender });
+    app.s = E.newGame({ country: opts.country || app.sel.country, seed: seed, gender: opts.gender || app.sel.gender });
+    app.cardsAge = -1; app.cardsShown = 0;
     var list = S.list();
     var empty = list.slots.filter(function (x) { return !x.meta || !x.meta.alive; })[0];
     app.slot = opts.slot || (empty ? empty.slot : 1);
     app.tab = isPhone() ? 'log' : 'acts';
     save();
     renderGame();
-    toast('슬롯 ' + app.slot + '에 자동 저장됩니다. 시드: ' + seed);
+    proceed();
   }
   function loadSlot(n) {
     try {
@@ -205,8 +210,9 @@
       if (!s) return toast('저장된 인생이 없습니다.');
       app.s = s; app.slot = n;
       if (!s.alive) return renderSummary();
+      app.cardsAge = s.age; app.cardsShown = (s.cards || []).length; // do not replay last year's cards
       renderGame();
-      if (s.queue.length) showEvent();
+      proceed();
     } catch (e) { toast('불러오기 실패: ' + e.message); }
   }
   function save() { if (app.s) S.save(app.slot, app.s); }
@@ -225,14 +231,16 @@
       '<aside class="side">' +
       '  <section class="card portrait"><div class="portrait-row"><div class="pcv"></div><div class="who" id="who"></div></div></section>' +
       '  <section class="card"><div class="card-h">능력치</div><div class="card-b stats" id="stats"></div></section>' +
-      '  <div class="age-dock"><button class="age-btn" id="btn-age"></button></div>' +
+      '  <div class="actionbar" id="actionbar"><button class="ab-auto" id="btn-auto" aria-pressed="false"></button><button class="ab-speed" id="btn-speed" aria-label="속도"></button><button class="age-btn" id="btn-age"></button></div>' +
       '</aside>' +
       '<section class="card logcol"><div class="card-h">인생 기록 <span class="muted" id="log-count"></span></div><div class="log" id="log"></div></section>' +
       '<section class="card panelcol"><div class="tabs" id="tabs"></div><div class="tabpanel" id="panel"></div></section>' +
       '</div>');
     scr.appendChild(el);
     $('.pcv', el).appendChild(portraitCanvas('', function () { return E.homeScene(app.s); }, function () { return lookOf(app.s); }));
-    $('#btn-age', el).addEventListener('click', onAgeUp);
+    $('#btn-age', el).addEventListener('click', function () { if (E.isMontage(app.s) && !app.s.queue.length) return proceed(true); onAgeUp(); });
+    $('#btn-auto', el).addEventListener('click', function () { setAuto(!app.auto); });
+    $('#btn-speed', el).addEventListener('click', function () { app.speed = app.speed === 1 ? 2 : 1; try { G.localStorage.setItem('ronaldo-adventure.speed', String(app.speed)); } catch (e) { /* ignore */ } renderAgeBtn(); });
     refresh(true);
   }
 
@@ -246,18 +254,18 @@
     var ap = ''; for (var i = 0; i < E.AP_PER_YEAR; i++) ap += '<i class="' + (i < s.ap ? '' : 'off') + '"></i>';
     var where = s.jail > 0 ? '수감 중 (' + s.jail + '년 남음)' : (s.flags.abroad ? (s.abroadCity || '해외') : (s.flags.moved_alone && s.age < 40 ? c.places.bigcity : c.places.city));
     $('#who').innerHTML =
-      '<div class="nm"><span class="age">' + s.age + '살</span><span>' + esc(E.fullName(c, s.hero.surname, s.hero.given)) + '</span></div>' +
+      '<div class="nm"><span class="age">' + s.age + '살</span><span>' + esc(E.genName(s.generation)) + '</span></div>' +
       '<div class="sub">' + esc(c.name) + ' · ' + esc(where) + ' · ' + s.year + '년</div>' +
       '<div class="sub">' + esc(s.job ? E.jobTitle(s) : eduLabel(s)) + '</div>' +
       '<div class="money">' + esc(money(s.money)) + '</div>' +
-      '<div class="ap">행동력 ' + ap + '</div>';
+      (E.isMontage(s) ? '<div class="ap">아기 시절 · 자동으로 넘어가요</div>' : '<div class="ap">행동력 ' + ap + '</div>');
   }
   function eduLabel(s) {
     var c = country(), st = c.school[s.edu.stage];
     if (st && st.school) return st.school + ' 재학';
     if (s.edu.stage === 'univ') return s.edu.univ + ' ' + (C.MAJORS[s.edu.major] || '') + ' 재학';
     if (s.edu.stage === 'grad') return s.edu.univ + ' 대학원';
-    if (s.age < c.school.elem.from) return '미취학 어린이';
+    if (s.age < c.school.elem.from) return (s.eduFocus ? E.EDU_FOCUS[s.eduFocus].icon + ' ' + E.EDU_FOCUS[s.eduFocus].label + ' 집중 · ' : '') + (s.age < 3 ? '아기' : '미취학 어린이');
     if (s.fb.stage !== 'none' && s.fb.stage !== 'retired') return C.FB_STAGE_LABELS[s.fb.stage];
     return s.retiredFromWork ? '은퇴' : '무직 · ' + C.DEGREE_LABELS[s.edu.degree];
   }
@@ -266,7 +274,7 @@
     var s = app.s, box = $('#stats');
     if (!box.children.length) {
       C.STATS.forEach(function (k) {
-        box.appendChild(h('<div class="stat" data-k="' + k + '" title="' + C.STAT_LABELS[k] + '"><span>' + STAT_ICONS[k] + ' ' + SHORT[k] + '</span><div class="bar"><i></i></div><span class="v"></span></div>'));
+        box.appendChild(h('<div class="stat" data-k="' + k + '"><span>' + STAT_ICONS[k] + ' ' + SHORT[k] + '</span><div class="bar"><i></i></div><span class="v"></span></div>'));
       });
     }
     C.STATS.forEach(function (k) {
@@ -281,9 +289,15 @@
     });
   }
   function renderAgeBtn() {
-    var s = app.s, b = $('#btn-age');
+    var s = app.s, b = $('#btn-age'), au = $('#btn-auto'), sp = $('#btn-speed');
+    if (!b) return;
+    if (au) { au.innerHTML = app.auto ? '⏸ <span>자동 진행 중</span>' : '▶ <span>자동 진행</span>'; au.setAttribute('aria-pressed', app.auto ? 'true' : 'false'); au.classList.toggle('on', app.auto); }
+    if (sp) sp.textContent = app.speed + 'x';
+    doc.body.classList.toggle('auto-on', !!app.auto);
     if (!s.alive) { b.innerHTML = '인생 결산 보기<small>이번 생이 끝났습니다</small>'; return; }
-    b.innerHTML = '+1살 나이 먹기 <small>' + (s.queue.length ? '먼저 일어난 일에 답하세요' : (s.age + 1) + '살이 됩니다 · 남은 행동력 ' + s.ap) + '</small>';
+    if (s.queue.length) { b.innerHTML = '선택하기<small>먼저 일어난 일에 답하세요</small>'; return; }
+    if (E.isMontage(s)) { b.innerHTML = '빨리 넘기기 ⏩<small>아기 시절은 자동으로 흘러가요</small>'; return; }
+    b.innerHTML = '+1살 <small>' + (s.age + 1) + '살이 됩니다 · 행동력 ' + s.ap + '</small>';
   }
   function renderLog(full) {
     var s = app.s, box = $('#log');
@@ -295,7 +309,7 @@
     items.forEach(function (e) {
       if (e.k === 'year' || !cur) { cur = []; groups.push(cur); }
       if (e.k === 'year') cur.push('<div class="yr">' + esc(e.t.replace(/—/g, '').trim()) + '</div>');
-      else cur.push('<div class="e k-' + esc(e.k) + '">' + esc(e.t) + '</div>');
+      else cur.push('<div class="e k-' + esc(e.k) + '">' + (e.k === 'card' ? '🍼 ' : '') + esc(e.t) + (e.chg ? chipsHtml(e.chg) : '') + '</div>');
     });
     if (newestFirst) groups.reverse();
     return groups.map(function (g) { return g.join(''); }).join('');
@@ -324,6 +338,7 @@
   function panelActs(p) {
     var s = app.s;
     if (!s.alive) { p.innerHTML = '<p class="muted">이번 생은 끝났습니다.</p>'; return; }
+    if (E.isMontage(s)) { p.innerHTML = '<p class="muted">🍼 아기 시절(0~4살)에는 활동이 없어요. 사진첩처럼 자동으로 넘어가요.</p>' + (s.eduFocus ? '<p class="hint">조기 교육: ' + E.EDU_FOCUS[s.eduFocus].icon + ' ' + esc(E.EDU_FOCUS[s.eduFocus].label) + ' — ' + esc(E.EDU_FOCUS[s.eduFocus].desc) + '</p>' : ''); return; }
     var grid = h('<div class="acts"></div>');
     E.activities(s).forEach(function (a) {
       var b = h('<button class="act' + (a.ok ? '' : ' is-off') + '" aria-disabled="' + (a.ok ? 'false' : 'true') + '" title="' + esc(a.reason) + '"><span class="ic">' + a.icon + '</span><span>' + esc(a.label) + '</span>' + (a.cost === 0 ? '<span class="muted" style="font-size:10px">행동력 0</span>' : '') + '</button>');
@@ -363,11 +378,12 @@
   }
   function afterAction() {
     save();
+    triumphCue();
     var news = app.s.y.newAchievements; app.s.y.newAchievements = null;
     refresh();
     if (news && news.length) { A.play('achieve'); news.forEach(function (id) { var a = achById(id); if (a) toast('🏅 업적 달성: ' + a.name); }); }
     if (!app.s.alive) return setTimeout(renderSummary, 900);
-    if (app.s.queue.length) showEvent();
+    proceed();
   }
   function achById(id) { return (RA.data.achievements || []).filter(function (a) { return a.id === id; })[0]; }
 
@@ -459,7 +475,7 @@
     var list = E.jobList(s);
     var sectors = {}; list.forEach(function (j) { sectors[j.sector] = 1; });
     var m = modal('<div class="card-h">직업 찾기 <button class="btn btn-sm btn-ghost" id="x">닫기</button></div><div class="card-b"><div class="filter" id="flt"></div><div class="joblist" id="jl"></div></div>', { dismiss: true });
-    m.querySelector('#x').addEventListener('click', closeModal);
+    m.querySelector('#x').addEventListener('click', closeModalAndGo);
     var flt = m.querySelector('#flt');
     [['ok', '지원 가능'], ['all', '전체']].concat(Object.keys(sectors).map(function (k) { return [k, C.SECTORS[k]]; })).forEach(function (f) {
       var b = h('<button class="' + (app.jobFilter === f[0] ? 'on' : '') + '">' + esc(f[1]) + '</button>');
@@ -488,24 +504,45 @@
   }
 
   // ---------------------------------------------------------------- events
+  function bindAutoStop(root) {
+    var b = root.querySelector('.auto-stop');
+    if (b) b.addEventListener('click', function () { setAuto(false); b.remove(); });
+  }
+  function categoryHtml(cat) {
+    if (!cat) return '';
+    return '<div class="ev-cat" style="--cat:' + cat.color + '"><span class="ev-cat-ic">' + cat.icon + '</span>' + esc(cat.label) + '</div>';
+  }
   function showEvent() {
     var s = app.s;
     var ev = E.currentEvent(s);
-    if (!ev) { closeModal(); refresh(); return; }
+    if (!ev) { closeModal(); refresh(); return proceed(); }
+    renderAgeBtn();
     var wrap = doc.createElement('div');
-    var cvHolder = doc.createElement('div');
+    wrap.className = 'ev-card' + (ev.pick ? ' is-pick' : '');
+    wrap.style.setProperty('--cat', ev.category.color);
+    var cvHolder = doc.createElement('div'); cvHolder.className = 'ev-pic';
     wrap.appendChild(cvHolder);
-    var body = h('<div class="card-b"><p class="ev-text">' + esc(ev.text) + '</p><div class="choices"></div></div>');
+    var body = h('<div class="card-b">' + categoryHtml(ev.category) + '<p class="ev-text">' + esc(ev.text) + '</p><div class="choices"></div>' +
+      (app.auto ? '<button class="btn btn-ghost auto-stop">⏸ 자동 진행 끄기 <span class="muted">(선택을 기다리는 중)</span></button>' : '') + '</div>');
     wrap.appendChild(body);
     ev.choices.forEach(function (ch) {
       var pct = ch.chance != null ? '<span class="p">성공률 ' + Math.round(ch.chance * 100) + '%</span>' : '';
-      var b = h('<button class="btn choice" ' + (ch.enabled ? '' : 'disabled') + '><span>' + esc(ch.text) + '</span>' + (ch.enabled ? pct : '<span class="p">조건 부족</span>') + '</button>');
-      b.addEventListener('click', function () { onChoose(ch.i, ev); });
+      var extra = (ch.desc ? '<span class="desc">' + esc(ch.desc) + '</span>' : '') + (ch.preview ? chipsHtml(ch.preview, true) : '');
+      var b = h('<button class="btn choice' + (ch.desc ? ' has-desc' : '') + '" ' + (ch.enabled ? '' : 'aria-disabled="true"') + '><span class="ct"><span>' + esc(ch.text) + '</span>' + extra + '</span>' + (ch.enabled ? pct : '<span class="p">조건 부족</span>') + '</button>');
+      b.addEventListener('click', function () {
+        if (!ch.enabled) { A.play('bad'); toast('조건이 부족해서 고를 수 없어요.'); return; }
+        onChoose(ch.i, ev);
+      });
       body.querySelector('.choices').appendChild(b);
     });
-    modal(wrap);
+    bindAutoStop(body);
+    modal(wrap, { sheet: true });
     var scene = ev.scene;
-    cvHolder.appendChild(portraitCanvas('', function () { return scene; }, function () { return lookOf(app.s); }));
+    if (ev.pic) {
+      var pc = doc.createElement('canvas'); pc.width = P.W; pc.height = P.H; pc.className = 'px';
+      addCanvas(pc, function (t) { P.drawMilestone(pc.getContext('2d'), ev.pic, t, country(), lookOf(app.s)); });
+      cvHolder.appendChild(pc);
+    } else cvHolder.appendChild(portraitCanvas('', function () { return scene; }, function () { return lookOf(app.s); }));
   }
   function onChoose(i, ev) {
     var s = app.s;
@@ -513,47 +550,117 @@
     if (!res) return;
     if (res.outcome === 'fail') { A.play('bad'); app.mood = 'sad'; app.moodUntil = performance.now() + 2000; }
     else { A.play('good'); if (res.outcome === 'success') { app.mood = 'celebrate'; app.moodUntil = performance.now() + 1800; } }
+    triumphCue();
     var m = $('.modal');
     var body = m.querySelector('.card-b');
-    body.innerHTML = '<p class="ev-text muted">' + esc(ev.text) + '</p>' +
+    body.innerHTML = categoryHtml(ev.category) + '<p class="ev-text muted">' + esc(ev.text) + '</p>' +
       '<div class="result ' + (res.outcome === 'fail' ? 'fail' : '') + '">' + (res.outcome === 'success' ? '✔ 성공! ' : res.outcome === 'fail' ? '✖ 실패… ' : '') + esc(res.log) +
       res.changes.filter(function (c) { return c.k === 'msg'; }).map(function (c) { return '<br>▸ ' + esc(c.t); }).join('') + '</div>' +
       chipsHtml(res.changes) +
-      '<button class="btn btn-green" id="next" style="width:100%">' + (s.queue.length ? '다음 일 ▶' : (s.alive ? '계속하기' : '…')) + '</button>';
+      '<button class="btn btn-green btn-big" id="next" style="width:100%">' + (s.queue.length ? '다음 ▶' : (s.alive ? '계속하기 ▶' : '…')) + '</button>' +
+      (app.auto ? '<button class="btn btn-ghost auto-stop">⏸ 자동 진행 끄기</button>' : '');
+    bindAutoStop(body);
     var nb = body.querySelector('#next');
-    nb.addEventListener('click', function () {
+    var go = function () {
       A.play('click');
       save();
       if (!s.alive) { closeModal(); return renderSummary(); }
-      if (s.queue.length) return showEvent();
+      if (s.queue.length && !unseenCards()) return showEvent();
       closeModal(); afterAction();
-    });
+    };
+    nb.addEventListener('click', go);
     nb.focus();
     refresh();
+    // in auto mode a plain result (no further choice) moves on by itself
+    if (app.auto) setTimeout(function () { if (doc.body.contains(nb) && app.auto) go(); }, autoDelay() + 600);
   }
 
+  // ---------------------------------------------------------------- flow, montage and auto-play
+  function autoDelay() { return app.speed === 2 ? 900 : 1800; }
+  function cardDelay() { return app.speed === 2 ? 1000 : 1700; }
+  function triumphCue() { var s = app.s; if (s && s.y && s.y.triumph) { s.y.triumph = null; if (!A.siuu()) A.play('goal'); } }
+  function unseenCards() {
+    var s = app.s; if (!s || !s.cards) return 0;
+    if (app.cardsAge !== s.age) { app.cardsAge = s.age; app.cardsShown = 0; }
+    return Math.max(0, s.cards.length - app.cardsShown);
+  }
+  function setAuto(on) {
+    app.auto = !!on;
+    clearTimeout(app.autoTimer);
+    renderAgeBtn();
+    toast(app.auto ? '▶ 자동 진행을 켰어요. 선택이 필요하면 멈춰요.' : '⏸ 자동 진행을 껐어요.', 1800);
+    if (app.auto) proceed();
+  }
+  // Decide what happens next: cards → choices → (montage or auto) next year.
+  function proceed(fast) {
+    var s = app.s;
+    clearTimeout(app.autoTimer);
+    if (!s || app.screen !== 'game') return;
+    if (!s.alive) { setTimeout(renderSummary, 600); return; }
+    if ($('.modal-wrap') || app.montageOpen) { if (app.auto || E.isMontage(s)) app.autoTimer = setTimeout(proceed, 800); return; }
+    if (unseenCards()) return showMontage();
+    if (s.queue.length) return showEvent();
+    renderAgeBtn();
+    if (E.isMontage(s)) { app.autoTimer = setTimeout(onAgeUp, fast ? 50 : 500); return; }
+    if (app.auto) app.autoTimer = setTimeout(function () { if (app.auto && !$('.modal-wrap') && !app.montageOpen) onAgeUp(); else proceed(); }, autoDelay());
+  }
+  function showMontage() {
+    var s = app.s, c = country();
+    app.montageOpen = true;
+    var root = $('#fx-root');
+    var ov = h('<div class="montage" role="dialog" aria-label="아기 시절"><div class="mt-card card"><div class="mt-age"></div><div class="mt-pic"></div><p class="mt-text"></p><div class="mt-chips"></div><div class="mt-dots"></div><p class="mt-hint">화면을 누르면 넘어가요</p></div></div>');
+    root.appendChild(ov);
+    var cv = doc.createElement('canvas'); cv.width = P.W; cv.height = P.H; cv.className = 'px';
+    ov.querySelector('.mt-pic').appendChild(cv);
+    var cur = null, timer = null;
+    addCanvas(cv, function (t) {
+      if (!cur) return;
+      var ms = (RA.data.milestones || []).filter(function (m) { return m.id === cur.id; })[0];
+      P.drawMilestone(cv.getContext('2d'), cur.pic, t, c, lookOf(s), ms && ms.props);
+    });
+    function show() {
+      var left = unseenCards();
+      if (!left) { finish(); return; }
+      cur = s.cards[app.cardsShown];
+      ov.querySelector('.mt-age').textContent = cur.age === 0 ? '태어난 해' : cur.age + '살';
+      ov.querySelector('.mt-text').textContent = cur.text;
+      ov.querySelector('.mt-chips').innerHTML = chipsHtml(cur.chg);
+      var dots = ''; for (var i = 0; i < s.cards.length; i++) dots += '<i class="' + (i <= app.cardsShown ? 'on' : '') + '"></i>';
+      ov.querySelector('.mt-dots').innerHTML = dots;
+      var card = ov.querySelector('.mt-card'); card.classList.remove('pop'); void card.offsetWidth; card.classList.add('pop');
+      A.play('click');
+      clearTimeout(timer); timer = setTimeout(next, cardDelay());
+    }
+    function next() { clearTimeout(timer); app.cardsShown++; show(); }
+    function finish() { clearTimeout(timer); app.montageOpen = false; ov.remove(); refresh(); proceed(); }
+    ov.addEventListener('click', next);
+    show();
+  }
   // ---------------------------------------------------------------- age up
   function onAgeUp() {
     var s = app.s;
+    clearTimeout(app.autoTimer);
+    if (!s || app.screen !== 'game') return;
     if (!s.alive) return renderSummary();
     if (s.queue.length) return showEvent();
-    var before = s.age;
+    if ($('.modal-wrap') || app.montageOpen) return;
     E.ageUp(s);
-    A.play('age');
-    ageFlash(s.age);
+    var baby = E.isMontage(s) || unseenCards();
+    if (!baby) { A.play('age'); ageFlash(s.age); }
     save();
-    if (isPhone()) app.tab = 'log';
+    if (isPhone()) app.tab = E.isMontage(s) ? app.tab : 'log';
     refresh(true);
     var anim = s.y.anim;
     var news = s.y.newAchievements; s.y.newAchievements = null;
+    var hadTriumph = !!s.y.triumph;
+    triumphCue();
     setTimeout(function () {
-      if (anim) celebrate(anim);
-      else if (news && news.length) { A.play('achieve'); }
+      if (anim) celebrate(anim, hadTriumph);
       if (news) news.forEach(function (id) { var a = achById(id); if (a) toast('🏅 업적 달성: ' + a.name); });
+      if (news && news.length && !anim && !hadTriumph) A.play('achieve');
       if (!s.alive) { A.play('death'); return setTimeout(renderSummary, anim ? 2600 : 1200); }
-      if (s.queue.length) setTimeout(showEvent, anim ? 1800 : 150);
-    }, 650);
-    void before;
+      setTimeout(proceed, anim ? 1800 : 50);
+    }, baby ? 50 : 650);
   }
 
   // ---------------------------------------------------------------- summary
@@ -561,6 +668,7 @@
     var s = app.s;
     if (!s) return renderStart();
     app.screen = 'summary';
+    app.auto = false; clearTimeout(app.autoTimer); doc.body.classList.remove('auto-on');
     closeModal();
     var sum = E.summary(s);
     var scr = $('#screen'); scr.innerHTML = '';
@@ -595,15 +703,17 @@
       b.addEventListener('click', function () {
         A.play('age');
         app.s = E.continueAsChild(s, k.id);
-        save(); app.tab = isPhone() ? 'log' : 'acts'; renderGame();
+        save(); app.tab = isPhone() ? 'log' : 'acts'; app.cardsAge = -1; renderGame();
         toast(s.generation + 1 + '대째 이야기가 시작됩니다.');
+        proceed();
       });
       hb.appendChild(b);
     });
     $('#btn-replay', el).addEventListener('click', function () {
       var cc = RA.data.countries[s.country];
       if (s.generation > 1) { startGame({ country: s.country, seed: s.seed.split('-G')[0] }); return; }
-      startGame({ country: s.country, seed: s.seed, given: s.hero.given !== cc.hero.given ? s.hero.given : undefined, gender: s.hero.gender, slot: app.slot });
+      void cc;
+      startGame({ country: s.country, seed: s.seed, gender: s.hero.gender, slot: app.slot });
     });
     $('#btn-new', el).addEventListener('click', function () { renderStart(); });
     $('#btn-copy', el).addEventListener('click', function () {
@@ -640,10 +750,12 @@
   }
   function showHelp() {
     var m = modal('<div class="card-h">도움말 <button class="btn btn-sm btn-ghost" id="x">닫기</button></div><div class="card-b" style="font-size:13px">' +
+      '<p>⓪ 아기 시절(0~4살)은 사진첩처럼 자동으로 흘러가요. 태교와 조기 교육, 두 가지만 직접 골라요.</p>' +
       '<p>① <b class="gold">활동</b> 탭에서 한 해에 행동력 3만큼 하고 싶은 일을 고르세요.</p>' +
       '<p>② <b class="gold">+1살 나이 먹기</b>를 누르면 한 해가 지나고 사건이 일어납니다. 선택지마다 결과가 다르고, 어떤 선택은 몇 년 뒤에 돌아옵니다.</p>' +
       '<p>③ 축구 실력이 충분하면 동네 클럽 → 지역 클럽 → 12살 아카데미 → 프로로 이어지는 정석 루트가 열려요. 공부하면 의사·변호사·우주비행사, 범죄를 저지르면 감옥… 무엇이든 될 수 있습니다.</p>' +
       '<p>④ 생을 마치면 인생 결산과 칭호가 나오고, 자녀가 있으면 유산을 물려받아 자녀의 삶을 이어 갈 수 있어요.</p>' +
+      '<p>⑤ 아래쪽 <b class="gold">▶ 자동 진행</b>을 켜면 해마다 저절로 넘어가고, 선택이 필요할 때만 멈춰요. 1x/2x로 속도를 바꿀 수 있어요.</p>' +
       '<p class="muted">같은 시드에서 같은 선택을 하면 똑같은 인생이 펼쳐집니다. Enter 키로도 나이를 먹을 수 있어요.</p></div>', { dismiss: true });
     m.querySelector('#x').addEventListener('click', closeModal);
   }
@@ -656,7 +768,7 @@
     $('#btn-home').addEventListener('click', function () { if (app.screen === 'start') return; showMenu(); });
     doc.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' && $('.modal-wrap') && !app.s || (e.key === 'Escape' && $('.modal-wrap') && !(app.s && app.s.queue.length))) closeModal();
-      if (e.key === 'Enter' && app.screen === 'game' && !$('.modal-wrap') && doc.activeElement === doc.body) onAgeUp();
+      if (e.key === 'Enter' && app.screen === 'game' && !$('.modal-wrap') && !app.montageOpen && doc.activeElement === doc.body) onAgeUp();
     });
     var resizeTimer = null, lastW = G.innerWidth;
     function onViewportChange(e) {
@@ -673,6 +785,9 @@
     }
     G.addEventListener('resize', onViewportChange);
     G.addEventListener('orientationchange', onViewportChange);
+    try { app.speed = Number(G.localStorage.getItem('ronaldo-adventure.speed')) === 2 ? 2 : 1; } catch (e) { app.speed = 1; }
+    // the web app manifest only makes sense (and only loads without errors) over http(s), not from file://
+    if (/^https?:$/.test(G.location.protocol)) { var ln = doc.createElement('link'); ln.rel = 'manifest'; ln.href = 'manifest.webmanifest'; doc.head.appendChild(ln); }
     var list = S.list();
     renderStart();
     G.requestAnimationFrame(loop);

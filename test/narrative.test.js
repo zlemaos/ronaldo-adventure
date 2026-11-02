@@ -10,7 +10,7 @@ const { load, autoplay } = require('../tools/sim-helpers.js');
 const RA = load();
 const E = RA.Engine, T = RA.Text;
 const LIVES = Number(process.env.NARRATIVE_LIVES || 100);
-const COUNTRIES = ['kr', 'jp', 'cn', 'us', 'br', 'ar', 'za', 'in'];
+const COUNTRIES = ['pt', 'kr', 'jp', 'cn', 'us', 'br', 'ar', 'za', 'in'];
 const POLICIES = [null, (s, acts) => acts.find(a => a.id === 'football') || null, (s, acts) => acts.find(a => a.id === 'family') || null];
 
 function namesOf(s, p) {

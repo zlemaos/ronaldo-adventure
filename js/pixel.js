@@ -335,6 +335,188 @@
     if (scene !== 'grave') P.drawHero(ctx, 80, 88, Object.assign({ t: t }, look));
   };
 
+
+  // ---------------------------------------------------------------- milestone pictures (ages 0-4 montage)
+  function heart(ctx, x, y, c) { R(ctx, x, y, 2, 1, c); R(ctx, x + 3, y, 2, 1, c); R(ctx, x - 1, y + 1, 7, 2, c); R(ctx, x, y + 3, 5, 1, c); R(ctx, x + 1, y + 4, 3, 1, c); R(ctx, x + 2, y + 5, 1, 1, c); }
+  function ball(ctx, x, y, r) { B(ctx, x - r, y - r, r * 2, r * 2, PAL.white); R(ctx, x - 1, y - 1, 2, 2, PAL.ink); R(ctx, x - r + 1, y, 1, 1, PAL.ink); R(ctx, x + r - 2, y, 1, 1, PAL.ink); R(ctx, x, y - r + 1, 1, 1, PAL.ink); }
+  function swaddle(ctx, x, y, skin, col) {
+    B(ctx, x, y + 4, 18, 9, col || '#f4f6ff'); R(ctx, x + 1, y + 8, 16, 1, shade(col || '#f4f6ff', 0.85));
+    B(ctx, x + 2, y, 10, 9, skin); R(ctx, x + 4, y + 4, 1, 1, PAL.ink); R(ctx, x + 8, y + 4, 1, 1, PAL.ink); R(ctx, x + 5, y + 6, 3, 1, PAL.red2);
+    R(ctx, x + 3, y - 1, 6, 1, '#3b2416');
+  }
+  function confetti(ctx, t, n, cols, seed) {
+    for (var i = 0; i < n; i++) { var x = hash(i * 31 + seed) * P.W, y = (hash(i * 7 + seed) * P.H + t / (40 + i % 5 * 10)) % P.H; R(ctx, x, y, 2, 2, cols[i % cols.length]); }
+  }
+  function floor(ctx, y, c1, c2) { R(ctx, 0, y, P.W, P.H - y, c1); for (var x = 0; x < P.W; x += 16) R(ctx, x, y, 1, P.H - y, c2); }
+  function wall(ctx, c) { R(ctx, 0, 0, P.W, P.H, c); for (var y = 0; y < 70; y += 6) R(ctx, 0, y, P.W, 1, shade(c, 1.08)); }
+  function table(ctx, x, y, w, c) { B(ctx, x, y, w, 4, c); R(ctx, x + 2, y + 4, 2, 10, shade(c, 0.7)); R(ctx, x + w - 4, y + 4, 2, 10, shade(c, 0.7)); }
+
+  var MS = {
+    birth: function (ctx, t, c, lk) {
+      wall(ctx, '#232c4f'); floor(ctx, 72, '#5b4030', '#4a3426');
+      B(ctx, 112, 10, 34, 24, '#0b1530'); R(ctx, 128, 10, 2, 24, PAL.cream); R(ctx, 112, 21, 34, 2, PAL.cream);
+      if (Math.floor(t / 500) % 2) R(ctx, 120, 14, 1, 1, PAL.white); R(ctx, 138, 16, 2, 2, PAL.gold);
+      P.drawHero(ctx, 40, 88, { t: t, age: 31, gender: 'f', outfit: 'apron', skin: lk.skin, hairColor: lk.hairColor, hair: 0 });
+      P.drawHero(ctx, 124, 88, { t: t, age: 33, gender: 'm', outfit: 'casual', skin: lk.skin, hairColor: lk.hairColor, hair: 3, mood: 'celebrate' });
+      B(ctx, 64, 60, 34, 16, '#a07a52'); R(ctx, 64, 76, 2, 10, '#5a3c28'); R(ctx, 96, 76, 2, 10, '#5a3c28');
+      swaddle(ctx, 72, 50, lk.skin);
+      heart(ctx, 80 + Math.round(Math.sin(t / 400) * 3), 30 - (t / 120 % 10), PAL.red);
+    },
+    smile: function (ctx, t, c, lk) {
+      R(ctx, 0, 0, P.W, P.H, '#ffd9e0'); for (var i = 0; i < 12; i++) heart(ctx, hash(i * 9) * 150, hash(i * 3) * 88, '#ffb3c4');
+      var x = 50, y = 14; B(ctx, x, y, 60, 62, lk.skin); R(ctx, x + 18, y - 3, 24, 4, '#3b2416');
+      var blink = (t % 3000) < 150;
+      R(ctx, x + 14, y + 22, 8, blink ? 1 : 3, PAL.ink); R(ctx, x + 38, y + 22, 8, blink ? 1 : 3, PAL.ink);
+      R(ctx, x + 6, y + 32, 8, 4, '#f49a9a'); R(ctx, x + 46, y + 32, 8, 4, '#f49a9a');
+      R(ctx, x + 18, y + 40, 24, 3, PAL.red2); R(ctx, x + 16, y + 37, 3, 3, PAL.red2); R(ctx, x + 41, y + 37, 3, 3, PAL.red2); R(ctx, x + 22, y + 43, 16, 4, '#d9465b');
+      if (Math.floor(t / 300) % 2) { R(ctx, 120, 20, 3, 1, PAL.gold); R(ctx, 121, 19, 1, 3, PAL.gold); }
+    },
+    steps: function (ctx, t, c, lk) {
+      wall(ctx, '#2a3355'); floor(ctx, 70, '#6b4a33', '#5a3c28');
+      table(ctx, 16, 54, 36, '#a07a52');
+      var x = 70 + (Math.floor(t / 300) % 4) * 6;
+      P.drawHero(ctx, x, 88, { t: t, age: 1, outfit: 'casual', skin: lk.skin, hairColor: lk.hairColor, gender: lk.gender, mood: 'celebrate' });
+      for (var i = 0; i < 3; i++) R(ctx, x - 14 - i * 8, 86 - (i % 2), 3, 2, '#3f2b1f');
+      R(ctx, x + 10, 72, 4, 1, PAL.white); R(ctx, x + 11, 76, 5, 1, PAL.white);
+      bunting(ctx, c.flag, 4);
+    },
+    word: function (ctx, t, c, lk) {
+      wall(ctx, '#2a3355'); floor(ctx, 72, '#6b4a33', '#5a3c28');
+      P.drawHero(ctx, 46, 88, { t: t, age: 2, outfit: 'casual', skin: lk.skin, hairColor: lk.hairColor, gender: lk.gender, mood: 'celebrate' });
+      B(ctx, 70, 12, 70, 40, PAL.white); R(ctx, 70, 52, 8, 4, PAL.white); R(ctx, 64, 56, 6, 3, PAL.white);
+      ball(ctx, 104, 32, 10 + (Math.floor(t / 400) % 2));
+      R(ctx, 126, 22, 3, 12, PAL.red); R(ctx, 126, 38, 3, 3, PAL.red);
+    },
+    ball: function (ctx, t, c, lk) {
+      SCENES.home(ctx, t, c);
+      P.drawHero(ctx, 120, 88, { t: t, age: 33, outfit: 'casual', skin: lk.skin, hairColor: lk.hairColor, hair: 3 });
+      B(ctx, 132, 70, 16, 12, '#2f6b3a'); R(ctx, 132, 70, 16, 2, '#1f4a28'); ball(ctx, 140, 68, 4);
+      P.drawHero(ctx, 70, 88, { t: t, age: 3, outfit: 'casual', skin: lk.skin, hairColor: lk.hairColor, gender: lk.gender, mood: 'celebrate' });
+      ball(ctx, 70, 82 - Math.abs(Math.sin(t / 250)) * 8, 6);
+    },
+    move: function (ctx, t, c, lk) {
+      sky(ctx, '#7fb4ff', '#b5d6ff', 50); clouds(ctx, t, 8);
+      for (var x = 0; x < P.W; x += 30) { B(ctx, x + 2, 26, 24, 26, x % 60 ? '#c9b79c' : '#b8a586'); R(ctx, x + 10, 38, 8, 14, '#5a3c28'); R(ctx, x, 22, 28, 4, '#7c4a2d'); }
+      R(ctx, 0, 52, P.W, 44, '#6b6f80'); R(ctx, 0, 70, P.W, 2, '#f4f6ff');
+      var cx = 40 + (t / 60 % 60);
+      B(ctx, cx, 56, 40, 14, '#a07a52'); B(ctx, cx + 4, 46, 12, 10, '#d8b27a'); B(ctx, cx + 18, 44, 14, 12, '#c99a5e'); B(ctx, cx + 10, 36, 10, 8, '#e0c08a');
+      R(ctx, cx + 4, 70, 6, 6, PAL.ink); R(ctx, cx + 30, 70, 6, 6, PAL.ink); R(ctx, cx - 10, 60, 10, 2, '#5a3c28');
+      P.drawHero(ctx, cx - 16, 88, { t: t, age: 4, outfit: 'casual', skin: lk.skin, hairColor: lk.hairColor, gender: lk.gender });
+    },
+    sibling: function (ctx, t, c, lk) {
+      sky(ctx, '#ffb86b', '#ffd59e', 60);
+      R(ctx, 120, 10, 14, 14, '#fff2b3');
+      R(ctx, 0, 60, P.W, 36, '#8a7a5e'); for (var x = 0; x < P.W; x += 12) R(ctx, x, 60, 10, 6, '#9b8a6c');
+      P.drawHero(ctx, 80, 90, { t: t, age: 14, outfit: 'uniform', skin: lk.skin, hairColor: lk.hairColor, hair: 1 });
+      P.drawHero(ctx, 80, 66, { t: t, age: 2, outfit: 'casual', skin: lk.skin, hairColor: lk.hairColor, gender: lk.gender, mood: 'celebrate' });
+      heart(ctx, 104, 26 - (t / 150 % 8), PAL.red); heart(ctx, 52, 34 - (t / 170 % 8), '#ff8fab');
+    },
+    birthday: function (ctx, t, c, lk, props) {
+      wall(ctx, '#2a2f55'); bunting(ctx, c.flag, 4); floor(ctx, 74, '#6b4a33', '#5a3c28');
+      var kid = { t: t, age: 1, outfit: 'casual', skin: lk.skin, hairColor: lk.hairColor, gender: lk.gender, mood: 'celebrate' };
+      if (props === 'mochi') { P.drawHero(ctx, 70, 88, kid); B(ctx, 54, 52, 20, 18, PAL.white); R(ctx, 54, 58, 20, 3, PAL.red); R(ctx, 60, 50, 8, 2, PAL.red); return; }
+      if (props === 'doljabi' || props === 'zhuazhou') {
+        var cloth = props === 'doljabi' ? '#d94f7a' : '#c8102e';
+        B(ctx, 20, 62, 120, 10, cloth); R(ctx, 20, 62, 120, 2, PAL.gold);
+        R(ctx, 30, 58, 12, 3, PAL.white);                               // thread / brush
+        R(ctx, 50, 56, 2, 6, '#f5c518'); R(ctx, 50, 55, 2, 1, PAL.ink); // pencil
+        B(ctx, 104, 56, 14, 5, props === 'doljabi' ? '#7fbf7f' : '#8b5a2b'); // money / abacus
+        if (props === 'zhuazhou') for (var k = 0; k < 4; k++) R(ctx, 106 + k * 3, 57, 2, 2, PAL.ink);
+        P.drawHero(ctx, 80, 66, kid); ball(ctx, 88, 50 - Math.abs(Math.sin(t / 300)) * 4, 5);
+        if (props === 'doljabi') { R(ctx, 74, 46, 12, 2, '#3b82f6'); R(ctx, 74, 48, 12, 2, '#e8384f'); }
+        return;
+      }
+      table(ctx, 40, 58, 80, '#a07a52');
+      B(ctx, 60, 40, 40, 18, props === 'smash' ? '#f9d7e0' : '#fbe7b3'); R(ctx, 60, 40, 40, 4, PAL.pink); R(ctx, 79, 32, 2, 8, PAL.white);
+      var fl = Math.floor(t / 200) % 2; R(ctx, 79, 29 - fl, 2, 3, PAL.gold);
+      P.drawHero(ctx, 130, 88, kid);
+      if (props === 'smash') { R(ctx, 126, 50, 8, 3, PAL.pink); R(ctx, 70, 44, 10, 6, '#c26d84'); }
+    },
+    ceremony: function (ctx, t, c, lk, props) {
+      var bg = props === 'baptism' ? '#2b2f4f' : '#3a2f2a';
+      wall(ctx, bg); floor(ctx, 74, '#5b4030', '#4a3426');
+      if (props === 'baptism') { B(ctx, 70, 8, 20, 30, '#7dd3fc'); R(ctx, 79, 8, 2, 30, PAL.gold); R(ctx, 70, 20, 20, 2, PAL.gold); B(ctx, 104, 56, 22, 14, '#d4d4d8'); R(ctx, 106, 56, 18, 3, '#9fd0ff'); }
+      if (props === 'imbeleko') { for (var i = 0; i < 5; i++) P.drawHero(ctx, 16 + i * 30, 88, { t: t + i * 200, age: 40, outfit: i % 2 ? 'casual' : 'apron', gender: i % 2 ? 'm' : 'f', skin: lk.skin, hairColor: lk.hairColor }); R(ctx, 0, 76, P.W, 4, '#c8102e'); for (var x = 0; x < P.W; x += 8) R(ctx, x, 77, 4, 2, PAL.gold); swaddle(ctx, 70, 48, lk.skin, '#f5c518'); return; }
+      table(ctx, 20, 58, 60, '#8b5a2b');
+      if (props === 'baekseolgi') { for (var l = 0; l < 4; l++) B(ctx, 30 + l * 2, 50 - l * 7, 36 - l * 4, 6, PAL.white); }
+      if (props === 'redeggs') { for (var e = 0; e < 7; e++) B(ctx, 26 + (e % 4) * 10, 50 - Math.floor(e / 4) * 6, 6, 6, '#d7263d'); }
+      if (props === 'okuizome') { B(ctx, 24, 48, 50, 8, '#7a1f1f'); R(ctx, 30, 44, 26, 6, '#ff6b6b'); R(ctx, 54, 43, 6, 4, '#ff6b6b'); R(ctx, 60, 46, 8, 4, PAL.white); }
+      P.drawHero(ctx, 120, 88, { t: t, age: 30, gender: 'f', outfit: props === 'baptism' ? 'suit' : 'apron', skin: lk.skin, hairColor: lk.hairColor });
+      swaddle(ctx, 108, 52, lk.skin, props === 'baptism' ? '#ffffff' : '#ffe08a');
+    },
+    festival: function (ctx, t, c, lk, props) {
+      var night = props === 'halloween' || props === 'fireworks';
+      if (props === 'beach') { sky(ctx, '#62b0ff', '#a6d6ff', 46); R(ctx, 0, 46, P.W, 18, '#1d6fd1'); for (var w = 0; w < P.W; w += 10) R(ctx, (w + t / 50) % P.W, 50 + (w % 3), 6, 1, '#9fd0ff'); R(ctx, 0, 64, P.W, 32, '#f2d58a'); R(ctx, 130, 8, 14, 14, PAL.gold); }
+      else if (props === 'shichigosan') { wall(ctx, '#3a2a3a'); B(ctx, 20, 20, 120, 8, '#c8102e'); R(ctx, 30, 28, 6, 46, '#c8102e'); R(ctx, 124, 28, 6, 46, '#c8102e'); floor(ctx, 74, '#9b8a6c', '#8a7a5e'); }
+      else if (props === 'asado') { sky(ctx, '#ff9e5e', '#ffc58f', 50); R(ctx, 0, 50, P.W, 46, '#4d7c0f'); B(ctx, 96, 54, 44, 8, PAL.grey2); for (var g = 0; g < 5; g++) R(ctx, 100 + g * 8, 50, 6, 4, '#8b3a1f'); for (var sm = 0; sm < 4; sm++) R(ctx, 104 + sm * 9, 40 - (t / 80 + sm * 5) % 20, 3, 3, 'rgba(230,230,230,0.6)'); R(ctx, 100, 62, 2, 14, PAL.ink); R(ctx, 136, 62, 2, 14, PAL.ink); }
+      else { R(ctx, 0, 0, P.W, P.H, night ? '#120d2a' : '#2a1458'); R(ctx, 0, 74, P.W, 22, night ? '#2b2440' : '#3b2a6b'); }
+      if (props === 'carnival') confetti(ctx, t, 60, [PAL.gold, PAL.grass3, PAL.red, PAL.blue, PAL.pink], 7);
+      if (props === 'carnival') { B(ctx, 112, 56, 20, 16, PAL.red); R(ctx, 112, 60, 20, 2, PAL.gold); R(ctx, 114 + (Math.floor(t / 150) % 2) * 12, 50, 2, 6, PAL.white); }
+      if (props === 'fireworks') {
+        R(ctx, 0, 60, P.W, 14, '#0e2a4a'); for (var hx = 0; hx < P.W; hx += 9) R(ctx, hx, 54 + (hx % 4), 6, 6, hx % 18 ? '#c9b79c' : '#e8e0c8');
+        var fcols = [PAL.gold, PAL.red, PAL.grass3, PAL.pink, PAL.sky2];
+        for (var f = 0; f < 4; f++) { var ph = ((t / 60) + f * 17) % 40, fx0 = 24 + f * 36, fy0 = 14 + (f % 2) * 10;
+          for (var a = 0; a < 8; a++) { var ang = a * Math.PI / 4; R(ctx, fx0 + Math.cos(ang) * ph / 3, fy0 + Math.sin(ang) * ph / 3, 2, 2, fcols[(f + a) % fcols.length]); } }
+      }
+      else if (night) { R(ctx, 128, 10, 12, 12, '#fff2b3'); R(ctx, 132, 10, 8, 8, '#120d2a'); B(ctx, 40, 66, 16, 12, PAL.orange); R(ctx, 44, 70, 2, 2, PAL.ink); R(ctx, 50, 70, 2, 2, PAL.ink); R(ctx, 47, 63, 2, 3, '#166534'); }
+      var kid = { t: t, age: props === 'shichigosan' ? 3 : 2, outfit: props === 'shichigosan' ? 'robe' : 'casual', skin: lk.skin, hairColor: lk.hairColor, gender: lk.gender, mood: 'celebrate' };
+      P.drawHero(ctx, 80, 88, kid);
+      if (props === 'shichigosan') { R(ctx, 90, 58, 3, 18, PAL.white); R(ctx, 90, 58, 3, 3, PAL.red); }
+      if (props === 'beach') { R(ctx, 74, 52, 12, 3, PAL.red); R(ctx, 84, 50, 3, 3, PAL.white); }
+    },
+    preschool: function (ctx, t, c, lk) {
+      sky(ctx, '#7fc3ff', '#bfe3ff', 50); clouds(ctx, t, 6);
+      B(ctx, 92, 22, 60, 40, '#ffe08a'); R(ctx, 88, 18, 68, 6, '#e8384f'); for (var w = 0; w < 3; w++) B(ctx, 98 + w * 18, 30, 10, 10, '#9fd0ff'); R(ctx, 116, 46, 12, 16, '#7c4a2d');
+      R(ctx, 0, 62, P.W, 34, '#7fb069'); R(ctx, 0, 62, P.W, 2, '#5c8a4a');
+      var x = 50 + (Math.floor(t / 300) % 3) * 2;
+      P.drawHero(ctx, x, 90, { t: t, age: 4, outfit: 'casual', skin: lk.skin, hairColor: lk.hairColor, gender: lk.gender });
+      B(ctx, x - 9, 68, 18, 14, '#e8384f'); R(ctx, x - 7, 70, 14, 2, PAL.gold);
+    },
+    prenatal: function (ctx, t, c, lk) {
+      wall(ctx, '#2c2a52'); floor(ctx, 74, '#6b4a33', '#5a3c28'); bunting(ctx, c.flag, 4);
+      B(ctx, 112, 14, 34, 24, '#5aa9ff'); R(ctx, 128, 14, 2, 24, PAL.cream); R(ctx, 112, 25, 34, 2, PAL.cream);
+      P.drawHero(ctx, 70, 88, { t: t, age: 31, gender: 'f', outfit: 'apron', skin: lk.skin, hairColor: lk.hairColor });
+      for (var by = 0; by < 10; by++) { var bw = Math.round(Math.sqrt(1 - Math.pow((by - 4.5) / 5, 2)) * 5); R(ctx, 76, 60 + by, bw + 1, 1, '#16a34a'); R(ctx, 76 + bw, 60 + by, 1, 1, '#0f6e33'); } // the baby bump
+      R(ctx, 77, 62, 1, 3, '#4ade80');
+      heart(ctx, 79, 50 - (t / 160 % 8), PAL.red);
+      for (var n = 0; n < 2; n++) { var y = 30 + ((t / 100 + n * 15) % 20); R(ctx, 96 + n * 12, y, 4, 3, PAL.gold); R(ctx, 99 + n * 12, y - 7, 1, 7, PAL.gold); }
+      B(ctx, 30, 64, 14, 10, '#e8384f'); R(ctx, 36, 64, 2, 10, PAL.gold);         // a picture book
+    },
+    focus_lang: function (ctx, t, c, lk) {
+      wall(ctx, '#20304f'); floor(ctx, 74, '#6b4a33', '#5a3c28');
+      B(ctx, 70, 30, 34, 26, PAL.white); B(ctx, 104, 30, 34, 26, '#f4f0e0'); R(ctx, 103, 30, 2, 26, PAL.slate);
+      for (var l = 0; l < 4; l++) { R(ctx, 74, 36 + l * 5, 24, 1, PAL.slate); R(ctx, 108, 36 + l * 5, 22, 1, PAL.slate); }
+      R(ctx, 118, 18 - (t / 200 % 6), 6, 6, PAL.gold); R(ctx, 84, 16 - (t / 260 % 6), 5, 5, PAL.blue);
+      P.drawHero(ctx, 40, 88, { t: t, age: 3, outfit: 'casual', skin: lk.skin, hairColor: lk.hairColor, gender: lk.gender });
+    },
+    focus_music: function (ctx, t, c, lk) {
+      wall(ctx, '#2c2050'); floor(ctx, 74, '#6b4a33', '#5a3c28');
+      var cols = [PAL.red, PAL.orange, PAL.gold, PAL.grass3, PAL.blue, PAL.purple];
+      for (var k = 0; k < 6; k++) B(ctx, 92 + k * 9, 60 - k, 7, 14 + k, cols[k]);
+      for (var n = 0; n < 3; n++) { var y = 20 + ((t / 90 + n * 20) % 30); R(ctx, 70 + n * 22, y, 4, 3, PAL.white); R(ctx, 73 + n * 22, y - 8, 1, 8, PAL.white); }
+      P.drawHero(ctx, 50, 88, { t: t, age: 3, outfit: 'casual', skin: lk.skin, hairColor: lk.hairColor, gender: lk.gender, mood: 'celebrate' });
+    },
+    focus_play: function (ctx, t, c, lk) {
+      wall(ctx, '#2a3355'); floor(ctx, 72, '#c99a5e', '#b08650');
+      B(ctx, 100, 40, 40, 30, '#f9d7e0'); R(ctx, 96, 34, 48, 8, PAL.red); B(ctx, 114, 54, 10, 16, '#7c4a2d');
+      P.drawHero(ctx, 50, 88, { t: t, age: 3, outfit: 'apron', skin: lk.skin, hairColor: lk.hairColor, gender: lk.gender, mood: 'celebrate' });
+      P.drawHero(ctx, 78, 88, { t: t + 400, age: 3, outfit: 'casual', skin: lk.skin, hairColor: '#6b4423', gender: lk.gender === 'f' ? 'm' : 'f' });
+      heart(ctx, 62, 40 - (t / 160 % 8), PAL.red);
+    },
+    focus_sports: function (ctx, t, c, lk) {
+      SCENES.pitch(ctx, t, c);
+      var x = 40 + (t / 30 % 80);
+      P.drawHero(ctx, x, 88, { t: t, age: 4, outfit: 'kit', skin: lk.skin, hairColor: lk.hairColor, gender: lk.gender, number: 7 });
+      ball(ctx, x + 12, 84, 4);
+    }
+  };
+  P.MILESTONES = MS;
+  P.drawMilestone = function (ctx, pic, t, country, look, props) {
+    ctx.imageSmoothingEnabled = false;
+    if (pic === 'focus_all') pic = ['focus_lang', 'focus_music', 'focus_play', 'focus_sports'][Math.floor((t || 0) / 1400) % 4];
+    (MS[pic] || MS.steps)(ctx, t || 0, country || { flag: ['#fff', '#e8384f', '#3b82f6'] }, look || {}, props);
+  };
+
   // ---------------------------------------------------------------- flags (simplified, drawn from rects) 24x16
   P.drawFlag = function (ctx, id, x, y, s) {
     s = s || 1;
@@ -363,6 +545,8 @@
         }
         break;
       }
+      case 'pt': r(0, 0, 24, 16, '#da291c'); r(0, 0, 10, 16, '#046a38');
+        r(7, 4, 6, 8, '#ffe900'); r(6, 5, 8, 6, '#ffe900'); r(8, 5, 4, 6, '#da291c'); r(9, 6, 2, 4, '#ffffff'); break;
       case 'in': r(0, 0, 24, 5, '#ff9933'); r(0, 5, 24, 6, '#fff'); r(0, 11, 24, 5, '#138808'); r(10, 6, 4, 4, '#000080'); r(11, 7, 2, 2, '#fff'); break;
       default: r(0, 0, 24, 16, '#888');
     }

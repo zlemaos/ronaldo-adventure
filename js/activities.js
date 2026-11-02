@@ -102,17 +102,17 @@
     { id: 'friends', label: '친구 만나기', icon: '🤝', min: 5, max: 120, run: function (s) {
       var f = E.person(s, 'friend');
       if (!f) {
-        if (E.chance(s, 0.55 + s.stats.looks / 300)) return E.FX.newFriend(s);
+        if (E.chance(s, 0.35 + s.stats.looks / 400 + s.stats.social / 200)) return E.FX.newFriend(s);
         eff(s, { happy: -1 });
         return '놀이터에 갔지만 말을 걸 용기가 나지 않았다.';
       }
-      eff(s, { happy: 3, rel: { friend: E.rint(s, 4, 8) } });
+      eff(s, { happy: 3, social: E.chance(s, 0.5) ? 1 : 0, rel: { friend: E.rint(s, 4, 8) } });
       return E.line(s, 'friends');
     } },
     { id: 'date', label: '데이트', icon: '💘', min: 15, max: 100, run: function (s) {
       var p = E.person(s, 'partner') || E.person(s, 'spouse');
       if (!p) {
-        if (E.chance(s, 0.25 + s.stats.looks / 160 + s.stats.fame / 300)) return E.FX.newPartner(s);
+        if (E.chance(s, 0.18 + s.stats.looks / 180 + s.stats.fame / 300 + s.stats.social / 300)) return E.FX.newPartner(s);
         eff(s, { happy: -2 });
         return E.pick(s, ['소개팅 상대가 화장실 간다더니 돌아오지 않았다.', '고백했지만 "좋은 친구로 지내자"는 답을 들었다.', '데이트 앱을 깔았다가 지웠다.']);
       }
@@ -214,6 +214,7 @@
   E.ACTIVITIES = A;
 
   E.activities = function (s) {
+    if (E.isMontage(s)) return []; // ages 0-4 play as a montage: no activities
     return A.filter(function (a) { return s.age >= a.min && s.age <= a.max; }).map(function (a) {
       var av = a.avail ? a.avail(s) : true;
       var cost = a.ap === 0 ? 0 : 1;
@@ -235,7 +236,7 @@
     var changes = [];
     Object.keys(before).forEach(function (k) { if (s.stats[k] !== before[k]) changes.push({ k: k, d: s.stats[k] - before[k] }); });
     if (s.money !== m0) changes.push({ k: 'money', d: s.money - m0 });
-    E.addLog(s, a.icon + ' ' + text, 'act', { line: s.y.lineKey || null });
+    E.addLog(s, a.icon + ' ' + text, 'act', { line: s.y.lineKey || null, chg: E.compactChanges(changes) });
     E.checkAchievements(s);
     E.checkDeath(s, true);
     return { ok: true, log: T.fixJosa(text), changes: changes };
