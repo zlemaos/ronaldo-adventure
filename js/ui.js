@@ -72,10 +72,18 @@
     if (!changes) return '';
     var list = Array.isArray(changes) ? changes : Object.keys(changes).filter(function (k) { return typeof changes[k] === 'number'; }).map(function (k) { return { k: k, d: changes[k] }; });
     if (!Array.isArray(changes) && changes.rel) list.push({ k: 'rel', d: 1 });
-    var agg = {}, order = [];
-    list.forEach(function (c) { if (c.k === 'msg' || !c.d) return; if (!(c.k in agg)) { agg[c.k] = 0; order.push(c.k); } agg[c.k] += c.d; });
-    var out = order.filter(function (k) { return agg[k]; }).map(function (k) {
+    var agg = {}, order = [], capped = {};
+    list.forEach(function (c) {
+      if (c.k === 'msg' || !(c.d || c.want)) return;
+      if (!(c.k in agg)) { agg[c.k] = 0; order.push(c.k); }
+      agg[c.k] += c.d || 0;
+      if (c.want) capped[c.k] = c.max ? 'max' : 'near';
+    });
+    var out = order.filter(function (k) { return agg[k] || capped[k]; }).map(function (k) {
       var v = agg[k];
+      // gains reduced by the top of the scale say so, instead of silently shrinking
+      if (capped[k] && v <= 0) return '<span class="chip cap" title="' + esc(C.STAT_LABELS[k] || k) + (capped[k] === 'max' ? ' 최대치' : ' 최대치 근접') + '">' + (STAT_ICONS[k] || '') + (capped[k] === 'max' ? ' 최대' : ' 최대 근접') + '</span>';
+      if (capped[k]) return '<span class="chip up cap" title="최대치에 가까워 덜 올랐어요">' + (STAT_ICONS[k] || '') + ' +' + v + (capped[k] === 'max' ? ' (최대)' : ' (최대 근접)') + '</span>';
       if (k === 'rel') return '<span class="chip ' + (v > 0 ? 'up' : 'down') + '" title="관계">' + (v > 0 ? '💞' : '💔') + ' 관계</span>';
       var txt = k === 'money' ? (v > 0 ? '+' : '') + (preview ? '' : money(v)) : (v > 0 ? '+' : '') + v;
       if (k === 'money' && preview) txt = v > 0 ? '+' : '−';
@@ -504,9 +512,19 @@
   }
 
   // ---------------------------------------------------------------- events
+  // While auto-play is on, an open card covers the bottom bar, so the card carries its own stop and speed buttons.
+  function autoRowHtml(label) {
+    return '<div class="auto-row"><button class="btn btn-ghost auto-stop">' + label + '</button><button class="btn auto-speed" aria-label="속도">' + app.speed + 'x</button></div>';
+  }
   function bindAutoStop(root) {
-    var b = root.querySelector('.auto-stop');
-    if (b) b.addEventListener('click', function () { setAuto(false); b.remove(); });
+    var row = root.querySelector('.auto-row'); if (!row) return;
+    row.querySelector('.auto-stop').addEventListener('click', function () { setAuto(false); row.remove(); });
+    var sp = row.querySelector('.auto-speed');
+    sp.addEventListener('click', function () {
+      app.speed = app.speed === 1 ? 2 : 1;
+      try { G.localStorage.setItem('ronaldo-adventure.speed', String(app.speed)); } catch (e) { /* ignore */ }
+      sp.textContent = app.speed + 'x'; renderAgeBtn();
+    });
   }
   function categoryHtml(cat) {
     if (!cat) return '';
@@ -523,7 +541,7 @@
     var cvHolder = doc.createElement('div'); cvHolder.className = 'ev-pic';
     wrap.appendChild(cvHolder);
     var body = h('<div class="card-b">' + categoryHtml(ev.category) + '<p class="ev-text">' + esc(ev.text) + '</p><div class="choices"></div>' +
-      (app.auto ? '<button class="btn btn-ghost auto-stop">⏸ 자동 진행 끄기 <span class="muted">(선택을 기다리는 중)</span></button>' : '') + '</div>');
+      (app.auto ? autoRowHtml('⏸ 자동 진행 끄기<small>선택을 기다리는 중</small>') : '') + '</div>');
     wrap.appendChild(body);
     ev.choices.forEach(function (ch) {
       var pct = ch.chance != null ? '<span class="p">성공률 ' + Math.round(ch.chance * 100) + '%</span>' : '';
@@ -558,7 +576,7 @@
       res.changes.filter(function (c) { return c.k === 'msg'; }).map(function (c) { return '<br>▸ ' + esc(c.t); }).join('') + '</div>' +
       chipsHtml(res.changes) +
       '<button class="btn btn-green btn-big" id="next" style="width:100%">' + (s.queue.length ? '다음 ▶' : (s.alive ? '계속하기 ▶' : '…')) + '</button>' +
-      (app.auto ? '<button class="btn btn-ghost auto-stop">⏸ 자동 진행 끄기</button>' : '');
+      (app.auto ? autoRowHtml('⏸ 자동 진행 끄기') : '');
     bindAutoStop(body);
     var nb = body.querySelector('#next');
     var go = function () {

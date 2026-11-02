@@ -55,6 +55,7 @@ function validate(RA) {
     }
     const p = c.places || {};
     ['hometown', 'region', 'city', 'bigcity', 'capital', 'house', 'homeShort'].forEach(k => { if (!p[k]) err(w + ': places.' + k); });
+    if (p.house && !/집$/.test(p.house)) err(w + ': places.house must be a noun phrase ending in 집 (used as "…에서 태어났다")');
     const cl = c.clubs || {};
     ['local', 'regional', 'academy', 'big', 'rival', 'league'].forEach(k => { if (!cl[k]) err(w + ': clubs.' + k); });
     const s = c.school || {};

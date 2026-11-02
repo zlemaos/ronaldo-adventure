@@ -243,6 +243,7 @@
     s.stats[k] = clamp(Math.round(v + d), 0, 100);
   }
   E.addStat = addStat;
+  E.CAP_NOTE_FROM = 80; // gains shrink as a stat gets high; from here on the UI says so
 
   function changeRel(s, key, d) {
     peopleByRel(s, key).forEach(function (p) { p.rel = clamp(Math.round(p.rel + d), 0, 100); });
@@ -256,7 +257,9 @@
       if (typeof eff[k] === 'number' && eff[k] !== 0) {
         var before = s.stats[k]; addStat(s, k, eff[k]);
         var d = s.stats[k] - before;
-        if (d) out.push({ k: k, d: d });
+        // a gain reduced near the top of the scale is reported as such (UI: "❤️ 최대" / "+1 (최대 근접)")
+        var capped = eff[k] > 0 && d < eff[k] && s.stats[k] >= E.CAP_NOTE_FROM;
+        if (d || capped) out.push(capped ? { k: k, d: d, want: eff[k], max: s.stats[k] >= 100 } : { k: k, d: d });
       }
     });
     if (typeof eff.money === 'number' && eff.money !== 0) {
@@ -1003,7 +1006,10 @@
   };
   function compactChanges(chg) {
     var out = [];
-    (chg || []).forEach(function (c) { if (c.k !== 'msg' && c.k !== 'rel' && c.d) out.push({ k: c.k, d: c.d }); });
+    (chg || []).forEach(function (c) {
+      if (c.k === 'msg' || c.k === 'rel' || !(c.d || c.want)) return;
+      out.push(c.want ? { k: c.k, d: c.d, want: c.want, max: !!c.max } : { k: c.k, d: c.d });
+    });
     return out.length ? out : null;
   }
   E.compactChanges = compactChanges;
@@ -1028,7 +1034,7 @@
   // Birth happens right after the prenatal pick
   E.birth = function (s) {
     s.born = true;
-    addLog(s, T.render('{hometown}의 {houseLong}에서 사남매의 막내로 태어났다.', vars(s)), 'milestone');
+    addLog(s, T.render('{hometown}에서 태어났다. 집은 {houseLong}[이/]다.', vars(s)), 'milestone'); // "사남매의 막내" is told once, on the birth card
     E.selectMilestones(s);
   };
 

@@ -381,7 +381,9 @@ body.auto-on .topbar { border-bottom-color: var(--gold); }
   .ab-auto span { font-size: 10px; }
 }
 
-.auto-stop { width: 100%; margin-top: 8px; border-color: var(--gold); color: var(--gold); }
+.auto-row { display: grid; grid-template-columns: 1fr 64px; gap: 8px; margin-top: 8px; }
+.auto-stop { width: 100%; border-color: var(--gold); color: var(--gold); }
+.auto-speed { min-width: 56px; font-weight: 700; }
 
 /* Korean wraps between words, not inside them */
 body, .mt-text, .ev-text, .log .e, .choice, .toast { word-break: keep-all; overflow-wrap: anywhere; }
@@ -401,3 +403,7 @@ body, .mt-text, .ev-text, .log .e, .choice, .toast { word-break: keep-all; overf
 }
 /* the top bar (mute, menu) stays reachable while an event card is open */
 .topbar { z-index: 55; }
+
+.chip.cap { color: var(--gold); }
+.auto-stop { flex-direction: column; gap: 0; }
+.auto-stop small { display: block; font-size: 11px; font-weight: 400; color: var(--muted); }

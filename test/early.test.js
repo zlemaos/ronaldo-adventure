@@ -166,3 +166,39 @@ test('the whole life still plays end to end with the new early years', () => {
   assert.ok(s.prenatal && s.eduFocus);
   assert.ok(RA.data.milestones.filter(m => s.fired[m.id]).length >= 7, 'milestones were shown');
 });
+
+test('birth lines read naturally in every country and "사남매의 막내" is told once', () => {
+  for (const c of COUNTRIES) {
+    const s = E.newGame({ country: c, seed: 'birth-' + c });
+    pickFirst(s);
+    const lines = s.log.filter(e => e.age === 0).map(e => e.t);
+    const birth = lines[0];
+    assert.ok(birth.includes(RA.data.countries[c].places.hometown), c + ': ' + birth);
+    // a descriptive phrase ending in a verb or a bare "식구" must never be followed by "에서"
+    assert.ok(!/(다|는다|식구)(에서| 에서)/.test(birth), c + ': ' + birth);
+    assert.ok(!/에서 사남매/.test(lines.join(' ')), c + ': ' + birth);
+    assert.match(birth, /에서 태어났다\. 집은 .+집이다\.$/, c);
+    assert.strictEqual(lines.join('\n').split('사남매의 막내로 태어났다').length - 1, 1, c + ': told once');
+  }
+});
+
+test('a gain reduced near the top of the scale is reported as capped', () => {
+  const s = E.newGame({ country: 'pt', seed: 'cap' });
+  pickFirst(s);
+  s.eduFocus = 'sports'; s.age = 5;
+  s.stats.health = 100; s.y = {};
+  E.applyEduFocus(s);
+  let chg = s.log[s.log.length - 1].chg;
+  const h = chg.find(c => c.k === 'health');
+  assert.ok(h && h.want === 3 && h.max, 'health at max is shown as 최대');
+  s.age = 6; s.stats.health = 90; s.y = {};
+  E.applyEduFocus(s);
+  chg = s.log[s.log.length - 1].chg;
+  const h2 = chg.find(c => c.k === 'health');
+  assert.ok(h2 && h2.want === 3 && h2.d < 3 && !h2.max, 'reduced gain near the top carries the intended amount');
+  // low stats grow in full, without a cap note
+  s.age = 7; s.stats.health = 40; s.y = {};
+  E.applyEduFocus(s);
+  chg = s.log[s.log.length - 1].chg;
+  assert.ok(chg.find(c => c.k === 'health' && c.d === 3 && !c.want));
+});
