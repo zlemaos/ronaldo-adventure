@@ -132,7 +132,8 @@
       },
       achievements: {}, pending: [], queue: [], ap: AP_PER_YEAR, jail: 0, sick: null,
       y: {}, hist: [], legacy: opts.legacy || null,
-      prenatal: null, eduFocus: null, eduFocusChanged: false, cards: []
+      prenatal: null, eduFocus: null, eduFocusChanged: false, cards: [],
+      traits: { mischief: 0, rep: 50, gamble: 0, alcohol: 0, record: 0 }, dec: {}, gambleLog: { plays: 0, wins: 0, net: 0 }
     };
     s.year = s.birthYear;
     s.hero.skin = rint(s, 0, (c.skin || [1]).length - 1);
@@ -262,6 +263,16 @@
         if (d || capped) out.push(capped ? { k: k, d: d, want: eff[k], max: s.stats[k] >= 100 } : { k: k, d: d });
       }
     });
+    C.TRAITS.forEach(function (k) {
+      if (typeof eff[k] === 'number' && eff[k] !== 0) {
+        var before = s.traits[k] || 0;
+        s.traits[k] = clamp(Math.round(before + eff[k]), 0, k === 'record' ? 99 : 100);
+        var d = s.traits[k] - before;
+        if (d) out.push({ k: k, d: d });
+      }
+    });
+    if (eff.alcohol > 0) s.y.drank = true;
+    if (eff.mischief || eff.gamble || eff.alcohol || eff.record) E.traitUnlocks(s);
     if (typeof eff.money === 'number' && eff.money !== 0) {
       var m = Math.round(eff.money * wage(s));
       s.money += m; out.push({ k: 'money', d: m });
@@ -317,6 +328,8 @@
     if (cond.sector) { if (!s.job || cond.sector.indexOf(careerById(s.job.id).sector) < 0) return false; }
     if (cond.level) { if (!s.job || !inRange(s.job.level, cond.level)) return false; }
     if (cond.gender && s.hero.gender !== cond.gender) return false;
+    if (cond.traits) for (k in cond.traits) if (!inRange((s.traits || {})[k] || 0, cond.traits[k])) return false;
+    if (cond.jailed && !(s.jail > 0)) return false;
     // recent: { flag: maxYears } — the flag was set no more than maxYears ago (e.g. first holiday after a death)
     if (cond.recent) for (k in cond.recent) { if (!s.flags[k] || s.age - s.flags[k] > cond.recent[k]) return false; }
     // family: 'all' — both parents and all three siblings still alive (present-tense "여섯 식구" texts)
@@ -397,7 +410,7 @@
   };
   // Events allowed while the hero is in prison
   E.jailOk = function (ev) {
-    return !!(ev && (ev.jailOk || ev.anyState || (ev.cond && ev.cond.flags && ev.cond.flags.indexOf('jailed') >= 0)));
+    return !!(ev && (ev.jailOk || ev.anyState || (ev.cond && ev.cond.jailed) || (ev.cond && ev.cond.flags && ev.cond.flags.indexOf('jailed') >= 0)));
   };
   function dropJailBlocked(s) {
     if (s.jail > 0) s.queue = s.queue.filter(function (id) { return E.jailOk(E.eventIndex()[id]); });
@@ -406,6 +419,7 @@
 
   E.eventMatches = function (s, ev) {
     if (!s.alive) return false;
+    if (ev.cond && ev.cond.jailed && !(s.jail > 0)) return false;
     var age = ev.age || [1, 120];
     if (s.age < age[0] || s.age > age[1]) return false;
     if (ev.countries && ev.countries.indexOf(s.country) < 0) return false;
@@ -483,14 +497,56 @@
       id: ev.id, text: E.render(s, text), scene: ev.scene || E.sceneFor(s, ev), pick: !!ev.pick, pic: ev.pic || null,
       category: { key: ev._cat, label: cat.label, icon: cat.icon, color: cat.color, pic: cat.pic },
       choices: eventChoices(s, ev).map(function (ch, i) {
-        var chance = ch.check ? E.checkChance(s, ch.check) : null;
+        var chance = ch.bet ? ch.bet.odds : ch.check ? E.checkChance(s, ch.check) : null;
         return { i: i, text: E.render(s, ch.text), enabled: E.choiceAvailable(s, ch), chance: chance,
-          desc: ch.desc ? E.render(s, ch.desc) : null, preview: ch.preview || null };
+          desc: ch.desc ? E.render(s, ch.desc) : null, preview: ch.preview || E.autoPreview(ch), risky: E.isRisky(ch),
+          bet: ch.bet ? { odds: ch.bet.odds, mult: ch.bet.mult, stake: E.betStake(s, ch.bet), addict: ch.bet.addict != null ? ch.bet.addict : 3 } : null,
+          career: ch.career ? (E.careerIndex()[ch.career] || {}).name : null };
       })
     };
   };
 
+  // A choice is risky when the author marked it, or when it can lead to prison, expulsion, bankruptcy,
+  // or builds up 악동 기질 / 도박 / 음주 (used for the ⚠️ badge and the test bots)
+  var RISKY_FX = ['jail', 'expel', 'suspend', 'bankrupt', 'deport', 'fbBan', 'divorce', 'scam', 'dropOut'];
+  E.isRisky = function (ch) {
+    if (ch.risky || ch.bet) return true;
+    var bad = function (eff) {
+      if (!eff) return false;
+      var fx = eff.fx ? (Array.isArray(eff.fx) ? eff.fx : [eff.fx]) : [];
+      return fx.some(function (f) { return RISKY_FX.indexOf(f) >= 0; }) || eff.mischief > 0 || eff.gamble > 0 || eff.alcohol > 0 || eff.record > 0;
+    };
+    if (bad(ch.effects) || bad(ch.success && ch.success.effects) || bad(ch.fail && ch.fail.effects)) return true;
+    // a delayed consequence counts too (e.g. lending your bank account → the police knock a year later)
+    var sch = ch.schedule || (ch.success && ch.success.schedule) || (ch.fail && ch.fail.schedule);
+    var next = sch && E.eventIndex()[sch.id];
+    return !!(next && (next.choices || []).some(function (c2) { return bad(c2.effects) || bad(c2.success && c2.success.effects) || bad(c2.fail && c2.fail.effects); }));
+  };
+  // What a choice touches, for the icon chips shown before deciding (sign only matters for previews)
+  E.autoPreview = function (ch) {
+    var out = {}, add = function (eff) {
+      if (!eff) return;
+      C.STATS.concat(C.TRAITS, ['money']).forEach(function (k) { if (typeof eff[k] === 'number' && eff[k] && out[k] == null) out[k] = eff[k]; });
+      if (eff.rel && out.rel == null) out.rel = 1;
+    };
+    if (ch.bet) { out.money = 1; out.gamble = ch.bet.addict != null ? ch.bet.addict : 3; }
+    add(ch.effects); if (ch.success) add(ch.success.effects); if (ch.fail) add(ch.fail.effects);
+    return Object.keys(out).length ? out : null;
+  };
+  // Money at stake for a bet (internal money units)
+  E.betStake = function (s, bet) {
+    var w = wage(s), m = Math.max(0, s.money);
+    switch (bet.stake) {
+      case 'tiny': return Math.round(5 * w);
+      case 'small': return Math.round(Math.max(20 * w, m * 0.02));
+      case 'medium': return Math.round(Math.max(200 * w, m * 0.1));
+      case 'big': return Math.round(Math.max(1000 * w, m * 0.3));
+      case 'all': return Math.round(Math.max(2000 * w, m));
+    }
+    return Math.round(20 * w);
+  };
   E.checkChance = function (s, chk) {
+    if (typeof chk.odds === 'number') return chk.odds; // fixed odds (dice, cards, being caught)
     return clamp(0.5 + ((s.stats[chk.stat] || 0) - chk.diff) / 40, chk.min != null ? chk.min : 0.05, chk.max != null ? chk.max : 0.95);
   };
 
@@ -507,18 +563,41 @@
     if (!ev.manual || ev.id.indexOf('canon_') === 0 || ev.memorial) addLog(s, E.render(s, E.eventText(s, ev)), 'q', mem);
     var res = { changes: [], outcome: null, log: '', anim: ch.anim || null };
     var branch = ch;
-    if (ch.check) {
+    if (choices.length >= 2) { s.dec = s.dec || {}; s.dec[s.age] = (s.dec[s.age] || 0) + 1; }
+    var betNote = '';
+    if (ch.bet) {
+      var stake = E.betStake(s, ch.bet), won = rnd(s) < ch.bet.odds;
+      branch = won ? ch.success : ch.fail;
+      res.outcome = won ? 'success' : 'fail';
+      var delta = won ? Math.round(stake * (ch.bet.mult - 1)) : (ch.bet.stake === 'tiny' ? 0 : -stake);
+      s.money += delta;
+      if (delta) res.changes.push({ k: 'money', d: delta });
+      var add = (ch.bet.addict != null ? ch.bet.addict : 3) + (won && ch.bet.mult >= 3 ? 5 : 0);
+      applyEffects(s, { gamble: add }, res.changes);
+      s.gambleLog = s.gambleLog || { plays: 0, wins: 0, net: 0 };
+      s.gambleLog.plays++; if (won) s.gambleLog.wins++; s.gambleLog.net += delta;
+      s.y.bets = (s.y.bets || 0) + 1;
+      if (won && ch.bet.mult >= 3) E.triumph(s, 'jackpot');
+      betNote = delta ? ' (' + (delta > 0 ? '+' : '') + T.money(delta, country(s)) + ')' : '';
+    } else if (ch.check) {
       var ok = rnd(s) < E.checkChance(s, ch.check);
       branch = ok ? ch.success : ch.fail;
       res.outcome = ok ? 'success' : 'fail';
     }
     applyEffects(s, branch.effects, res.changes);
+    if (ch.career && E.careerIndex()[ch.career] && s.jail === 0) {
+      var kc = E.careerIndex()[ch.career];
+      if (!s.job || s.job.id !== ch.career) {
+        E.startJob(s, ch.career, 0);
+        res.changes.push({ k: 'msg', t: kc.name + '(으)로 새 길을 시작했다. 첫 직함은 "' + E.ladderTitle(s, kc, 0) + '".' });
+      }
+    }
     if (res.outcome !== 'fail' && branch.effects && (branch.effects.fame || 0) >= 3 && E.eventCategory(ev).key === 'football') E.triumph(s, 'goal');
     var log = variant(s, ev, branch.logVariants, branch.log);
     if (branch.run) log = branch.run(s, res) || log;
     var sch = branch.schedule || ch.schedule;
     if (sch) s.pending.push({ age: s.age + (sch.years || 1), id: sch.id });
-    res.log = E.render(s, log || '');
+    res.log = E.render(s, log || '') + betNote;
     mem.chg = compactChanges(res.changes);
     res.category = E.eventCategory(ev);
     if (res.log) addLog(s, res.log, res.outcome === 'fail' ? 'bad' : res.outcome === 'success' ? 'good' : 'event', mem);
@@ -584,14 +663,39 @@
         if (e.countries) w *= 1.6;
         if (e.cond && (e.cond.sector || e.cond.career)) w *= 1.3;
         if (e.once) w *= 1.2;
-        return w;
+        return w * E.habitWeight(s, e);
       });
       if (!ev) break;
       chosen.push(ev); used[ev.id] = 1;
       pool = pool.filter(function (e) { return e !== ev; });
     }
     chosen.forEach(function (ev) { fireEvent(s, ev); });
+    // 4) "올해의 결정": make sure the year asks for enough real decisions
+    var target = E.decisionTarget(s);
+    var extra = eligible.filter(function (ev) { return !used[ev.id] && !ev.priority && !ev.manual && (ev.choices || ev.choicesFn) && (ev.choices || []).length >= 2; });
+    while (s.queue.length < target && extra.length) {
+      var d = R.weighted(s.rng, extra, function (e) { return (e.decision ? 30 : 6) * (e.weight != null ? Math.max(0.2, e.weight / 10) : 1) * E.habitWeight(s, e); });
+      if (!d) break;
+      extra = extra.filter(function (e) { return e !== d; });
+      used[d.id] = 1; chosen.push(d);
+      s.y.yearDecision = s.y.yearDecision || d.id;
+      fireEvent(s, d);
+    }
     return chosen.map(function (e) { return e.id; });
+  };
+  // A habit pulls its temptations closer: gambling events come more often the deeper the addiction
+  E.habitWeight = function (s, ev) {
+    if (ev._bet == null) ev._bet = (ev.choices || []).some(function (c) { return !!c.bet; }) || /^gam_/.test(ev.id || '');
+    var g = (s.traits || {}).gamble || 0;
+    return ev._bet && g > 0 ? 1 + g / 8 : 1;
+  };
+  // decisions wanted per year: ages 5-12: 1, teens: 2-3, adults: 1-2
+  E.decisionTarget = function (s) {
+    if (E.isMontage(s)) return 0;
+    if (s.age <= 12) return 1;
+    if (s.age <= 19) return rnd(s) < 0.35 ? 3 : 2;
+    if (s.age <= 64) return rnd(s) < 0.4 ? 2 : 1;
+    return 1;
   };
 
   // ---------------------------------------------------------------- education
@@ -628,11 +732,11 @@
     var need = ed.stage === 'univ' ? (ed.major === 'medicine' ? 6 : 4) : (ed.target === 'phd' ? 4 : 2);
     if (ed.univYears >= need) {
       if (ed.stage === 'univ') {
-        ed.degree = 'bachelor'; ed.stage = 'none';
+        ed.degree = 'bachelor'; ed.stage = 'none'; ed.gradAge = s.age;
         addLog(s, ed.univ + ' ' + C.MAJORS[ed.major] + ' 전공으로 졸업했다. 학사모를 던졌다!', 'milestone');
         E.queueSys(s, 'sys_grad');
       } else {
-        ed.degree = ed.target; ed.stage = 'none';
+        ed.degree = ed.target; ed.stage = 'none'; ed.gradAge = s.age;
         addLog(s, (ed.target === 'phd' ? '박사' : '석사') + ' 학위를 받았다.', 'milestone');
         if (ed.target === 'master') E.queueSys(s, 'sys_phd');
       }
@@ -669,7 +773,8 @@
     if (r.degree && degreeRank(s.edu.degree) < degreeRank(r.degree)) miss.push(C.DEGREE_LABELS[r.degree] + ' 이상');
     if (r.majors && r.majors.length && (degreeRank(s.edu.degree) < 2 || r.majors.indexOf(s.edu.major) < 0)) miss.push('전공: ' + r.majors.map(function (m) { return C.MAJORS[m]; }).join('/'));
     if (r.stats) Object.keys(r.stats).forEach(function (st) { if ((s.stats[st] || 0) < r.stats[st]) miss.push(C.STAT_LABELS[st] + ' ' + r.stats[st] + '+'); });
-    if (r.flags && !hasFlags(s, r.flags)) miss.push('특별 조건');
+    if (r.flags && !hasFlags(s, r.flags)) miss.push(r.unlockHint || '특별 조건');
+    if (r.traits) Object.keys(r.traits).forEach(function (t) { if (((s.traits || {})[t] || 0) < r.traits[t]) miss.push(r.unlockHint || (C.TRAIT_LABELS[t] + ' ' + r.traits[t] + ' 이상')); });
     if (r.fame && s.stats.fame < r.fame) miss.push('명성 ' + r.fame + '+');
     var school = ['elem', 'middle', 'high', 'univ', 'grad'].indexOf(s.edu.stage) >= 0;
     if (school && k.sector !== 'parttime') miss.push('학업 중');
@@ -749,8 +854,15 @@
       return;
     }
     var sal = E.salaryOf(s, k, j.level);
-    s.money += Math.round(sal * 0.78);
-    s.y.income = (s.y.income || 0) + sal;
+    if (k.special === 'gamble') {
+      // a gambler's year swings wildly: from big losses to a fortune, and the habit deepens
+      var swing = Math.round(sal * (rnd(s) * 2.8 - 0.9));
+      s.money += swing;
+      s.traits.gamble = clamp((s.traits.gamble || 0) + 2, 0, 100);
+      addLog(s, '🎲 ' + E.jobTitle(s) + '의 한 해: ' + (swing >= 0 ? '+' : '') + T.money(swing, country(s)) + (swing > sal ? ' 대박이 났다!' : swing < 0 ? ' 테이블에서 크게 잃었다.' : ''), swing >= 0 ? 'good' : 'bad');
+      if (swing > sal * 1.2) E.triumph(s, 'jackpot');
+    } else s.money += Math.round(sal * 0.78);
+    s.y.income = (s.y.income || 0) + Math.max(0, sal);
     addStat(s, 'happy', -(k.stress - 2) + (j.perf > 70 ? 1 : 0));
     if (k.stress >= 4) addStat(s, 'health', -1);
     if (k.fame) addStat(s, 'fame', Math.round(k.fame * (n ? j.level / n : 1)));
@@ -779,6 +891,9 @@
     if (s.flags.drinker) q *= 1.2;
     if (s.sick) q *= 1.6;
     if (s.stats.happy < 15) q *= 1.25;
+    var tr = s.traits || {};
+    if (tr.alcohol >= 60) q *= 1.3;
+    if (tr.gamble >= 75) q *= 1.15;
     return clamp(q, 0, 0.95);
   };
 
@@ -797,13 +912,48 @@
     if (!dead && !onlyHealth) dead = rnd(s) < E.mortality(s) || s.age >= 122;
     if (dead) {
       s.alive = false;
-      s.cause = s.stats.health <= 0 ? (s.sick ? s.sick.name : '건강 악화') : deathCause(s);
+      s.cause = s.stats.health <= 0 ? (s.sick ? s.sick.name : ((s.traits || {}).alcohol >= 60 ? '술로 망가진 건강' : '건강 악화')) : deathCause(s);
       s.queue = [];
+      if (E.ending) { var en = E.ending(s); s.ending = en ? en.id : null; }
       if (s.job) endJob(s, '사망');
       addLog(s, s.age + '세, ' + s.cause + '(으)로 세상을 떠났다.', 'death');
       E.checkAchievements(s);
     }
     return dead;
+  };
+
+  // Traits act every year: drinking wears the body down, gambling eats savings, habits fade if left alone
+  function yearlyTraits(s) {
+    var t = s.traits = s.traits || { mischief: 0, rep: 50, gamble: 0, alcohol: 0, record: 0 };
+    if (t.alcohol >= 50) { addStat(s, 'health', t.alcohol >= 75 ? -3 : -2); if (t.alcohol >= 75) addStat(s, 'happy', -2); }
+    if (t.alcohol > 0 && !s.y.drank) t.alcohol = Math.max(0, t.alcohol - 1);
+    if (t.gamble >= 45 && s.money > 0) {
+      var loss = Math.round(s.money * (t.gamble >= 75 ? 0.15 : 0.08));
+      s.money -= loss; addStat(s, 'happy', -2);
+      if (loss > 0) addLog(s, '🎲 도박으로 모은 돈이 새어 나간다. (-' + T.money(loss, country(s)) + ')', 'bad');
+    }
+    if (t.gamble > 0 && t.gamble < 20 && !s.y.bets) t.gamble = Math.max(0, t.gamble - 1); // a habit (20+) does not fade on its own
+    if (t.mischief > 0 && s.age > 20) t.mischief = Math.max(0, t.mischief - 1);
+    if (t.rep !== 50) t.rep += t.rep > 50 ? -1 : 1;
+    E.traitUnlocks(s);
+  }
+  E.yearlyTraits = yearlyTraits;
+  // New paths open when a trait crosses a threshold (shown in the log and the 진로 panel)
+  E.traitUnlocks = function (s) {
+    var t = s.traits || {};
+    if (t.gamble >= 45 && !s.flags.gambler_unlocked) {
+      s.flags.gambler_unlocked = s.age;
+      addLog(s, '🎲 도박 중독 2단계. 새 진로 해금: 겜블러 (카지노 딜러부터 시작할 수 있다)', 'achieve');
+    }
+    if (t.mischief >= 40 && !s.flags.rascal_unlocked) {
+      s.flags.rascal_unlocked = s.age;
+      addLog(s, '😈 악동 기질 40. 뒷골목 진로가 열렸다 (야바위꾼, 밀수꾼…)', 'achieve');
+    }
+  };
+  E.gambleStage = function (s) {
+    var g = (s.traits || {}).gamble || 0, st = C.GAMBLE_STAGES, out = st[0][1];
+    for (var i = 0; i < st.length; i++) if (g >= st[i][0]) out = st[i][1];
+    return out;
   };
 
   function yearlyStats(s) {
@@ -850,8 +1000,10 @@
     // savings interest / debt interest
     if (s.money > 0) s.money += Math.round(s.money * 0.01);
     else {
-      s.money += Math.round(s.money * 0.05); addStat(s, 'happy', -3); s.flags.in_debt = s.age;
-      if (s.money < -60000 * wage(s) && (!s.flags.bankrupt || s.age - s.flags.bankrupt >= 10)) {
+      // student loans: low interest and no bankruptcy while studying and for 4 years after the last degree
+      var studying = s.edu.stage === 'univ' || s.edu.stage === 'grad' || (s.edu.gradAge && s.age - s.edu.gradAge < 4);
+      s.money += Math.round(s.money * (studying ? 0.02 : 0.05)); addStat(s, 'happy', studying ? -1 : -3); s.flags.in_debt = s.age;
+      if (!studying && !s.job && s.money < -60000 * wage(s) && (!s.flags.bankrupt || s.age - s.flags.bankrupt >= 10)) { // people with a job keep repaying
         s.money = 0; s.flags.bankrupt = s.age; addStat(s, 'happy', -10);
         addLog(s, '빚을 감당할 수 없어 개인 파산을 신청했다. 모든 걸 잃었지만, 다시 시작할 수 있다.', 'bad');
       }
@@ -973,6 +1125,7 @@
     addLog(s, '— ' + s.age + '세 (' + s.year + '년) —', 'year');
     yearlyHealth(s);
     yearlyStats(s);
+    yearlyTraits(s);
     E.updateEducation(s);
     progressUniversity(s);
     if (s.edu.stage === 'high' && s.age === country(s).school.exam.age) E.prepareExam(s);

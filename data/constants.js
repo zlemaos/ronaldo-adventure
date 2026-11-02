@@ -6,7 +6,7 @@
   RA.data = RA.data || {};
 
   RA.C = {
-    SAVE_VERSION: 4,
+    SAVE_VERSION: 5,
     HERO_NAME: '호날두',          // the hero is always 호날두 (male or female)
     STATS: ['health', 'happy', 'smarts', 'looks', 'football', 'grit', 'social', 'fame'],
     STAT_LABELS: {
@@ -56,8 +56,18 @@
       'fatherSeekHelp', 'fatherRelapse', 'fatherRecover',
       'newFriend', 'loseFriend', 'newPartner', 'breakup', 'marry', 'divorce', 'haveChild',
       'jail', 'fired', 'promote', 'demote', 'quitJob', 'getSick', 'cure', 'adoptPet',
-      'buyHouse', 'buyCar', 'lottery', 'scam', 'moveAbroad', 'becomeMonk', 'leaveMonastery'
+      'buyHouse', 'buyCar', 'lottery', 'scam', 'moveAbroad', 'becomeMonk', 'leaveMonastery',
+      // round 5: failure routes and life decisions
+      'suspend', 'expel', 'holdBack', 'careerEndingInjury', 'deport', 'bankrupt', 'rehab', 'fbBan', 'quickJob',
+      'dropOut', 'enlist'
     ],
+    // Traits: hidden/visible tendencies that bad (and good) choices build up. Effects and cond.traits use these keys.
+    TRAITS: ['mischief', 'rep', 'gamble', 'alcohol', 'record'],
+    TRAIT_LABELS: { mischief: '악동 기질', rep: '평판', gamble: '도박 중독', alcohol: '음주', record: '전과' },
+    TRAIT_ICONS: { mischief: '😈', rep: '🗣️', gamble: '🎲', alcohol: '🍺', record: '⛓️' },
+    // 도박 중독 stages (min value, label)
+    GAMBLE_STAGES: [[0, '없음'], [1, '재미 삼아'], [20, '1단계 · 습관'], [45, '2단계 · 중독'], [75, '3단계 · 심각']],
+    BET_STAKES: ['tiny', 'small', 'medium', 'big', 'all'],
     // Text tokens available in any event/career text: {token}
     TOKENS: ['name', 'nick', 'father', 'mother', 'bro', 'sis1', 'sis2', 'friend', 'partner',
       'spouse', 'child', 'coach', 'city', 'hometown', 'region', 'bigcity', 'capital', 'house',

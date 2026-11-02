@@ -407,3 +407,37 @@ body, .mt-text, .ev-text, .log .e, .choice, .toast { word-break: keep-all; overf
 .chip.cap { color: var(--gold); }
 .auto-stop { flex-direction: column; gap: 0; }
 .auto-stop small { display: block; font-size: 11px; font-weight: 400; color: var(--muted); }
+
+/* round 5: traits, risky choices, endings, career paths */
+.traits { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 12px 12px; align-items: center; }
+.traits-h { font-size: 12px; color: var(--gold); margin-right: 2px; }
+.tchip { font-size: 12px; padding: 3px 8px; border-radius: 99px; background: var(--panel3); white-space: nowrap; }
+.tchip.good { color: var(--green); }
+.tchip.bad1 { color: #fbbf24; }
+.tchip.bad2 { color: #fb923c; box-shadow: 0 0 0 1px #fb923c inset; }
+.tchip.bad3 { color: #fff; background: #b4233e; }
+.chip.trait.down { color: #fb923c; }
+.year-decision { display: inline-block; margin-left: 6px; font-size: 12px; font-weight: 700; color: #1d1600; background: var(--gold); border-radius: 99px; padding: 2px 8px; vertical-align: top; }
+.choice.is-risky { border-color: #b4233e; }
+.risky-tag { font-size: 11px; color: #ff8a9b; font-weight: 700; }
+.p.odds { color: var(--gold); font-weight: 700; }
+.ending-card { display: grid; grid-template-columns: 56px 1fr; gap: 10px; align-items: center; padding: 10px; margin: 0 0 12px; border-radius: var(--radius); background: var(--panel2); border: 2px solid var(--green); }
+.ending-card.fall { border-color: #b4233e; }
+.ec-icon { font-size: 36px; text-align: center; }
+.ec-kind { font-size: 12px; color: var(--muted); }
+.ec-name { font-size: 18px; font-weight: 700; color: var(--gold); }
+.ec-desc { font-size: 13px; }
+.endings { display: grid; gap: 6px; }
+.ending { display: grid; grid-template-columns: 40px 1fr; gap: 8px; align-items: center; background: var(--panel2); border: 2px solid var(--line); border-radius: var(--radius); padding: 6px 8px; }
+.ending .ei { font-size: 24px; text-align: center; }
+.ending .en { font-weight: 700; }
+.ending .ed { font-size: 12px; color: var(--muted); }
+.ending.got.win { border-color: var(--green2); }
+.ending.got.fall { border-color: #b4233e; }
+.ending.locked { opacity: .6; }
+.paths { display: grid; gap: 6px; }
+.path { background: var(--panel2); border: 2px solid var(--line); border-radius: var(--radius); padding: 8px 10px; }
+.path.open { border-color: var(--green2); }
+.path .pn { font-weight: 700; }
+.path .pl { font-size: 12px; color: var(--muted); }
+.path .ph { font-size: 12px; color: #fbbf24; }

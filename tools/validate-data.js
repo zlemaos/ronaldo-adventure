@@ -90,6 +90,8 @@ function validate(RA) {
     if (r.degree && !C.DEGREES.includes(r.degree)) err(w + ': bad degree');
     (r.majors || []).forEach(m => { if (!C.MAJORS[m]) err(w + ': bad major ' + m); });
     Object.keys(r.stats || {}).forEach(s => { if (!C.STATS.includes(s)) err(w + ': bad stat ' + s); });
+    Object.keys(r.traits || {}).forEach(t => { if (!C.TRAITS.includes(t)) err(w + ': bad trait ' + t); });
+    if (r.traits && !r.unlockHint) err(w + ': trait-gated careers need req.unlockHint (shown in the 진로 panel)');
     if (!Array.isArray(k.salary) || k.salary.length !== 2 || !(k.salary[0] >= 0 && k.salary[1] >= k.salary[0])) err(w + ': salary');
     if (!Array.isArray(k.ladder) || k.ladder.length < 3 || k.ladder.length > 7) err(w + ': ladder 3..7');
     if (!C.STATS.includes(k.keyStat)) err(w + ': keyStat');
@@ -103,7 +105,7 @@ function validate(RA) {
   const checkEffects = (w, e) => {
     if (!e) return;
     for (const key of Object.keys(e)) {
-      if (C.STATS.includes(key) || key === 'money') { if (typeof e[key] !== 'number') err(w + ': ' + key + ' not number'); }
+      if (C.STATS.includes(key) || key === 'money' || C.TRAITS.includes(key)) { if (typeof e[key] !== 'number') err(w + ': ' + key + ' not number'); }
       else if (key === 'rel') Object.keys(e.rel).forEach(r => { if (!C.REL_KEYS.includes(r)) err(w + ': bad rel ' + r); });
       else if (key === 'flags' || key === 'unflags') { if (!Array.isArray(e[key])) err(w + ': ' + key + ' must be array'); }
       else if (key === 'fx') { (Array.isArray(e.fx) ? e.fx : [e.fx]).forEach(f => { if (!fxSet.has(f)) err(w + ': bad fx ' + f); }); }
@@ -122,12 +124,13 @@ function validate(RA) {
     if (ev.age && !(Array.isArray(ev.age) && ev.age[0] <= ev.age[1])) err(w + ': age');
     (ev.countries || []).forEach(c => { if (!COUNTRIES.includes(c)) err(w + ': bad country ' + c); });
     const cd = ev.cond || {};
-    const allowed = ['stats', 'money', 'flags', 'fb', 'edu', 'degree', 'career', 'sector', 'level', 'rel', 'gender', 'recent', 'family'];
+    const allowed = ['stats', 'money', 'flags', 'fb', 'edu', 'degree', 'career', 'sector', 'level', 'rel', 'gender', 'recent', 'family', 'traits', 'jailed'];
     Object.keys(cd).forEach(k => { if (!allowed.includes(k)) err(w + ': unknown cond ' + k); });
     if (cd.family && cd.family !== 'all') err(w + ': cond.family must be "all"');
     if (ev.memorial && ev.memorial !== true && !Array.isArray(ev.memorial)) err(w + ': memorial must be true or a list');
 
     Object.keys(cd.stats || {}).forEach(s => { if (!C.STATS.includes(s)) err(w + ': bad cond stat ' + s); });
+    Object.keys(cd.traits || {}).forEach(t => { if (!C.TRAITS.includes(t) || !Array.isArray(cd.traits[t])) err(w + ': bad cond trait ' + t); });
     (cd.fb || []).forEach(s => { if (!C.FB_STAGES.includes(s)) err(w + ': bad fb ' + s); });
     (cd.edu || []).forEach(s => { if (!C.EDU_STAGES.includes(s)) err(w + ': bad edu ' + s); });
     (cd.sector || []).forEach(s => { if (!C.SECTORS[s]) err(w + ': bad sector ' + s); });
@@ -141,8 +144,15 @@ function validate(RA) {
       ev.choices.forEach((ch, i) => {
         const cw = w + ' choice' + i;
         checkText(cw, ch.text);
-        if (ch.check) {
-          if (!C.STATS.includes(ch.check.stat) || typeof ch.check.diff !== 'number') err(cw + ': bad check');
+        if (ch.career && careers.length && !cids.has(ch.career)) err(cw + ': unknown career ' + ch.career);
+        if (ch.bet) {
+          const b = ch.bet;
+          if (!(b.odds > 0 && b.odds < 1) || !(b.mult > 1) || !C.BET_STAKES.includes(b.stake)) err(cw + ': bad bet (odds 0..1, mult > 1, stake ' + C.BET_STAKES.join('/') + ')');
+          if (!ch.success || !ch.fail) err(cw + ': bet needs success+fail');
+          else { checkText(cw + ' success', ch.success.log); checkText(cw + ' fail', ch.fail.log); checkEffects(cw, ch.success.effects); checkEffects(cw, ch.fail.effects); }
+        } else if (ch.check) {
+          const fixed = typeof ch.check.odds === 'number';
+          if (fixed ? !(ch.check.odds > 0 && ch.check.odds < 1) : (!C.STATS.includes(ch.check.stat) || typeof ch.check.diff !== 'number')) err(cw + ': bad check');
           if (!ch.success || !ch.fail) err(cw + ': check needs success+fail');
           else { checkText(cw + ' success', ch.success.log); checkText(cw + ' fail', ch.fail.log); checkEffects(cw, ch.success.effects); checkEffects(cw, ch.fail.effects); }
         } else {

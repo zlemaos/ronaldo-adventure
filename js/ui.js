@@ -87,7 +87,13 @@
       if (k === 'rel') return '<span class="chip ' + (v > 0 ? 'up' : 'down') + '" title="관계">' + (v > 0 ? '💞' : '💔') + ' 관계</span>';
       var txt = k === 'money' ? (v > 0 ? '+' : '') + (preview ? '' : money(v)) : (v > 0 ? '+' : '') + v;
       if (k === 'money' && preview) txt = v > 0 ? '+' : '−';
-      return '<span class="chip ' + (v > 0 ? 'up' : 'down') + '" title="' + esc(C.STAT_LABELS[k] || k) + '">' + (STAT_ICONS[k] || '') + ' ' + esc(txt) + '</span>';
+      var trait = C.TRAITS.indexOf(k) >= 0;
+      // for traits "up" is usually bad (악동, 도박, 음주, 전과) — 평판 is the exception
+      var good = trait ? (k === 'rep' ? v > 0 : v < 0) : v > 0;
+      var icon = trait ? C.TRAIT_ICONS[k] : (STAT_ICONS[k] || '');
+      var label = trait ? C.TRAIT_LABELS[k] : (C.STAT_LABELS[k] || k);
+      if (trait && preview) txt = (v > 0 ? '+' : '−');
+      return '<span class="chip ' + (good ? 'up' : 'down') + (trait ? ' trait' : '') + '" title="' + esc(label) + '">' + icon + (trait ? ' ' + esc(label.replace(/ .*/, '')) : '') + ' ' + esc(txt) + '</span>';
     });
     return out.length ? '<div class="chips">' + out.join('') + '</div>' : '';
   }
@@ -238,7 +244,7 @@
     var el = h('<div class="game">' +
       '<aside class="side">' +
       '  <section class="card portrait"><div class="portrait-row"><div class="pcv"></div><div class="who" id="who"></div></div></section>' +
-      '  <section class="card"><div class="card-h">능력치</div><div class="card-b stats" id="stats"></div></section>' +
+      '  <section class="card"><div class="card-h">능력치</div><div class="card-b stats" id="stats"></div><div class="traits" id="traits"></div></section>' +
       '  <div class="actionbar" id="actionbar"><button class="ab-auto" id="btn-auto" aria-pressed="false"></button><button class="ab-speed" id="btn-speed" aria-label="속도"></button><button class="age-btn" id="btn-age"></button></div>' +
       '</aside>' +
       '<section class="card logcol"><div class="card-h">인생 기록 <span class="muted" id="log-count"></span></div><div class="log" id="log"></div></section>' +
@@ -254,7 +260,7 @@
 
   function refresh(full) {
     if (app.screen !== 'game') return;
-    renderWho(); renderStats(); renderAgeBtn(); renderLog(full); renderTabs(); renderPanel();
+    renderWho(); renderStats(); renderTraits(); renderAgeBtn(); renderLog(full); renderTabs(); renderPanel();
   }
 
   function renderWho() {
@@ -295,6 +301,18 @@
       }
       vv.textContent = v; prevStats[k] = v;
     });
+  }
+  // 특성 strip: shows what bad (and good) choices have built up
+  function renderTraits() {
+    var s = app.s, box = $('#traits'); if (!box) return;
+    var t = s.traits || {}, out = [];
+    var stageCls = t.gamble >= 75 ? 'bad3' : t.gamble >= 45 ? 'bad2' : t.gamble >= 20 ? 'bad1' : '';
+    out.push('<span class="tchip' + (t.rep < 35 ? ' bad1' : t.rep >= 65 ? ' good' : '') + '">' + C.TRAIT_ICONS.rep + ' 평판 ' + (t.rep != null ? t.rep : 50) + '</span>');
+    if (t.mischief > 0) out.push('<span class="tchip' + (t.mischief >= 40 ? ' bad2' : t.mischief >= 20 ? ' bad1' : '') + '">' + C.TRAIT_ICONS.mischief + ' 악동 ' + t.mischief + '</span>');
+    if (t.gamble > 0) out.push('<span class="tchip ' + stageCls + '">' + C.TRAIT_ICONS.gamble + ' 도박 ' + t.gamble + ' · ' + esc(E.gambleStage(s)) + '</span>');
+    if (t.alcohol > 0) out.push('<span class="tchip' + (t.alcohol >= 50 ? ' bad2' : t.alcohol >= 25 ? ' bad1' : '') + '">' + C.TRAIT_ICONS.alcohol + ' 음주 ' + t.alcohol + '</span>');
+    if (t.record > 0) out.push('<span class="tchip bad2">' + C.TRAIT_ICONS.record + ' 전과 ' + t.record + '범</span>');
+    box.innerHTML = '<span class="traits-h">특성</span>' + out.join('');
   }
   function renderAgeBtn() {
     var s = app.s, b = $('#btn-age'), au = $('#btn-auto'), sp = $('#btn-speed');
@@ -434,8 +452,10 @@
     } else html += '<p class="muted">' + (s.age < 14 ? '아직 일할 나이가 아닙니다.' : '직업이 없습니다. 활동 탭의 "구직/이직"에서 120가지가 넘는 직업에 지원할 수 있어요.') + '</p>';
     if (s.jobHistory.length) html += '<div class="section-title">경력</div><div class="ladder">' + s.jobHistory.slice(-8).reverse().map(function (j) { return '<div>' + j.from + '–' + j.to + '세 · ' + esc(j.name) + ' · ' + esc(j.title) + ' <span class="muted">(' + esc(j.why) + ')</span></div>'; }).join('') + '</div>';
     p.innerHTML = html;
+    var pb = h('<button class="btn" style="margin-top:12px;width:100%">🧭 진로 지도 (열린 길 · 잠긴 길)</button>');
+    pb.addEventListener('click', showPaths); p.appendChild(pb);
     if (s.age >= 14 && s.alive) {
-      var b = h('<button class="btn btn-gold" style="margin-top:12px;width:100%">🔎 직업 찾아보기</button>');
+      var b = h('<button class="btn btn-gold" style="margin-top:8px;width:100%">🔎 직업 찾아보기</button>');
       b.addEventListener('click', showJobs); p.appendChild(b);
     }
   }
@@ -540,13 +560,18 @@
     wrap.style.setProperty('--cat', ev.category.color);
     var cvHolder = doc.createElement('div'); cvHolder.className = 'ev-pic';
     wrap.appendChild(cvHolder);
-    var body = h('<div class="card-b">' + categoryHtml(ev.category) + '<p class="ev-text">' + esc(ev.text) + '</p><div class="choices"></div>' +
+    var isYearDecision = s.y && s.y.yearDecision === ev.id;
+    var body = h('<div class="card-b">' + categoryHtml(ev.category) + (isYearDecision ? '<span class="year-decision">🧭 올해의 결정</span>' : '') + '<p class="ev-text">' + esc(ev.text) + '</p><div class="choices"></div>' +
       (app.auto ? autoRowHtml('⏸ 자동 진행 끄기<small>선택을 기다리는 중</small>') : '') + '</div>');
     wrap.appendChild(body);
     ev.choices.forEach(function (ch) {
-      var pct = ch.chance != null ? '<span class="p">성공률 ' + Math.round(ch.chance * 100) + '%</span>' : '';
-      var extra = (ch.desc ? '<span class="desc">' + esc(ch.desc) + '</span>' : '') + (ch.preview ? chipsHtml(ch.preview, true) : '');
-      var b = h('<button class="btn choice' + (ch.desc ? ' has-desc' : '') + '" ' + (ch.enabled ? '' : 'aria-disabled="true"') + '><span class="ct"><span>' + esc(ch.text) + '</span>' + extra + '</span>' + (ch.enabled ? pct : '<span class="p">조건 부족</span>') + '</button>');
+      var pct = ch.bet ? '<span class="p odds">' + Math.round(ch.bet.odds * 100) + '% · 💰×' + ch.bet.mult + '</span>'
+        : ch.chance != null ? '<span class="p">성공 ' + Math.round(ch.chance * 100) + '%</span>' : '';
+      var extra = (ch.risky ? '<span class="risky-tag">⚠️ 위험한 선택</span>' : '') +
+        (ch.bet ? '<span class="desc">판돈 ' + esc(money(ch.bet.stake)) + ' · 이기면 ' + esc(money(Math.round(ch.bet.stake * (ch.bet.mult - 1)))) + ' 벌고, 지면 잃어요. 🎲 도박 중독 +' + ch.bet.addict + '</span>' : '') +
+        (ch.career ? '<span class="desc">💼 진로: ' + esc(ch.career) + '</span>' : '') +
+        (ch.desc ? '<span class="desc">' + esc(ch.desc) + '</span>' : '') + (ch.preview ? chipsHtml(ch.preview, true) : '');
+      var b = h('<button class="btn choice' + (ch.desc ? ' has-desc' : '') + (ch.risky ? ' is-risky' : '') + '" ' + (ch.enabled ? '' : 'aria-disabled="true"') + '><span class="ct"><span>' + esc(ch.text) + '</span>' + extra + '</span>' + (ch.enabled ? pct : '<span class="p">조건 부족</span>') + '</button>');
       b.addEventListener('click', function () {
         if (!ch.enabled) { A.play('bad'); toast('조건이 부족해서 고를 수 없어요.'); return; }
         onChoose(ch.i, ev);
@@ -689,10 +714,12 @@
     app.auto = false; clearTimeout(app.autoTimer); doc.body.classList.remove('auto-on');
     closeModal();
     var sum = E.summary(s);
+    var newEnding = recordEnding(s, sum.ending);
     var scr = $('#screen'); scr.innerHTML = '';
     var heirs = E.heirs(s);
     var el = h('<div class="summary">' +
       '<section class="card"><div class="grave"></div><div class="card-b">' +
+      (sum.ending ? '<div class="ending-card ' + sum.ending.kind + '"><div class="ec-icon">' + sum.ending.icon + '</div><div><div class="ec-kind">' + (sum.ending.kind === 'win' ? '엔딩' : '실패 엔딩') + (newEnding ? ' · <b class="gold">새 엔딩!</b>' : '') + '</div><div class="ec-name">' + esc(sum.ending.name) + '</div><div class="ec-desc">' + esc(sum.ending.desc) + '</div></div></div>' : '') +
       '<div style="font-size:20px;font-weight:700">' + esc(sum.name) + '</div>' +
       '<div class="muted">' + sum.born + ' – ' + sum.died + ' · ' + sum.age + '세 · ' + esc(sum.cause) + '</div>' +
       '<div class="titles" style="margin:10px 0">' + sum.titles.slice(0, 4).map(function (t, i) { return '<span class="ribbon' + (i ? ' sub' : '') + '" title="' + esc(t.desc) + '">' + esc(t.name) + '</span>'; }).join('') + '</div>' +
@@ -702,6 +729,7 @@
       '<dt>자녀</dt><dd>' + sum.children + '명</dd><dt>시드</dt><dd>' + esc(sum.seed) + (sum.generation > 1 ? ' · ' + sum.generation + '대째' : '') + '</dd></dl>' +
       '<div class="section-title">다음 인생</div><div class="heirs" id="heirs"></div>' +
       '<div class="row" style="margin-top:10px"><button class="btn btn-gold grow" id="btn-replay">같은 시드로 다시</button><button class="btn grow" id="btn-new">새 인생</button></div>' +
+      '<div class="row" style="margin-top:8px"><button class="btn grow" id="btn-hall">📖 엔딩 도감</button></div>' +
       '</div></section>' +
       '<section class="card"><div class="card-h">인생 이야기 <button class="btn btn-sm btn-green" id="btn-copy">복사해서 자랑하기</button></div><div class="card-b">' +
       '<textarea class="story" id="story" readonly></textarea>' +
@@ -734,6 +762,7 @@
       startGame({ country: s.country, seed: s.seed, gender: s.hero.gender, slot: app.slot });
     });
     $('#btn-new', el).addEventListener('click', function () { renderStart(); });
+    $('#btn-hall', el).addEventListener('click', showEndings);
     $('#btn-copy', el).addEventListener('click', function () {
       var ta = $('#story');
       var done = function () { toast('인생 이야기를 복사했어요!'); };
@@ -749,11 +778,14 @@
     var m = modal('<div class="card-h">메뉴 <button class="btn btn-sm btn-ghost" id="x">닫기</button></div><div class="card-b">' +
       (app.s ? '<div class="section-title">저장 슬롯 (현재: ' + app.slot + '번 · 매년 자동 저장)</div>' : '<div class="section-title">저장 슬롯</div>') +
       '<div class="slots" id="mslots"></div>' +
+      '<div class="section-title">인생 길잡이</div><div class="row">' + (app.s ? '<button class="btn grow" id="m-path">🧭 진로</button>' : '') + '<button class="btn grow" id="m-endings">📖 엔딩 도감</button></div>' +
       '<div class="section-title">게임</div><div class="row"><button class="btn grow" id="m-new">새 인생</button>' + (app.s ? '<button class="btn grow" id="m-help">도움말</button>' : '') + '</div>' +
       '<p class="hint">비공식 팬 패러디 게임입니다. 실존 인물·구단과 관계가 없으며 등장하는 구단·학교 이름은 모두 가상입니다. 폰트: Galmuri (OFL-1.1).</p></div>', { dismiss: true });
     m.querySelector('#x').addEventListener('click', closeModal);
     m.querySelector('#m-new').addEventListener('click', function () { closeModal(); renderStart(); });
     var hb = m.querySelector('#m-help'); if (hb) hb.addEventListener('click', showHelp);
+    var pb = m.querySelector('#m-path'); if (pb) pb.addEventListener('click', showPaths);
+    m.querySelector('#m-endings').addEventListener('click', showEndings);
     var box = m.querySelector('#mslots');
     list.slots.forEach(function (x) {
       var meta = x.meta;
@@ -766,6 +798,48 @@
       box.appendChild(row);
     });
   }
+  // ---------------------------------------------------------------- 진로 panel
+  function showPaths() {
+    var s = app.s; if (!s) return;
+    var cp = E.careerPaths(s);
+    var cur = s.job ? E.jobTitle(s) : (s.fb.stage !== 'none' && s.fb.stage !== 'retired' ? C.FB_STAGE_LABELS[s.fb.stage] : eduLabel(s));
+    var PATHS = { path_study: '📚 공부 올인', path_football: '⚽ 축구 올인', path_arts: '🎨 예체능', path_trade: '🔧 기술·장사', path_free: '🛹 자유로운 영혼', path_creator: '📹 내 길(창작)' };
+    var item = function (x, open) {
+      return '<div class="path ' + (open ? 'open' : 'locked') + '"><div class="pn">' + (open ? '🔓 ' : '🔒 ') + esc(x.name) + ' <span class="muted">· ' + esc(C.SECTORS[x.sector] || '') + '</span></div>' +
+        '<div class="pl">' + x.ladder.map(esc).join(' → ') + '</div>' + (open ? '' : '<div class="ph">해금 조건: ' + esc(x.hint || '조건 미달') + '</div>') + '</div>';
+    };
+    var m = modal('<div class="card-h">🧭 진로 <button class="btn btn-sm btn-ghost" id="x">닫기</button></div><div class="card-b">' +
+      '<div class="section-title">지금 걷는 길</div><p>' + esc(cur) + (cp.pathFlags.length ? '<br><span class="muted">진로 결정: ' + cp.pathFlags.map(function (f) { return PATHS[f] || f; }).join(', ') + '</span>' : '') + '</p>' +
+      '<p class="muted">지금 지원할 수 있는 직업 ' + cp.available + '개 · 활동 탭의 "구직/이직"에서 지원해요.</p>' +
+      '<div class="section-title">열린 특별 진로 ' + cp.open.length + '</div><div class="paths">' + (cp.open.map(function (x) { return item(x, true); }).join('') || '<p class="muted">아직 없어요.</p>') + '</div>' +
+      '<div class="section-title">잠긴 진로 ' + cp.locked.length + '</div><div class="paths">' + cp.locked.map(function (x) { return item(x, false); }).join('') + '</div>' +
+      '</div>', { dismiss: true });
+    m.querySelector('#x').addEventListener('click', closeModalAndGo);
+  }
+
+  // ---------------------------------------------------------------- 엔딩 도감 (kept across lives in this browser)
+  var ENDINGS_KEY = 'ronaldo-adventure.endings';
+  function endingHall() { try { return JSON.parse(G.localStorage.getItem(ENDINGS_KEY) || '{}'); } catch (e) { return {}; } }
+  function recordEnding(s, en) {
+    if (!en || s.endingRecorded) return false;
+    var hall = endingHall(), isNew = !hall[en.id];
+    hall[en.id] = { count: (hall[en.id] ? hall[en.id].count : 0) + 1, last: s.year, country: s.country };
+    try { G.localStorage.setItem(ENDINGS_KEY, JSON.stringify(hall)); } catch (e) { /* ignore */ }
+    s.endingRecorded = true;
+    return isNew;
+  }
+  function showEndings() {
+    var hall = endingHall(), all = RA.data.endings || [];
+    var got = all.filter(function (e) { return hall[e.id]; }).length;
+    var m = modal('<div class="card-h">📖 엔딩 도감 ' + got + ' / ' + all.length + ' <button class="btn btn-sm btn-ghost" id="x">닫기</button></div><div class="card-b"><div class="endings">' +
+      all.map(function (e) {
+        var h0 = hall[e.id];
+        return '<div class="ending ' + (h0 ? 'got ' + e.kind : 'locked') + '"><div class="ei">' + (h0 ? e.icon : '❔') + '</div><div><div class="en">' + (h0 ? esc(e.name) : '???') + (h0 && h0.count > 1 ? ' <span class="muted">×' + h0.count + '</span>' : '') + '</div>' +
+          '<div class="ed">' + (h0 ? esc(e.desc) : '힌트: ' + esc(e.hint)) + '</div></div></div>';
+      }).join('') + '</div><p class="hint">실패한 인생도 엔딩이에요. 모든 엔딩을 모아 보세요.</p></div>', { dismiss: true });
+    m.querySelector('#x').addEventListener('click', closeModalAndGo);
+  }
+
   function showHelp() {
     var m = modal('<div class="card-h">도움말 <button class="btn btn-sm btn-ghost" id="x">닫기</button></div><div class="card-b" style="font-size:13px">' +
       '<p>⓪ 아기 시절(0~4살)은 사진첩처럼 자동으로 흘러가요. 태교와 조기 교육, 두 가지만 직접 골라요.</p>' +

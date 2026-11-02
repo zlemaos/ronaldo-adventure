@@ -49,6 +49,15 @@
       s.born = true;
       s.saveVersion = 4;
       return s;
+    },
+    // v4: traits (악동 기질, 평판, 도박 중독, 음주, 전과), decision counts, gambling log, ending id
+    4: function (s) {
+      s.traits = s.traits || { mischief: 0, rep: 50, gamble: 0, alcohol: 0, record: s.flags && s.flags.ever_jailed ? 1 : 0 };
+      s.dec = s.dec || {};
+      s.gambleLog = s.gambleLog || { plays: 0, wins: 0, net: 0 };
+      if (s.ending === undefined) s.ending = null;
+      s.saveVersion = 5;
+      return s;
     }
   };
 

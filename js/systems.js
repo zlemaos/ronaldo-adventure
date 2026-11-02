@@ -154,6 +154,7 @@
     if (s.jail > 0) return null;
     var yrs = E.rint(s, 1, 4);
     s.jail = yrs; s.flags.jailed = s.age; s.flags.ever_jailed = s.age;
+    s.traits = s.traits || {}; s.traits.record = (s.traits.record || 0) + 1; s.traits.rep = Math.max(0, (s.traits.rep || 50) - 15);
     if (s.job) E.endJob(s, '수감');
     if (s.fb.stage === 'pro') { s.fb.stage = 'retired'; }
     if (['elem', 'middle', 'high', 'univ', 'grad'].indexOf(s.edu.stage) >= 0) { s.edu.stage = 'none'; s.flags.dropout = s.age; }
@@ -233,6 +234,78 @@
     return '사기를 당해 ' + T.money(loss, E.country(s)) + '을(를) 잃었다.';
   };
   FX.moveAbroad = function (s) { s.flags.abroad = s.age; s.abroadCity = s.abroadCity || E.pick(s, ['런던', '파리', '시드니', '토론토', '베를린', '두바이']); return s.abroadCity + '(으)로 이민을 떠났다.'; };
+  // ---- round 5: failure routes and life decisions
+  function inSchool(s) { return ['elem', 'middle', 'high', 'univ', 'grad'].indexOf(s.edu.stage) >= 0; }
+  FX.suspend = function (s) {
+    if (!inSchool(s)) return null;
+    s.suspensions = (s.suspensions || 0) + 1;
+    s.edu.grades = Math.max(0, s.edu.grades - 20); E.addStat(s, 'happy', -6);
+    s.flags.suspended = s.age;
+    if (s.suspensions >= 2 && E.chance(s, 0.5)) return '두 번째 정학. ' + FX.expel(s);
+    return '정학 처분을 받았다. 집에 가는 길이 유난히 길었다.';
+  };
+  FX.expel = function (s) {
+    if (!inSchool(s)) return null;
+    var where = s.edu.stage;
+    s.edu.stage = 'none'; s.flags.expelled = s.age; s.flags.dropout = s.age;
+    E.addStat(s, 'happy', -10); s.traits.rep = Math.max(0, (s.traits.rep || 50) - 10);
+    return (where === 'univ' || where === 'grad' ? '대학에서 제적됐다.' : '퇴학당했다. 졸업장 없이 사회로 나간다.');
+  };
+  FX.holdBack = function (s) {
+    if (!inSchool(s)) return null;
+    s.flags.held_back = s.age; s.edu.grades = 40;
+    E.addStat(s, 'smarts', -3); E.addStat(s, 'happy', -6);
+    return '유급됐다. 친구들보다 한 해 늦게 간다.';
+  };
+  FX.dropOut = function (s) {
+    if (!inSchool(s)) return null;
+    s.edu.stage = 'none'; s.flags.dropout = s.age;
+    return '학교를 그만두고 내 길을 가기로 했다.';
+  };
+  FX.careerEndingInjury = function (s) {
+    E.addStat(s, 'health', -20); s.flags.career_injury = s.age;
+    if (s.fb.stage === 'pro') { var m = FX.retireFootball(s); return '선수 생명이 끝나는 부상이다. ' + (m || ''); }
+    if (['local', 'regional', 'academy', 'youth'].indexOf(s.fb.stage) >= 0) { FX.quitFootball(s); return '축구를 다시 할 수 없는 부상이다. 꿈이 꺾였다.'; }
+    if (s.job && E.careerIndex()[s.job.id].sector === 'sports') { E.endJob(s, '부상'); return '부상으로 일을 그만둬야 했다.'; }
+    return '큰 부상을 입었다. 예전처럼 움직일 수 없다.';
+  };
+  FX.deport = function (s) {
+    if (!s.flags.abroad) return null;
+    delete s.flags.abroad; s.flags.deported = s.age;
+    if (s.job) E.endJob(s, '추방');
+    s.traits.rep = Math.max(0, (s.traits.rep || 50) - 15); E.addStat(s, 'happy', -10);
+    return '추방 명령을 받았다. 짐 가방 하나로 고향에 돌아왔다.';
+  };
+  FX.bankrupt = function (s) {
+    s.money = 0; s.flags.bankrupt = s.age; delete s.flags.homeowner;
+    E.addStat(s, 'happy', -12);
+    return '파산했다. 집도 차도 남지 않았다.';
+  };
+  FX.rehab = function (s) {
+    s.traits.gamble = Math.max(0, (s.traits.gamble || 0) - 30);
+    s.traits.alcohol = Math.max(0, (s.traits.alcohol || 0) - 30);
+    s.money -= Math.round(500 * W(s)); s.flags.rehab = s.age; E.addStat(s, 'happy', 2);
+    return '치료 프로그램을 시작했다. 하루하루 버티는 연습을 한다.';
+  };
+  FX.fbBan = function (s) {
+    if (['academy', 'youth', 'pro'].indexOf(s.fb.stage) < 0) return null;
+    s.fb.injury = Math.max(s.fb.injury, 1); s.flags.fb_banned = s.age; E.addStat(s, 'fame', -2);
+    return '출전 정지 징계를 받았다. 이번 시즌 상당 부분을 관중석에서 봐야 한다.';
+  };
+  FX.quickJob = function (s) {
+    var ok = E.jobList(s).filter(function (j) { return j.ok && !j.current && E.careerIndex()[j.id].sector !== 'crime'; });
+    if (s.age >= 19) { var full = ok.filter(function (j) { return j.sector !== 'parttime'; }); if (full.length) ok = full; }
+    if (!ok.length) return '마땅한 자리를 찾지 못했다.';
+    var j = E.pick(s, ok);
+    E.startJob(s, j.id, 0);
+    return j.name + '(으)로 취직했다.';
+  };
+  FX.enlist = function (s) {
+    s.flags.mil_done = s.age; E.addStat(s, 'grit', 5); E.addStat(s, 'health', 3);
+    s.traits.rep = Math.min(100, (s.traits.rep || 50) + 3);
+    return '입대했다. 땀과 규율 속에서 2년을 보내고 전역했다.';
+  };
+
   FX.becomeMonk = function (s) {
     if (E.careerIndex().monk) { if (s.job) E.endJob(s, '출가'); E.startJob(s, 'monk', 0); }
     s.flags.monk = s.age;
@@ -461,6 +534,32 @@
   };
 
   // ---------------------------------------------------------------- life summary
+  // The one ending card of a life (see data/endings.js)
+  E.ending = function (s) {
+    var list = RA.data.endings || [];
+    for (var i = 0; i < list.length; i++) { try { if (list[i].test(s, E)) return list[i]; } catch (e) { /* skip */ } }
+    return null;
+  };
+  E.endingById = function (id) { return (RA.data.endings || []).filter(function (x) { return x.id === id; })[0] || null; };
+
+  // 진로 panel: the current path, special routes that are open, and locked ones with their unlock hints
+  E.careerPaths = function (s) {
+    var special = RA.data.careers.filter(function (k) {
+      return (k.req && k.req.traits) || ['crime', 'religion'].indexOf(k.sector) >= 0 || ['gamble', 'politics', 'space', 'crime', 'religion'].indexOf(k.special) >= 0 || k.unusual;
+    });
+    var open = [], locked = [];
+    special.forEach(function (k) {
+      if (k.special === 'football') return;
+      var miss = E.jobMissing(s, k).filter(function (m) { return m !== '학업 중' && m !== '수감 중'; });
+      var r = k.req || {};
+      var item = { id: k.id, name: k.name, sector: k.sector, ladder: k.ladder.map(function (t, i) { return E.ladderTitle(s, k, i); }), hint: r.unlockHint || miss.join(', '), minAge: r.minAge };
+      if (!miss.length || (miss.length === 1 && /세 이상$/.test(miss[0]))) open.push(item); else locked.push(item);
+    });
+    var flags = s.flags, path = [];
+    ['path_study', 'path_football', 'path_arts', 'path_trade', 'path_free', 'path_creator'].forEach(function (f) { if (flags[f]) path.push(f); });
+    return { open: open, locked: locked, pathFlags: path, available: E.jobList(s).filter(function (j) { return j.ok; }).length };
+  };
+
   E.lifeTitles = function (s) {
     var list = (RA.data.ribbons || []).filter(function (r) { return r.test(s, E); });
     list.sort(function (a, b) { return b.rank - a.rank; });
@@ -482,6 +581,7 @@
       football: fb.seasons ? { apps: fb.apps, goals: fb.goals, caps: fb.caps, natGoals: fb.natGoals, trophies: fb.trophies, clubs: fb.clubs } : null,
       bestJob: best || null, jobs: s.jobHistory.length, children: kids.length, married: !!spouseEver,
       degree: C.DEGREE_LABELS[s.edu.degree], generation: s.generation, seed: s.seed,
+      ending: E.endingById(s.ending) || E.ending(s), traits: s.traits,
       story: E.lifeStory(s, titles, ach)
     };
   };
@@ -506,6 +606,8 @@
     if (s.flags.ever_jailed) out.push('감옥 밥도 먹어 봤다.');
     if (ach.length) out.push('업적: ' + ach.map(function (a) { return a.name; }).join(', ') + '.');
     out.push(s.age + '세에 ' + s.cause + '(으)로 눈을 감았다. 남긴 재산 ' + T.money(s.money, c) + '.');
+    var en = E.endingById(s.ending) || E.ending(s);
+    if (en) out.push('엔딩: ' + en.icon + ' ' + en.name + ' — ' + en.desc);
     out.push('#호날두의모험 시드 ' + s.seed);
     return out.map(T.fixJosa).join('\n');
   };
