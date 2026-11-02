@@ -132,3 +132,25 @@ test('the 진로 panel lists open and locked special paths with hints', () => {
   s.traits.gamble = 50;
   assert.ok(E.careerPaths(s).open.some(x => x.id === 'pro_gambler'));
 });
+
+test('진로 고민 decisions come at 13-14, 16-17 and 19-20', () => {
+  let seen = { path_13: 0, path_16: 0, path_19: 0 }, n = 40;
+  for (let i = 0; i < n; i++) {
+    const s = autoplay(RA, { country: COUNTRIES[i % COUNTRIES.length], seed: 'path-' + i, bot: 'model' });
+    for (const id in seen) if (s.fired[id]) seen[id]++;
+  }
+  for (const id in seen) assert.ok(seen[id] >= n * 0.8, id + ' fired in ' + seen[id] + '/' + n + ' lives');
+  const ev = E.eventIndex().path_19;
+  assert.ok(ev.choices.length >= 3 && ev.choices.some(c => c.risky) && ev.choices.some(c => !c.risky));
+});
+
+test('every unusual career has a ladder of 3-7 steps and at least two events of its own', () => {
+  const ids = ['pro_gambler', 'yabawi', 'smuggler', 'cult_leader', 'fortune_teller', 'mercenary', 'bounty_hunter', 'simmani',
+    'streamer', 'mukbang_creator', 'pirate_dj', 'street_vendor', 'pawnshop_owner', 'antique_dealer', 'jockey', 'stunt_driver', 'designated_driver'];
+  for (const id of ids) {
+    const k = E.careerIndex()[id];
+    assert.ok(k && k.ladder.length >= 3 && k.ladder.length <= 7, id);
+    const evs = E.allEvents().filter(e => e.cond && Array.isArray(e.cond.career) && e.cond.career.includes(id));
+    assert.ok(evs.length >= 2, id + ' has ' + evs.length + ' events');
+  }
+});
