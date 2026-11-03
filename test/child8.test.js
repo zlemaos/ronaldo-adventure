@@ -158,7 +158,14 @@ test('a result reads its category from the hero: football cheers, memorial griev
   const goal = E.allEvents().find(ev => E.eventCategory(ev) === E.CATEGORIES.football && (ev.choices || []).some(sure));
   assert.ok(goal, 'a football card with a sure fame +3 option');
   const idx = goal.choices.findIndex(sure);
-  const play = (s, id, i) => { s.queue = [id]; s.y.triumph = null; return E.choose(s, i); };
+  const play = (s, id, i) => {
+    // Category rendering is independent of the source event's eligibility.
+    const index = E.eventIndex(), fixture = 'category_fixture';
+    const source = index[id];
+    index[fixture] = { id: fixture, text: source.text, choices: source.choices, _cat: source._cat };
+    s.queue = [fixture]; s.y.triumph = null;
+    try { return E.choose(s, i); } finally { delete index[fixture]; }
+  };
   // the football child: the card is 축구 and the big moment cheers
   const p = fresh('pt', 'goal-cue'); assert.ok(L.knows(p, 'football'));
   const rp = play(p, goal.id, idx);

@@ -46,9 +46,12 @@ test('with branch effects applied (bankruptcy too), a lost bet leaves less money
   const play = (ev, ci, money, r) => {
     const s = E.newGame({ country: 'kr', seed: 'bk' }); while (s.queue.length) E.choose(s, 0);
     s.age = Math.max(ev.age ? ev.age[0] : 20, 25); s.money = money; s.traits.gamble = 80; s.flags.homeowner = 1;
-    s.queue.unshift(ev.id);
+    // Exercise settlement independently of the source event's wealth/career eligibility.
+    const id = 'settlement_fixture', index = E.eventIndex();
+    index[id] = { id, text: 'Wager', choices: ev.choices };
+    s.queue.unshift(id);
     const orig = RA.RNG.next; RA.RNG.next = () => r;          // 0.999 = always lose, 0.0001 = always win
-    try { E.choose(s, ci); } finally { RA.RNG.next = orig; }
+    try { assert.ok(E.choose(s, ci)); } finally { RA.RNG.next = orig; delete index[id]; }
     return s.money;
   };
   const bad = [];
