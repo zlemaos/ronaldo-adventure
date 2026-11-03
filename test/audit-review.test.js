@@ -3,6 +3,29 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { load } = require('../tools/sim-helpers');
 
+test('adult university band practice outcomes work with a deceased mother', () => {
+  const RA = load(), E = RA.Engine;
+  for (const [choice, roll, outcome] of [[0, 0.99, 'fail'], [0, 0, 'success'], [1, 0, null]]) {
+    const s = E.newGame({ country: 'us', seed: 'adult-jam' });
+    s.age = 50;
+    s.edu.stage = 'univ';
+    s.hobbies = ['band'];
+    const mother = s.people.find(p => p.role === 'mother');
+    mother.name = 'Jamie'; mother.alive = false;
+    s.queue = ['hob_jam'];
+    assert.equal(E.condMatches(s, E.eventIndex().hob_jam.cond), true);
+    const original = RA.RNG.next;
+    RA.RNG.next = () => roll;
+    try {
+      const result = E.choose(s, choice);
+      assert.ok(result);
+      assert.equal(result.outcome, outcome);
+      assert.doesNotMatch(result.log, /Jamie|어머니|엄마|부모|옷장 위/);
+      if (outcome === 'fail') assert.match(result.log, /넣어 두기로 했다/);
+    } finally { RA.RNG.next = original; }
+  }
+});
+
 test('proposal outcome names the newly married partner', () => {
   const RA = load(), E = RA.Engine;
   const s = E.newGame({ country: 'us', seed: 'proposal-review' });

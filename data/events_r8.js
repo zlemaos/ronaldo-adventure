@@ -178,7 +178,7 @@
     choices: [
       { text: '간다', check: { odds: 0.55 },
           success: { effects: { happy: 4, smarts: -1 }, log: '드럼 소리에 머리가 맑아졌다. 처음으로 우리끼리 한 곡을 끝까지 맞췄다.' },
-          fail: { effects: { smarts: -3, happy: -2, rel: { mother: -3 } }, log: '합주는 신났지만 다음 날 시험지를 반이나 비웠다. 성적표를 본 {mother}[이/가] 기타를 옷장 위에 올렸다.' } },
+          fail: { effects: { smarts: -3, happy: -2, rel: { mother: -3 } }, log: '합주는 신났지만 다음 날 시험지를 반이나 비웠다. 시험지를 보고 한숨이 났다. 다음 시험까지 기타를 잠시 넣어 두기로 했다.' } },
       { text: '시험부터 끝낸다', effects: { smarts: 2, happy: -1 }, log: '시험이 끝난 날 밤새 기타를 쳤다.' }
     ] });
   H({ id: 'hob_streetball', age: [9, 45], hobby: 'basketball', cooldown: 6, weight: 10,
