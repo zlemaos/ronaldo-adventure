@@ -10,13 +10,13 @@
 
     // ---------------------------------------------------------------- canon: the father's illness arc
     { id: 'canon_father_talk', age: [10, 45], cooldown: 3, weight: 16, cond: { flags: ['!heir', 'father_drinking', '!father_sober'], rel: { father: 'alive' } },
-      text: '{father}[은/는] 오늘도 {localClub} 장비실 구석에서 혼자 술잔을 들고 있었다. 지쳐 보이는 얼굴이다.',
+      text: '{father}[은/는] 오늘도 방 한쪽에서 혼자 술잔을 들고 있었다. 지쳐 보이는 얼굴이다.',
       choices: [
         { text: '치료를 받아 보자고 진지하게 말한다', check: { stat: 'grit', diff: 35 },
           success: { effects: { rel: { father: 4 }, fx: ['fatherSeekHelp'] }, log: '{father}[은/는] 한참을 침묵하다 "…병원에 한번 가 보마"라고 했다.' },
           fail: { effects: { rel: { father: -2 }, happy: -3 }, log: '{father}[은/는] 창밖만 바라봤다. 오늘은 아닌가 보다. 그래도 포기하지 않기로 했다.' } },
-        { text: '가족 모두 모여 이야기하자고 한다', effects: { rel: { family: 3 }, fx: ['fatherSeekHelp'] }, log: '{mother}[과/와] {siblings}까지 식탁에 둘러앉았다. 처음으로 다 같이 울었다.' },
-        { text: '아무 말 없이 곁에 앉아 있는다', effects: { rel: { father: 7 } }, log: '{father}[이/가] 잔을 내려놓고 내 축구 이야기를 물었다.' }
+        { text: '함께 도움받을 방법을 찾아보자고 한다', effects: { rel: { family: 3 }, fx: ['fatherSeekHelp'] }, log: '식탁에 마주 앉아 이야기를 나눴다. 말하다 눈물이 났다.' },
+        { text: '아무 말 없이 곁에 앉아 있는다', effects: { rel: { father: 7 } }, log: '{father}[이/가] 잔을 내려놓고 내 안부를 물었다.' }
       ] },
     { id: 'canon_father_clinic', age: [16, 45], cooldown: 4, weight: 12, cond: { flags: ['!heir', 'father_drinking', '!father_sober'], rel: { father: 'alive' }, money: [1500, 1e12] },
       text: '알코올 의존증 전문 클리닉 이야기를 들었다. 치료비가 만만치 않다.',
@@ -37,34 +37,34 @@
       text: '{father}[이/가] 간 질환으로 병원에 입원했다. 의사는 "지금부터의 치료와 금주가 정말 중요하다"고 말했다.',
       choices: [
         { text: '최고의 치료를 받게 한다', req: { money: 3000 }, effects: { money: -3000, rel: { father: 10 }, fx: ['fatherSeekHelp', 'fatherSeekHelp'] }, log: '전문 병동으로 옮겼다. {father}[이/가] 오랜만에 맑은 눈으로 웃었다.' },
-        { text: '훈련을 쉬고 병상을 지킨다', effects: { rel: { father: 12 }, football: -2, happy: -2, fx: ['fatherSeekHelp'] }, log: '밤마다 손을 잡고 지난 경기 이야기를 들려 드렸다.' },
+        { text: '다른 일을 미루고 병상을 지킨다', effects: { rel: { father: 12 }, football: -2, happy: -2, fx: ['fatherSeekHelp'] }, log: '곁에서 손을 잡고 이야기를 나눴다.' },
         { text: '"가서 네 할 일을 해라"는 아버지의 부탁을 따른다', check: { stat: 'grit', diff: 40 },
           success: { effects: { rel: { father: 8 }, fame: 1 }, log: '맡은 일을 끝까지 해내고 병실에 소식을 전했다. {father}[이/가] 울었다고 한다.',
             run: function (s) { if (s.route && s.route.id === 'football' && s.fb.stage === 'pro') return '골을 넣고 하늘을 향해 두 손을 들었다. 병실 TV 앞에서 아버지가 울었다고 한다.'; } },
           fail: { effects: { happy: -4 }, log: '마음이 병실에 가 있어 일이 손에 잡히지 않았다. 그래도 {father}[은/는] "끝까지 버틴 게 좋았다"고 했다.' } }
       ] },
     { id: 'canon_father_farewell', manual: true, memorial: ['father'], jailOk: true, age: [1, 120],
-      text: '장례식장에는 {localClub}의 꼬마 선수들이 낡은 유니폼을 입고 줄지어 섰다. {father}[이/가] 평생 빨고 개던 유니폼들이다.',
+      text: '장례식장에서 {father}의 사진을 바라봤다. 함께 보냈던 시간이 하나씩 떠올랐다.',
       choices: [
         { text: '아버지의 이름을 가슴에 새긴다', effects: { grit: 5, happy: 2 }, log: '그 뒤로 힘든 날마다 하늘을 올려다봤다.',
           run: function (s) { if (s.route && s.route.id === 'football') return '그 뒤로 골을 넣을 때마다 하늘을 가리켰다.'; } },
-        { text: '한동안 아무것도 하지 못한다', effects: { happy: -5, health: -2, rel: { family: 6 } }, log: '가족들이 번갈아 곁을 지켰다. 아무도 서두르라고 말하지 않았다.' },
+        { text: '한동안 아무것도 하지 못한다', effects: { happy: -5, health: -2, rel: { family: 6 } }, log: '슬픔을 견디는 데 시간이 필요했다. 서두르지 않기로 했다.' },
         { text: '술은 평생 입에 대지 않기로 맹세한다', check: { stat: 'grit', diff: 40 },
           success: { effects: { health: 3, flags: ['teetotal'], unflags: ['drinker'] }, log: '아버지를 앗아 간 병을 이해하게 됐다. 그리고 미워하지 않기로 했다.' },
-          fail: { effects: { happy: -2, rel: { family: 2 } }, log: '맹세를 공책 맨 앞장에 적었지만, 장례식 날 밤 어른들이 건넨 잔을 거절하지 못했다. 그 공책은 서랍 깊숙이 들어갔다.' } }
+          fail: { effects: { happy: -2, rel: { family: 2 } }, log: '평생의 맹세를 하기에는 마음이 너무 어지러웠다. 오늘의 슬픔부터 견디기로 했다.' } }
       ] },
     { id: 'canon_father_sober_year', age: [10, 70], once: true, weight: 40, cond: { flags: ['father_sober'], rel: { father: 'alive' } },
-      text: '{father}[이/가] 술을 끊은 지 1년이 됐다. 온 가족이 {food}[을/를] 차려 놓고 작은 잔치를 열었다.',
-      effects: { happy: 8, rel: { father: 8, family: 4 } }, log: '{father}[은/는] 탄산수 잔을 들고 "우리 막내 덕분이다"라고 했다.' },
+      text: '{father}의 금주를 축하하며 {food}[을/를] 차렸다.',
+      effects: { happy: 8, rel: { father: 8, family: 4 } }, log: '{father}[은/는] 탄산수 잔을 들고 "곁에 있어 줘서 고맙다"고 했다.' },
     { id: 'canon_father_kitbag', age: [20, 70], once: true, weight: 20, cond: { flags: ['father_sober'], rel: { father: 'alive' } },
-      text: '머리가 희끗해진 {father}[은/는] 아직도 {localClub}에서 꼬마들의 유니폼을 빨고 있다. "이게 내 행복이다."',
-      effects: { happy: 5, rel: { father: 5 } }, log: '장비실 벽에는 어린 시절 내 사진이 붙어 있었다.' },
+      text: '{father}[과/와] 오래된 사진을 꺼내 봤다. "이런 날도 있었지."',
+      effects: { happy: 5, rel: { father: 5 } }, log: '사진 속 얼굴을 가리키며 한참 이야기를 나눴다.' },
 
     // ---------------------------------------------------------------- canon: clubs and the academy
     { id: 'canon_academy_second', age: [13, 15], once: true, weight: 40, cond: { fb: ['regional', 'local'], flags: ['!moved_alone'], stats: { football: [54, 100] } },
-      text: '{academy} 스카우트가 다시 찾아왔다. "재능은 기다려 주지 않는다. 이번이 마지막 제안이다."',
+      text: '{academy} 스카우트가 찾아왔다. "재능은 기다려 주지 않는다. 지금 결정을 내려야 한다."',
       choices: [
-        { text: '이번엔 간다', effects: { grit: 3, fx: ['joinAcademy'] }, log: '조금 늦었지만, 가방을 쌌다.' },
+        { text: '도전하러 간다', effects: { grit: 3, fx: ['joinAcademy'] }, log: '새로운 도전을 위해 가방을 쌌다.' },
         { text: '축구 말고 다른 미래를 생각한다', effects: { smarts: 2, fx: ['quitFootball'] }, log: '공 대신 다른 꿈을 품기로 했다.' }
       ] },
     { id: 'canon_warning', age: [12, 17], once: true, weight: 30, cond: { flags: ['academy_warning'], fb: ['academy'] },
@@ -78,7 +78,7 @@
     { id: 'canon_homesick', age: [12, 16], cooldown: 3, weight: 18, cond: { flags: ['moved_alone'], fb: ['academy'], stats: { happy: [0, 42] } },
       text: '향수병이 심해졌다. 밤마다 {mother}[이/가] 해 주던 {food} 생각이 난다.',
       choices: [
-        { text: '짐을 싸서 집으로 돌아간다', effects: { happy: 8, rel: { mother: 10 }, fx: ['quitFootball'], flags: ['went_home'] }, log: '{hometown} 항구에 내리자 가족이 모두 마중 나와 있었다.' },
+        { text: '짐을 싸서 집으로 돌아간다', effects: { happy: 8, rel: { mother: 10 }, fx: ['quitFootball'], flags: ['went_home'] }, log: '{hometown}에 도착하자 익숙한 풍경에 긴장이 풀렸다.' },
         { text: '이를 악물고 버틴다', check: { stat: 'grit', diff: 45 },
           success: { effects: { grit: 4, happy: -2 }, log: '달력에 다음 방학까지 남은 날을 하나씩 지웠다.' },
           fail: { effects: { health: -4, happy: -3 }, log: '버티다 몸살이 났다. 사흘 동안 훈련에 빠져 명단 맨 아래로 밀렸다.' } },
@@ -87,19 +87,19 @@
     { id: 'canon_heart', age: [15, 15], once: true, priority: true, cond: { flags: ['!heir'] },
       text: '정기 검진에서 의사가 고개를 갸웃했다. "쉬고 있는데도 심장이 너무 빨리 뛰네요. 검사가 필요합니다."',
       choices: [
-        { text: '솔직하게 말하고 시술을 받는다', effects: { fx: ['heartProcedure'], happy: -2, rel: { mother: 5 } }, log: '레이저 시술은 금방 끝났다. 며칠 뒤 다시 훈련장을 뛰었다. {mother}[은/는] 그제야 잠을 잤다.' },
+        { text: '솔직하게 말하고 시술을 받는다', effects: { fx: ['heartProcedure'], happy: -2, rel: { mother: 5 } }, log: '시술을 마치고 회복에 집중했다. {mother}[은/는] 그제야 잠을 잤다.' },
         { text: '축구를 못 하게 될까 봐 숨긴다', alt: { text: '좋아하는 걸 못 하게 될까 봐 숨긴다' }, effects: { fx: ['heartIgnore'] }, log: '"괜찮아요, 긴장해서 그래요." 거짓말이 입에서 쉽게 나왔다.' }
       ] },
     { id: 'canon_heart_back', age: [15, 16], once: true, priority: true, cond: { flags: ['heart_fixed'] },
-      text: '시술 후 첫 훈련. 가슴에 손을 얹어 보니 심장이 차분하게 뛰고 있다.',
-      effects: { happy: 6, grit: 2 }, log: '"이제 더 빨리 뛸 수 있다." 그날 팀에서 가장 많이 뛰었다.' },
+      text: '시술 후 몸 상태를 살폈다. 가슴에 손을 얹어 보니 심장이 차분하게 뛰고 있다.',
+      effects: { happy: 6, grit: 2 }, log: '한결 편안해진 몸으로 일상에 돌아왔다.' },
     { id: 'canon_heart_scare', age: [16, 40], cooldown: 4, weight: 14, cond: { flags: ['heart_hidden'] },
       text: '전력 질주 후 가슴이 쿵쾅거리며 눈앞이 하얘졌다. 숨겨 온 심장이 다시 신호를 보낸다.',
       choices: [
         { text: '이번엔 병원에 간다', effects: { health: -3, fx: ['heartProcedure'] }, log: '의사는 "더 늦었으면 위험했다"며 시술을 마쳤다.' },
         { text: '괜찮다며 버틴다', check: { stat: 'health', diff: 55 },
           success: { effects: { happy: -2 }, log: '다행히 곧 진정됐다. 다행히… 아직은.' },
-          fail: { effects: { health: -25, happy: -6 }, log: '그라운드에 쓰러졌다. 들것에 실려 나가며 숨긴 것을 후회했다.' } }
+          fail: { effects: { health: -25, happy: -6 }, log: '바닥에 쓰러졌다. 들것에 실려 나가며 숨긴 것을 후회했다.' } }
       ] },
     { id: 'canon_work_ethic', age: [13, 20], cooldown: 2, weight: 16, cond: { fb: ['academy', 'youth'] },
       text: '모두가 잠든 밤, 기숙사 창밖으로 불 켜진 체육관이 보인다.',
@@ -166,7 +166,7 @@
           fail: { effects: { happy: -3, rel: { coach: -3 } }, log: '헛다리만 짚다 공을 잃었다. 코치의 한숨이 들렸다.' } }
       ] },
     { id: 'fb_bro_support', age: [12, 18], once: true, weight: 16, cond: { fb: ['academy', 'youth'], rel: { bro: 'alive' }, flags: ['!heir'] },
-      text: '{bro}[이/가] 편지와 함께 용돈을 보냈다. "형은 이제 일한다. 너는 축구만 생각해."',
+      text: '{bro}[이/가] 편지와 함께 용돈을 보냈다. "응원하고 있어. 힘내."',
       effects: { money: 100, happy: 5, rel: { bro: 8 } }, log: '편지를 축구화 상자에 넣어 두었다.' },
     { id: 'fb_sisters_cheer', age: [12, 20], once: true, weight: 12, cond: { fb: ['academy', 'youth', 'pro'], rel: { sis1: 'alive' }, flags: ['!heir'] },
       text: '{sis1}[과/와] {sis2}[이/가] 직접 만든 응원 현수막을 들고 경기장에 나타났다.',
@@ -174,7 +174,7 @@
     { id: 'fb_quit_temptation', age: [13, 18], cooldown: 3, weight: 10, cond: { fb: ['academy', 'youth'], stats: { happy: [0, 35] } },
       text: '훈련, 훈련, 또 훈련. 친구들은 놀러 다니는데 나는 뭘 하고 있는 걸까.',
       choices: [
-        { text: '축구를 그만둔다', effects: { happy: 6, fx: ['quitFootball'] }, log: '처음으로 주말에 늦잠을 잤다. 그런데 조금 허전했다.' },
+        { text: '축구를 그만둔다', effects: { happy: 6, fx: ['quitFootball'] }, log: '주말에 늦잠을 잤다. 그런데 조금 허전했다.' },
         { text: '목표를 종이에 적고 버틴다', effects: { grit: 3, happy: 2 }, log: '"세계 최고가 된다." 천장에 붙여 두었다.' }
       ] },
 
@@ -205,10 +205,10 @@
         { text: '고향 팬들 곁에 남는다', effects: { happy: 3, fame: 2, flags: ['one_club'] }, log: '{bigClub} 팬들이 경기장에 "고마워"라는 대형 현수막을 걸었다.' }
       ] },
     { id: 'fb_transfer_second', age: [22, 31], once: true, weight: 25, cond: { fb: ['pro'], flags: ['!abroad', '!one_club'], stats: { football: [78, 100] } },
-      text: '해외 빅클럽들이 다시 문을 두드린다. 이번 제안은 거절하기 어렵다.',
+      text: '해외 빅클럽들이 문을 두드린다. 매력적인 제안이다.',
       choices: [
         { text: '수락한다', effects: { fx: ['transferAbroad'] }, log: '새 유니폼을 들고 사진을 찍었다.' },
-        { text: '한 번 더 거절한다', effects: { flags: ['one_club'], happy: 2 }, log: '나는 이 팀의 심장이 되기로 했다.' }
+        { text: '거절한다', effects: { flags: ['one_club'], happy: 2 }, log: '나는 이 팀의 심장이 되기로 했다.' }
       ] },
     { id: 'fb_number7', age: [18, 35], once: true, weight: 30, cond: { fb: ['pro'], flags: ['abroad'] },
       text: '{abroadClub} 감독이 등번호를 정하라며 웃었다. 전설들이 달던 7번이 비어 있다.',
@@ -249,7 +249,7 @@
       choices: [
         { text: '라이벌을 연료 삼아 더 훈련한다', effects: { grit: 4, football: 2, health: -1 }, log: '라이벌이 해트트릭을 하면, 나는 다음 경기에서 해트트릭을 했다.' },
         { text: '시상식에서 먼저 악수를 청한다', effects: { happy: 4, fame: 2 }, log: '둘이 웃으며 나눈 대화가 화제가 됐다. "서로 덕분에 더 잘하게 됐다."' },
-        { text: '인터뷰에서 도발한다', effects: { fame: 3, happy: -1 }, log: '조회수는 폭발했지만 엄마에게 전화가 왔다. "얘야, 겸손해라."' }
+        { text: '인터뷰에서 도발한다', effects: { fame: 3, happy: -1 }, log: '조회수는 폭발했지만 겸손하지 못했다는 비판도 따라왔다.' }
       ] },
     { id: 'fb_knee', age: [20, 38], cooldown: 5, weight: 10, cond: { fb: ['pro'] },
       text: '태클에 무릎이 꺾였다. 의료진은 최소 3개월 재활을 이야기한다.',
@@ -265,7 +265,7 @@
         { text: '최고 대우를 요구한다', check: { stat: 'fame', diff: 55 },
           success: { effects: { money: 400000, happy: 3 }, log: '구단이 백기를 들었다. 서명 보너스까지 챙겼다.' },
           fail: { effects: { fame: -2, happy: -2 }, log: '협상이 결렬 직전까지 갔다. 팬들의 시선이 싸늘하다.' } },
-        { text: '팀을 위해 양보한다', effects: { happy: 2, fame: 3, money: 50000 }, log: '팬들 사이에서 "의리의 사나이"라는 별명이 생겼다.' }
+        { text: '팀을 위해 양보한다', effects: { happy: 2, fame: 3, money: 50000 }, log: '팬들 사이에서 "의리의 선수"라는 별명이 생겼다.' }
       ] },
     { id: 'fb_charity', age: [20, 60], cooldown: 4, weight: 12, cond: { fb: ['pro', 'retired'], stats: { fame: [45, 100] } },
       text: '어린이 병원에서 편지가 왔다. 수술비가 없어 치료를 기다리는 아이가 있다고 한다.',
@@ -281,7 +281,7 @@
         { text: '팔에 가족 이름을 새긴다', effects: { looks: 2, rel: { family: 4 } }, log: '{mother}[은/는] 기겁했다가 자기 이름을 보고 조용해졌다.' }
       ] },
     { id: 'fb_mother_stands', age: [18, 40], cooldown: 5, weight: 10, cond: { fb: ['pro'], rel: { mother: 'alive' } },
-      text: '{mother}[이/가] 처음으로 큰 경기장에 왔다. 긴장해서 손을 꼭 쥐고 있다.',
+      text: '{mother}[이/가] 큰 경기장에 왔다. 긴장해서 손을 꼭 쥐고 있다.',
       choices: [
         { text: '엄마를 위해 골을 넣는다', check: { stat: 'football', diff: 65 },
           success: { effects: { rel: { mother: 8 }, happy: 6 }, log: '골! 카메라가 잡은 {mother}[은/는] 기절 직전이었다.' },
@@ -312,7 +312,7 @@
       text: '사막 리그의 부자 구단이 상상을 초월하는 연봉으로 마지막 2년을 제안했다.',
       choices: [
         { text: '받아들이고 은퇴 준비를 한다', effects: { money: 3000000, fame: -2, fx: ['retireFootball'] }, log: '모래바람 속에서 마지막 시즌들을 보내고 축구화를 벗었다.' },
-        { text: '최고 수준에서 끝까지 뛴다', effects: { grit: 3 }, log: '"돈은 이미 충분하다. 나는 트로피가 필요하다."' }
+        { text: '최고 수준에서 끝까지 뛴다', effects: { grit: 3 }, log: '"지금은 돈보다 트로피에 도전하고 싶다."' }
       ] },
     { id: 'fb_captain', age: [24, 37], once: true, weight: 25, cond: { fb: ['pro'], flags: ['nat_team'] },
       text: '{nationalTeam} 감독이 주장 완장을 건넸다.',
@@ -332,7 +332,7 @@
         { text: '벌금을 내고 조용히 끝낸다', effects: { money: -400000, fame: -1 }, log: '비싼 수업료를 냈다. 회계사를 바꿨다.' },
         { text: '법정에서 싸운다', check: { stat: 'smarts', diff: 60 },
           success: { effects: { fame: 1 }, log: '무혐의 판결. 기자 회견에서 미소를 지었다.' },
-          fail: { effects: { money: -900000, fame: -4, happy: -5 }, log: '패소. 벌금이 두 배가 됐다.' } }
+          fail: { effects: { money: -900000, fame: -4, happy: -5 }, log: '패소. 더 큰돈을 내야 했다.' } }
       ] },
     { id: 'fb_sponsor', age: [20, 38], once: true, weight: 20, cond: { fb: ['pro'], stats: { fame: [60, 100] } },
       text: '세계적인 스포츠 브랜드가 평생 후원 계약을 제안했다.',
@@ -347,13 +347,13 @@
       text: '{region}의 공항에 내 이름이 붙었다.',
       effects: { fame: 3, happy: 6 }, log: '공항 로비의 흉상이… 음, 조금 다른 사람 같다. 그래도 고향 사람들이 좋아한다.' },
     { id: 'fb_retired_path', age: [30, 50], once: true, priority: true, cond: { fb: ['retired'] },
-      text: '은퇴 후 첫 월요일 아침. 알람이 울리지 않는다. 이제 무엇을 할까?',
+      text: '선수 생활을 마친 뒤의 시간을 돌아봤다. 축구와는 어떤 관계를 이어 갈까?',
       choices: [
         { text: '지도자 자격증 공부를 시작한다', check: { stat: 'smarts', diff: 35 },
           success: { effects: { smarts: 2, flags: ['coach_license'] }, log: '지도자 자격증을 땄다. 구직 메뉴에서 감독에 도전할 수 있다.' },
           fail: { effects: { happy: -2 }, log: '전술 이론 시험에서 떨어졌다. 운동장과 교실은 다르다.' } },
         { text: '방송 해설가로 나선다', effects: { fame: 2, money: 50000 }, log: '첫 해설에서 "제가 뛰었다면…"을 열한 번 말했다.' },
-        { text: '가족과 시간을 보낸다', effects: { happy: 6, rel: { family: 8 } }, log: '처음으로 아이들 학교 행사에 빠짐없이 갔다.' }
+        { text: '주변 사람들과 시간을 보낸다', effects: { happy: 6, rel: { family: 8 } }, log: '경기 일정에 쫓기지 않고 느긋하게 이야기를 나눴다.' }
       ] },
     { id: 'fb_legend_match', age: [36, 60], once: true, weight: 20, cond: { fb: ['retired'], stats: { fame: [50, 100] } },
       text: '레전드 매치에 초대받았다. 배가 조금 나온 옛 동료들이 반갑게 손을 흔든다.',
