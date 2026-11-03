@@ -26,10 +26,10 @@
         { text: '무시한다', effects: { happy: -2, football: -1 }, log: '경기 중 둘 사이로 공이 자꾸 끊겼다.' }
       ] },
     { id: 'soc_coworker_help', age: [20, 64], cooldown: 5, cond: { career: 'any', stats: { social: [60, 100] } },
-      text: '동료가 힘든 일을 털어놓는다.',
+      text: '일하며 알게 된 사람이 힘든 일을 털어놓는다.',
       choices: [
-        { text: '끝까지 들어 준다', effects: { social: 2, happy: 2 }, log: '다음 날 팀 분위기가 한결 부드러워졌다.' },
-        { text: '일이 바빠 다음에', effects: { social: -1 }, log: '동료는 "괜찮아"라고 했지만 표정이 어두웠다.' }
+        { text: '끝까지 들어 준다', effects: { social: 2, happy: 2 }, log: '이야기를 마치자 상대의 표정이 한결 부드러워졌다.' },
+        { text: '일이 바빠 다음에', effects: { social: -1 }, log: '상대는 "괜찮아"라고 했지만 표정이 어두웠다.' }
       ] },
     { id: 'soc_office_cold', age: [20, 64], cooldown: 6, cond: { career: 'any', stats: { social: [0, 30] } },
       text: '회식 자리에서 대화에 끼지 못하고 겉돈다.',
