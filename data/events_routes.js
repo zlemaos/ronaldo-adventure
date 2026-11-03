@@ -50,7 +50,7 @@
       fail: { effects: { happy: -3 }, log: '내야 땅볼. 경기 끝.' } }
   ], { stages: ['first', 'regular', 'ace', 'veteran'] });
   M('baseball', [24, 40], '팔꿈치에서 찌릿한 통증이 계속된다. 수술하면 1년을 쉰다.', [
-    { text: '수술을 받는다', effects: { health: 4, happy: -3, fx: ['rtSetback'] }, log: '1년 뒤 마운드에 돌아왔다. 구속이 다시 붙었다.' },
+    { text: '수술을 받는다', effects: { health: 4, happy: -3, fx: ['rtSetback'] }, log: '재활 끝에 경기장으로 돌아왔다. 공을 던지는 팔에 다시 힘이 붙었다.' },
     { text: '참고 던진다', risky: true, check: { stat: 'health', diff: 62 },
       success: { effects: { fame: 2, fx: ['rtSkill'] }, log: '통증을 안고 시즌을 버텼다.' },
       fail: { effects: { fx: ['rtInjury'] }, log: '공을 놓는 순간 팔꿈치에서 소리가 났다.' } }
@@ -98,7 +98,7 @@
       success: { effects: { rep: 3, happy: 2 }, log: '팬들 대부분이 축하해 줬다.' },
       fail: { effects: { fx: ['rtScandal'] }, log: '팬덤이 둘로 갈라졌다.' } },
     { text: '소속사에 맡긴다', effects: { happy: -2 }, log: '"사실무근" 공식 입장이 나왔다. 마음이 무거웠다.' }
-  ], { stages: ['rookie', 'hot', 'top', 'late'] });
+  ], { stages: ['rookie', 'hot', 'top', 'late'], cond: { rel: { partner: 'yes' } } });
 
   // ---------------------------------------------------------------- 가수
   M('singer', [15, 35], '오디션 프로그램 예선. 자작곡을 부를까, 유명한 노래를 부를까?', [
@@ -126,10 +126,10 @@
     { text: '붙잡아 설득한다', effects: { rel: { friend: 3 }, happy: 1 }, log: '주말 합주만 하기로 했다. 그래도 같이 간다.' }
   ]);
   M('band', [16, 60], '페스티벌 무대 직전, 기타 줄이 끊어졌다.', [
-    { text: '남은 줄로 연주한다', check: { stat: 'grit', diff: 50 },
+    { text: '남은 줄에 맞춰 다 같이 연주를 이어 간다', check: { stat: 'grit', diff: 50 },
       success: { effects: { fame: 4, fx: ['rtBig'] }, log: '그 무대가 전설이 됐다. "다섯 줄의 기적."' },
       fail: { effects: { happy: -3 }, log: '음이 계속 어긋났다. 그래도 끝까지 했다.' } },
-    { text: '양해를 구하고 줄을 간다', effects: { social: 2 }, log: '관객들이 박자에 맞춰 박수로 기다려 줬다.' }
+    { text: '양해를 구하고 줄을 갈 시간을 번다', effects: { social: 2 }, log: '관객들이 박자에 맞춰 박수로 기다려 줬다.' }
   ], { stages: ['club', 'album', 'festival', 'headliner'] });
   M('band', [18, 60], '대형 기획사가 "말 잘 듣는 밴드"로 만들어 주겠다고 한다.', [
     { text: '계약한다', effects: { money: 8000, fame: 3, happy: -2, fx: ['rtSkill'] }, log: '방송 출연이 늘었다. 곡은 조금 둥글어졌다.' },
@@ -241,7 +241,7 @@
     { text: '모른 척한다', risky: true, check: { odds: 0.5 },
       success: { effects: { money: 8000, mischief: 3 }, log: '이겼다. 거울을 보기 싫었다.' },
       fail: { effects: { record: 1, fx: ['rtScandal'] }, log: '증거 은닉이 드러나 징계 위원회에 섰다.' } }
-  ], { stages: ['associate', 'senior', 'top'] });
+  ], { stages: ['associate', 'senior', 'top'], cond: { career: ['lawyer', 'patent_attorney'] } });
   M('law', [28, 72], '모두가 피하는 큰 사건이 배당됐다. 언론이 지켜본다.', [
     { text: '맡는다', check: { stat: 'smarts', diff: 65 },
       success: { effects: { fame: 5, fx: ['rtBig'] }, log: '판결문에 내 논리가 그대로 실렸다.' },
@@ -254,18 +254,18 @@
     { text: '내가 본다', check: { stat: 'health', diff: 50 },
       success: { effects: { rep: 3, fx: ['rtSkill'] }, log: '환자는 살았다. 나는 복도 의자에서 쓰러져 잤다.' },
       fail: { effects: { fx: ['rtBurnout'] }, log: '손이 떨려 선배를 불렀다. 집에 가서 울었다.' } },
-    { text: '동료에게 부탁하고 잠깐 눈을 붙인다', effects: { health: 2 }, log: '20분의 잠이 다음 수술을 살렸다.' }
-  ], { stages: ['intern', 'resident'] });
+    { text: '동료에게 부탁하고 잠깐 눈을 붙인다', effects: { health: 2 }, log: '20분의 잠이 다음 응급 처치에 큰 도움이 됐다.' }
+  ], { stages: ['intern', 'resident'], cond: { career: ['doctor', 'surgeon', 'nurse', 'paramedic'] } });
   M('medical', [28, 75], '아무도 손대지 않으려는 고위험 수술이 들어왔다.', [
     { text: '집도한다', check: { stat: 'smarts', diff: 65 },
       success: { effects: { fame: 5, fx: ['rtBig'] }, log: '열두 시간 뒤, 모니터가 안정됐다. 보호자가 무릎을 꿇었다.' },
       fail: { effects: { happy: -8, fx: ['rtSetback'] }, log: '최선을 다했지만 환자를 잃었다. 그날 밤을 잊지 못한다.' } },
     { text: '더 큰 병원으로 보낸다', effects: { rep: 1 }, log: '옳은 판단이었다고 스스로를 다독였다.' }
-  ], { stages: ['specialist', 'chief'] });
+  ], { stages: ['specialist', 'chief'], cond: { career: ['doctor', 'surgeon'] } });
   M('medical', [30, 75], '제약회사 영업사원이 두툼한 봉투를 내민다.', [
     { text: '돌려보낸다', effects: { rep: 4 }, log: '복도 끝에서 그가 다른 진료실로 들어갔다.' },
     { text: '받는다', risky: true, check: { odds: 0.5 },
       success: { effects: { money: 5000, mischief: 3 }, log: '처방전에 그 회사 약 이름이 늘었다.' },
       fail: { effects: { record: 1, fx: ['rtScandal'] }, log: '리베이트 수사가 시작됐다.' } }
-  ], { stages: ['specialist', 'chief', 'elder'] });
+  ], { stages: ['specialist', 'chief', 'elder'], cond: { career: ['doctor', 'surgeon', 'dentist'] } });
 })(typeof globalThis !== 'undefined' ? globalThis : this);
