@@ -27,7 +27,7 @@
         fail: { effects: { health: -8, grit: 2, flags: ['hardship'] }, log: '빙판에서 넘어져 팔에 금이 갔다. 배달은 석 달 만에 끝났다.' } },
       { text: '아무 일 없는 척 친구들과 논다', effects: { happy: 2, rel: { sis2: -6, mother: -3 } }, log: '집에 오면 불이 꺼져 있었다. 그 불 꺼진 집이 오래 마음에 걸렸다.' }
     ] });
-  H({ id: 'cri_bully', age: [7, 12], once: true, weight: 14,
+  H({ id: 'cri_bully', age: [7, 12], once: true, weight: 14, cond: { edu: ['elem', 'middle'] },
     text: '같은 반 덩치 큰 아이가 매일 급식 반찬과 용돈을 뺏어 간다. 오늘은 신발주머니까지 던졌다.',
     choices: [
       { text: '맞선다', risky: true, check: { stat: 'health', diff: 55 },
@@ -79,7 +79,7 @@
         success: { effects: { grit: 3, smarts: 2 }, log: '버스 기사님께 동네 이름을 말했다. 혼자 집에 도착했다. 다들 놀랐다.' },
         fail: { effects: { happy: -5, grit: 1 }, log: '반대 방향 버스였다. 종점 파출소에서 밤 열 시에 찾았다.' } }
     ] });
-  H({ id: 'cri_hunger', age: [5, 10], origin: POOR, cooldown: 4, maxTimes: 2, weight: 12,
+  H({ id: 'cri_hunger', age: [5, 10], origin: POOR, cooldown: 4, maxTimes: 2, weight: 12, cond: { edu: ['elem', 'middle'] },
     text: '쌀독이 비었다. 오늘 저녁은 없다고 {mother}[이/가] 미안한 얼굴로 말했다.',
     choices: [
       { text: '학교 급식 빵을 몰래 싸 온다', risky: true, check: { odds: 0.7 },
@@ -117,7 +117,7 @@
       { text: '학원을 끊겠다고 먼저 말한다', effects: { smarts: -3, rel: { mother: 8 }, happy: -2 }, log: '{mother}[은/는] 대답 대신 등을 쓸어 줬다. 그 뒤로 혼자 공부하는 법을 익혔다.' },
       { text: '친구들 앞에서 아무렇지 않은 척한다', effects: { social: 1, happy: -3 }, log: '새 운동화 이야기에 웃으며 맞장구쳤다. 집에 와서는 말이 없었다.' }
     ] });
-  H({ id: 'cri_rich_schedule', age: [7, 12], origin: ['rich'], once: true, weight: 14,
+  H({ id: 'cri_rich_schedule', age: [7, 12], origin: ['rich'], once: true, weight: 14, cond: { rel: { father: 'alive', mother: 'alive' } },
     text: '부모님이 다음 달부터 학원 일곱 개를 잡아 놓았다. 주말에는 과외 선생님이 온다.',
     choices: [
       { text: '시키는 대로 다 다닌다', effects: { smarts: 6, happy: -7, flags: ['trauma'] }, log: '성적표는 반짝였다. 웃는 날은 줄었다. 밤에 혼자 우는 날이 생겼다.' },
@@ -128,7 +128,7 @@
         success: { effects: { happy: 6, mischief: 4 }, log: 'PC방과 공원을 오갔다. 석 달 동안 아무도 몰랐다.' },
         fail: { effects: { mischief: 4, rel: { father: -8, mother: -8 }, happy: -4 }, log: '학원에서 집으로 전화가 왔다. 휴대폰을 빼앗기고 기사님이 학원 앞까지 데려다주게 됐다.' } }
     ] });
-  H({ id: 'cri_rich_follow', age: [8, 12], origin: ['rich'], once: true, weight: 8,
+  H({ id: 'cri_rich_follow', age: [8, 12], origin: ['rich'], once: true, weight: 8, cond: { edu: ['elem', 'middle'], rel: { father: 'alive', mother: 'alive' } },
     text: '하굣길, 낯선 승합차가 천천히 따라온다. 창문이 조금 열려 있다.',
     choices: [
       { text: '가까운 편의점으로 뛰어 들어간다', effects: { smarts: 2, happy: -3 }, log: '점원이 경찰을 불렀다. 그 뒤로 부모님은 경호원을 붙였다. 자유롭게 걷던 하굣길이 끝났다.' },
@@ -137,17 +137,17 @@
         fail: { effects: { happy: -12, health: -4, flags: ['trauma'] }, log: '누군가 팔을 잡아끌었다. 지나가던 학생들이 소리를 질러 겨우 빠져나왔다. 오랫동안 혼자 밖에 나가지 못했다.' } },
       { text: '차 번호를 외우고 부모님께 전화한다', effects: { smarts: 3, rel: { family: 3 } }, log: '번호판 덕에 경찰이 차 주인을 찾아냈다. 아빠가 처음으로 "잘했다"고 했다.' }
     ] });
-  H({ id: 'cri_school_fee', age: [7, 12], origin: POOR, once: true, weight: 12, countries: ['in', 'za', 'br', 'ar', 'cn'],
+  H({ id: 'cri_school_fee', age: [7, 12], origin: POOR, once: true, weight: 12, countries: ['in', 'za', 'br', 'ar', 'cn'], cond: { edu: ['elem', 'middle'] },
     text: '수업료가 밀려 담임이 교실 밖에 서 있으라고 했다. 복도 창문 너머로 수업이 계속된다.',
     choices: [
       { text: '장학금 신청서를 혼자 써서 낸다', check: { stat: 'smarts', diff: 40 },
         success: { effects: { smarts: 3, happy: 4, flags: ['scholarship'] }, log: '교장 선생님 이름으로 장학 통지가 왔다. 졸업까지 수업료 걱정이 사라졌다.' },
         fail: { effects: { happy: -4, grit: 2 }, log: '서류는 돌아왔다. 대신 다음 학기를 기약했다.' } },
       { text: '시장에서 짐을 날라 수업료를 번다', effects: { grit: 4, smarts: -2, money: 100, flags: ['hardship'] }, log: '새벽 시장에서 짐을 나르고 학교에 갔다. 수업 시간마다 졸았다.' },
-      { text: '학교를 쉬고 집안일을 돕는다', effects: { smarts: -5, rel: { family: 5 }, flags: ['left_school_early', 'hardship'] }, log: '교복을 장롱에 넣었다. 한 해가 지나자 친구들은 한 학년 위에 있었다.' }
+      { text: '당분간 수업보다 집안일을 챙긴다', effects: { smarts: -5, rel: { family: 5 }, flags: ['left_school_early', 'hardship'] }, log: '밀린 수업 내용을 따라가기 어려워졌다. 친구들 공책을 빌려 빈칸을 채웠다.' }
     ] });
   H({ id: 'cri_hobby_injury', age: [8, 12], once: true, weight: 10, when: function (s) { return (s.hobbies || []).some(function (h) { return ['basketball', 'baseball', 'martial', 'dance', 'football'].indexOf(h) >= 0; }); },
-    text: '{hobby}[을/를] 하다 착지를 잘못했다. 발목이 퉁퉁 부어올랐다. 다음 주에 대회가 있다.',
+    text: '운동을 하다 착지를 잘못했다. 발목이 퉁퉁 부어올랐다. 다음 주에 대회가 있다.',
     choices: [
       { text: '대회를 포기하고 푹 쉰다', effects: { health: 2, happy: -3 }, log: '대회는 관중석에서 봤다. 발목은 깨끗이 나았다.' },
       { text: '붕대를 감고 대회에 나간다', risky: true, check: { stat: 'health', diff: 55 },
@@ -173,7 +173,7 @@
     ] });
 
   // ================================================================ hobbies: changes and moments
-  H({ id: 'hob_jam', age: [9, 60], hobby: 'band', cooldown: 6, weight: 10,
+  H({ id: 'hob_jam', age: [9, 19], hobby: 'band', cooldown: 6, weight: 10, cond: { edu: ['elem', 'middle', 'high', 'univ'] },
     text: '친구가 합주실을 한 시간 빌렸다며 부른다. 시험 기간인데.',
     choices: [
       { text: '간다', check: { odds: 0.55 },
@@ -185,7 +185,7 @@
     text: '공원 코트에서 덩치 큰 어른들이 3대3 한 판 끼라고 한다.',
     choices: [
       { text: '낀다', check: { stat: 'health', diff: 45 },
-        success: { effects: { happy: 5, social: 2 }, log: '레이업 두 개를 넣었다. 어른들이 "꼬마, 또 와" 했다.' },
+        success: { effects: { happy: 5, social: 2 }, log: '레이업 두 개를 넣었다. 같이 뛴 사람들이 "다음에 또 와" 했다.' },
         fail: { effects: { health: -3, happy: -2 }, log: '몸싸움에 밀려 넘어졌다. 무릎에 피가 났다.' } },
       { text: '구경만 하며 동작을 익힌다', effects: { smarts: 1 }, log: '돌파하는 스텝을 머릿속으로 그려 봤다.' }
     ] });
@@ -210,7 +210,7 @@
     choices: [
       { text: '참가비를 내고 무대에 선다', check: { stat: 'grit', diff: 40 },
         success: { effects: { money: -20, happy: 6, fame: 2, social: 2 }, log: '고음에서 박수가 터졌다. 인기상과 쌀 한 가마를 수레에 싣고 왔다.' },
-        fail: { effects: { money: -20, happy: -4, social: -1 }, log: '첫 소절에서 음이 갈라졌다. 반 아이 하나가 그 장면을 흉내 내며 한 달을 우려먹었다.' } },
+        fail: { effects: { money: -20, happy: -4, social: -1 }, log: '첫 소절에서 음이 갈라졌다. 구경하던 이웃이 그 장면을 흉내 내며 한 달을 우려먹었다.' } },
       { text: '음이 높은 곡을 낮춰 달라고 사회자에게 부탁한다', check: { stat: 'social', diff: 35 },
         success: { effects: { happy: 4, social: 1 }, log: '사회자가 반주 키를 두 칸 내려 줬다. 편하게 불러 장려상을 받았다.' },
         fail: { effects: { happy: -2 }, log: '"규정상 안 돼요." 결국 예선 대기표만 손에 쥔 채 돌아왔다.' } },
@@ -245,8 +245,8 @@
         success: { effects: { happy: 5, fame: 1 }, log: '입선! 심사위원이 "색이 대담하다"고 적었다. 구청 로비에 그림이 걸렸다.' },
         fail: { effects: { happy: -2 }, log: '수상자 명단에 이름이 없었다. 그림은 둘둘 말아 방 벽에 붙였다.' } },
       { text: '옆자리 아이의 물감을 빌려 쓴다', risky: true, check: { odds: 0.5 },
-        success: { effects: { happy: 4, social: 2 }, log: '물감을 빌려준 아이와 같이 장려상을 받았다. 그 뒤로 짝꿍이 됐다.' },
-        fail: { effects: { happy: -3, money: -30, rel: { mother: -2 } }, log: '물통을 엎어 그 아이 그림을 망쳤다. 물감값은 {mother}[이/가] 물어 줬다.' } },
+        success: { effects: { happy: 4, social: 2 }, log: '물감을 빌려준 아이와 같이 장려상을 받았다. 다음 대회에서도 나란히 앉기로 했다.' },
+        fail: { effects: { happy: -3, money: -30, rel: { mother: -2 } }, log: '물통을 엎어 그 아이 그림을 망쳤다. 사과하고 물감값을 물어 줬다.' } },
       { text: '대회 대신 혼자 그린다', effects: { happy: 2 }, log: '아무도 채점하지 않는 그림이 제일 자유로웠다.' }
     ] });
   H({ id: 'hob_game_tourney', age: [10, 45], hobby: 'game', cooldown: 6, weight: 10,
@@ -260,14 +260,14 @@
         fail: { effects: { mischief: 2, rep: -3, happy: -3 }, log: '운영진이 접속 기록을 확인했다. 둘 다 대회에서 영구 제명됐다.' } },
       { text: '그 시간에 공부한다', effects: { smarts: 2, happy: -2 }, log: '대회 중계를 틀어 놓고 문제집을 풀었다.' }
     ] });
-  H({ id: 'hob_family_dinner', age: [9, 80], hobby: 'cook', cooldown: 6, weight: 10,
-    text: '가족 생일상을 직접 차려 보겠다고 큰소리를 쳤다. 가스레인지를 혼자 켜 본 적은 없다.',
+  H({ id: 'hob_family_dinner', age: [9, 80], hobby: 'cook', cooldown: 6, weight: 10, when: function (s) { return RA.Engine.peopleByRel(s, 'family').length > 0; },
+    text: '생일상을 직접 차려 보겠다고 큰소리를 쳤다. 이번 메뉴는 처음 만들어 본다.',
     choices: [
       { text: '튀김까지 처음부터 만든다', risky: true, check: { stat: 'grit', diff: 45 },
         success: { effects: { happy: 5, rel: { family: 6 } }, log: '다들 두 그릇씩 비웠다. 부엌이 내 자리가 됐다.' },
         fail: { effects: { health: -4, happy: -2 }, log: '기름이 튀어 팔뚝에 물집이 잡혔다. 생일상은 결국 라면이 됐다.' } },
-      { text: '{food}[을/를] 할머니 전화 레시피대로 만든다', check: { stat: 'smarts', diff: 35 },
-        success: { effects: { happy: 3, rel: { family: 4 } }, log: '"할머니 맛이 난다." 그 말 한마디에 어깨가 으쓱했다.' },
+      { text: '{food}[을/를] 오래된 요리책에 나온 대로 만든다', check: { stat: 'smarts', diff: 35 },
+        success: { effects: { happy: 3, rel: { family: 4 } }, log: '"정겨운 맛이네." 그 말 한마디에 어깨가 으쓱했다.' },
         fail: { effects: { happy: -2, rel: { family: 1 } }, log: '간을 세 번 했는데 짰다. 다들 물을 들이켜며 먹었다.' } },
       { text: '배달 음식을 시키고 플레이팅만 한다', effects: { happy: 2, money: -50 }, log: '접시는 예뻤다. 다들 알면서 모른 척했다.' }
     ] });
@@ -282,7 +282,7 @@
         fail: { effects: { rep: -3, happy: -3 }, log: '요약이 틀린 결말을 말했다. 모임 어른들이 서로 눈짓을 주고받았다.' } },
       { text: '듣는 쪽에 앉는다', effects: { smarts: 1, happy: 1 }, log: '남이 읽은 책 이야기가 더 재밌었다.' }
     ] });
-  H({ id: 'hob_school_play', age: [8, 18], hobby: 'act', cooldown: 4, weight: 10,
+  H({ id: 'hob_school_play', age: [8, 18], hobby: 'act', cooldown: 4, weight: 10, cond: { edu: ['elem', 'middle', 'high'] },
     text: '학예회 연극 배역을 정한다. 주인공과 웃기는 조연이 남았다. 공연 날은 시험 전날이다.',
     choices: [
       { text: '주인공에 손을 든다', check: { stat: 'looks', diff: 40 },
@@ -298,7 +298,7 @@
   H({ id: 'org_slum_police', age: [13, 30], origin: ['slum'], cooldown: 5, maxTimes: 2, weight: 10,
     text: '골목 입구에서 경찰이 이유도 없이 불러 세우더니 가방을 뒤진다. 친구들이 멀찍이서 본다.',
     choices: [
-      { text: '말없이 응한다', effects: { happy: -3 }, log: '가방 속 교과서를 확인하고 경찰은 돌아갔다. 손이 떨렸다.' },
+      { text: '말없이 응한다', effects: { happy: -3 }, log: '가방 속 소지품을 확인하고 경찰은 돌아갔다. 손이 떨렸다.' },
       { text: '"무슨 근거로요?" 따진다', risky: true, check: { stat: 'social', diff: 55 },
         success: { effects: { rep: 3, grit: 2 }, log: '경찰이 머쓱해하며 돌아섰다. 친구들이 박수를 쳤다.' },
         fail: { effects: { happy: -6, rep: -3, mischief: 2 }, log: '파출소에서 하룻밤을 보냈다. 기록이 남지는 않았지만 마음엔 남았다.' } },
@@ -314,7 +314,7 @@
         fail: { effects: { happy: -3, grit: 2 }, log: '떨어졌다. 선생님이 "내년에 또 보자"며 문제집을 쥐여 줬다.' } },
       { text: '그 시간에 돈을 번다', effects: { money: 200, grit: 2, smarts: -1 }, log: '시장 짐꾼 일을 시작했다. 공부방엔 발길을 끊었다.' }
     ] });
-  H({ id: 'org_rich_plan', age: [14, 18], origin: ['rich'], once: true, weight: 12,
+  H({ id: 'org_rich_plan', age: [14, 18], origin: ['rich'], once: true, weight: 12, cond: { rel: { father: 'alive', mother: 'alive' } },
     text: '부모님이 정해 둔 진로가 있다. 유학, 명문대, 그리고 가업. 식탁에서 계획표를 내민다.',
     choices: [
       { text: '계획대로 간다', effects: { smarts: 4, happy: -3, money: 2000 }, log: '과외 선생님이 셋 더 붙었다. 미래가 정해졌다는 건 편하면서 답답했다.' },
@@ -322,12 +322,12 @@
         success: { effects: { happy: 5, rel: { family: -2 } }, log: '긴 침묵 끝에 아버지가 "한번 해 봐라. 대신 끝까지"라고 했다.' },
         fail: { effects: { happy: -6, rel: { family: -8 } }, log: '용돈과 카드가 끊겼다. 처음으로 돈 없는 하루를 살았다.' } }
     ] });
-  H({ id: 'org_rich_seed', age: [19, 24], origin: ['rich'], once: true, weight: 14,
+  H({ id: 'org_rich_seed', age: [19, 24], origin: ['rich'], once: true, weight: 14, cond: { rel: { father: 'alive', mother: 'alive' } },
     text: '부모님이 독립 자금이라며 통장 하나를 건넸다. 0이 생각보다 많다.',
     choices: [
       { text: '손대지 않고 묻어 둔다', effects: { money: 30000, smarts: 1 }, log: '통장은 서랍 깊숙이 들어갔다. 든든한 비상구가 생겼다.' },
-      { text: '친구들과 한 해를 신나게 쓴다', risky: true, effects: { money: 8000, happy: 8, social: 3, alcohol: 6 }, log: '파티와 여행으로 한 해가 갔다. 통장엔 사진만 남았다.' },
-      { text: '돌려드리고 내 힘으로 해 본다', effects: { grit: 6, happy: -2, rel: { family: -2 }, flags: ['refused_family_money'] }, log: '아버지는 통장을 한참 보다가 "고집은 누굴 닮았는지" 하며 웃었다. 첫 월세는 내 알바비로 냈다.' }
+      { text: '친구들과 한 해를 신나게 쓴다', risky: true, effects: { money: 8000, happy: 8, social: 3, alcohol: 6 }, log: '파티와 여행으로 한 해가 갔다. 받은 돈은 많이 줄었고 사진은 잔뜩 남았다.' },
+      { text: '돌려드리고 내 힘으로 해 본다', effects: { grit: 6, happy: -2, rel: { family: -2 }, flags: ['refused_family_money'] }, log: '아버지는 통장을 한참 보다가 "고집은 누굴 닮았는지" 하며 웃었다. 생활비는 내가 마련하기로 했다.' }
     ] });
   H({ id: 'org_hood_return', age: [30, 70], origin: POOR, once: true, weight: 8,
     text: '어릴 적 살던 {hood}에 오랜만에 가 봤다. 골목 몇 개는 사라졌고, 몇 개는 그대로다.',
@@ -338,7 +338,7 @@
     ] });
 
   // ================================================================ the 악동 street path: pranks → 일진 → 패거리 → 조직
-  H({ id: 'drk_iljin_invite', age: [11, 16], once: true, weight: 16, cond: { traits: { mischief: [15, 100] }, flags: ['!iljin', '!left_gang'] },
+  H({ id: 'drk_iljin_invite', age: [11, 16], once: true, weight: 16, cond: { edu: ['elem', 'middle', 'high'], traits: { mischief: [15, 100] }, flags: ['!iljin', '!left_gang'] },
     text: '학교에서 제일 잘나가는 무리, 일진들이 "같이 다니자"고 한다. 거절하면 표적이 될 수도 있다.',
     choices: [
       { text: '끼어든다', risky: true, check: { odds: 0.65 },
@@ -349,7 +349,7 @@
         fail: { effects: { health: -4, happy: -5, flags: ['bullied'] }, log: '화장실에서 둘러싸였다. 그 학기는 조용히 지나가기만 바랐다.' } },
       { text: '선생님께 알린다', effects: { rep: 3, social: -3, happy: -2 }, log: '무리 몇 명이 정학을 받았다. 대신 "배신자" 소리를 졸업 때까지 들었다.' }
     ] });
-  H({ id: 'drk_iljin_shakedown', age: [11, 17], cooldown: 3, weight: 14, cond: { flags: ['iljin'] },
+  H({ id: 'drk_iljin_shakedown', age: [11, 17], cooldown: 3, weight: 14, cond: { edu: ['elem', 'middle', 'high'], flags: ['iljin', '!left_gang', '!went_straight'] },
     text: '일진 선배들이 후배들한테서 "회비"를 걷어 오라고 시킨다.',
     choices: [
       { text: '시키는 대로 걷는다', risky: true, check: { odds: 0.7 },
@@ -358,7 +358,7 @@
       { text: '못 하겠다고 버틴다', effects: { health: -5, happy: -3, rep: 2 }, log: '선배들에게 몇 대 맞았다. 그래도 후배들 돈엔 손대지 않았다.' },
       { text: '무리에서 빠진다', effects: { happy: -2, social: -2, unflags: ['iljin'], flags: ['left_gang'] }, log: '혼자 걷는 복도가 넓었다. 몇 달은 외로웠지만 숨은 편해졌다.' }
     ] });
-  H({ id: 'drk_iljin_brawl', age: [12, 17], cooldown: 4, weight: 12, cond: { flags: ['iljin'] },
+  H({ id: 'drk_iljin_brawl', age: [12, 17], cooldown: 4, weight: 12, cond: { edu: ['middle', 'high'], flags: ['iljin', '!left_gang', '!went_straight'] },
     text: '옆 학교 일진들과 방과 후 공터에서 패싸움 약속이 잡혔다.',
     choices: [
       { text: '공터로 간다', risky: true, check: { stat: 'health', diff: 55 },
@@ -368,14 +368,14 @@
       { text: '경찰에 몰래 신고한다', effects: { rep: 2, happy: -3, unflags: ['iljin'], flags: ['left_gang'] }, log: '순찰차가 먼저 와 있었다. 아무도 다치지 않았다. 나는 조용히 무리를 떠났다.' }
     ] });
   // the 일진 kids, and in a rough neighbourhood any kid who already gets into trouble
-  H({ id: 'drk_street_crew', age: [14, 19], once: true, weight: 14, cond: { flags: ['!left_gang'] },
+  H({ id: 'drk_street_crew', age: [14, 19], once: true, weight: 14, cond: { flags: ['!left_gang', '!went_straight'] },
     when: function (s) { return !!s.flags.iljin || (POOR.indexOf(s.origin) >= 0 && (s.traits.mischief || 0) >= 12); },
     text: '동네 형들 패거리가 "학교는 시시하지 않냐"며 밤거리로 부른다. 오토바이와 술이 있다.',
     choices: [
       { text: '따라간다', risky: true, effects: { mischief: 6, alcohol: 5, happy: 3, smarts: -2, flags: ['street_crew'] }, log: '밤의 골목이 내 교실이 됐다. 집에는 새벽에 들어갔다.' },
-      { text: '학교로 돌아간다', effects: { smarts: 2, happy: -2, unflags: ['iljin'], flags: ['left_gang'] }, log: '형들의 오토바이 소리가 멀어졌다. 그 소리를 오래 기억했다.' }
+      { text: '따라가지 않고 돌아선다', effects: { smarts: 2, happy: -2, unflags: ['iljin'], flags: ['left_gang'] }, log: '형들의 오토바이 소리가 멀어졌다. 그 소리를 오래 기억했다.' }
     ] });
-  H({ id: 'drk_crew_offer', age: [15, 26], once: true, weight: 16, cond: { flags: ['street_crew'] },
+  H({ id: 'drk_crew_offer', age: [15, 26], once: true, weight: 16, cond: { flags: ['street_crew', '!left_gang', '!went_straight'] },
     text: '패거리 형님이 진짜 "식구"가 될 기회라고 한다. 조직 막내, 야바위판, 털이 패거리 중 하나가 자리를 비웠다.',
     choices: [
       { text: '조직 막내로 들어간다', risky: true, route: 'gang', effects: { mischief: 5 }, log: '형님들 앞에서 고개를 숙였다. 그날 받은 봉투가 무거웠다.' },
@@ -383,10 +383,10 @@
       { text: '털이 패거리에 붙는다', risky: true, route: 'thief', effects: { mischief: 4 }, log: '첫날은 망만 봤다. 손이 하얗게 질려 있었다.' },
       { text: '손을 턴다', effects: { happy: -2, grit: 3, unflags: ['street_crew', 'iljin'], flags: ['left_gang', 'left_crew'] }, log: '형님은 한참 보더니 담배를 끄고 "그래, 너는 가라"고 했다.' }
     ] });
-  H({ id: 'drk_way_out', age: [13, 21], once: true, weight: 14, when: function (s) { return !!(s.flags.iljin || s.flags.street_crew); },
+  H({ id: 'drk_way_out', age: [13, 21], once: true, weight: 14, when: function (s) { return !s.flags.went_straight && !s.flags.left_gang && !!(s.flags.iljin || s.flags.street_crew); },
     text: '{hobby}[을/를] 하는 모습을 본 어른이 손을 내밀었다. "그 힘, 다른 데 써 볼래?"',
     choices: [
-      { text: '손을 잡는다', effects: { mischief: -10, happy: 4, grit: 3, rep: 4, fx: ['wayOut'] }, log: '그날 이후 밤거리 대신 연습실에 갔다. 형들의 연락은 받지 않았다.' },
+      { text: '손을 잡는다', effects: { mischief: -10, happy: 4, grit: 3, rep: 4, fx: ['wayOut'] }, log: '그날 이후 밤거리 대신 좋아하는 일에 시간을 썼다. 형들의 연락은 받지 않았다.' },
       { text: '웃어넘긴다', effects: { mischief: 2 }, log: '"아저씨가 뭘 알아요." 돌아서는 등 뒤로 한숨 소리가 들렸다.' }
     ] });
   // an adult with no work of their own and a reason the street knows them: a 악동 past, a record, a prison contact
@@ -433,7 +433,7 @@
         fail: { effects: { fx: ['streetClash'] }, log: '칼날이 번뜩였다.' } },
       { text: '협상 테이블을 차린다', check: { stat: 'social', diff: 50 },
         success: { effects: { money: 1500, fx: ['rtSkill'] }, log: '구역을 나눴다. 당분간은 조용할 것이다.' },
-        fail: { effects: { money: -2000, happy: -3 }, log: '협상은 깨졌고 내 몫의 절반을 내줬다.' } },
+        fail: { effects: { money: -2000, happy: -3 }, log: '협상은 깨졌다. 돈까지 뜯기고 돌아왔다.' } },
       { text: '이 바닥을 떠나겠다고 한다', effects: { happy: 2, fx: ['goStraight'] }, log: '아무도 붙잡지 않았다. 대신 다시는 이 동네에 오지 말라고 했다.' }
     ] });
   H({ id: 'drk_betrayal', manual: true, routes: DARK, age: [13, 90], cooldown: 0,
@@ -449,7 +449,7 @@
     text: '위에 있던 사람이 쓰러졌다. 빈자리를 두고 모두가 눈치를 본다.',
     choices: [
       { text: '빈자리를 차지한다', risky: true, check: { stat: 'grit', diff: 60 },
-        success: { effects: { fame: 3, money: 5000, fx: ['rtBig'] }, log: '모두가 고개를 숙였다. 이제 내가 꼭대기다.' },
+        success: { effects: { fame: 3, money: 5000, fx: ['rtBig'] }, log: '내 말에 귀를 기울이는 사람이 늘었다. 빈자리에 한 걸음 가까워졌다.' },
         fail: { effects: { health: -10, fx: ['rtSetback'] }, log: '반대파의 습격을 받았다. 병원 침대에서 다른 사람의 이름을 들었다.' } },
       { text: '한 발 물러나 2인자로 남는다', effects: { money: 1500, happy: 1 }, log: '총알받이 자리는 사양했다. 대신 오래 살 것이다.' },
       { text: '이 틈에 손을 씻는다', effects: { happy: 3, fx: ['goStraight'] }, log: '아무도 나를 찾지 않았다. 모두 그 자리만 보고 있었다.' }
@@ -466,7 +466,7 @@
     text: '술자리 끝에 옆 테이블과 시비가 붙었다. 상대가 먼저 멱살을 잡았다.',
     choices: [
       { text: '주먹을 날린다', risky: true, check: { stat: 'health', diff: 55 },
-        success: { effects: { mischief: 3, rep: -3 }, log: '상대가 먼저 쓰러졌다. 합의금으로 한 달 생활비가 나갔다.', },
+        success: { effects: { mischief: 3, rep: -3 }, log: '상대가 먼저 쓰러졌다. 주변 사람들이 손가락질했다.', },
         fail: { effects: { health: -10, money: -1500, rep: -5, record: 1 }, log: '경찰서에서 깼다. 폭행 전과가 생겼다.' } },
       { text: '사과하고 자리를 뜬다', effects: { happy: -2, rep: 1 }, log: '자존심은 상했지만 다음 날 아침이 멀쩡했다.' },
       { text: '친구에게 말려 달라고 한다', check: { stat: 'social', diff: 40 },
@@ -513,7 +513,7 @@
       { text: '한 잔만 하고 일어선다', effects: { social: 1, alcohol: 1 }, log: '사장님이 "웬일이야" 했다.' }
     ] });
   H({ id: 'drk_recovery', age: [18, 90], cooldown: 3, weight: 14, cond: { traits: { alcohol: [45, 100] } },
-    text: '아침마다 손이 떨린다. 거울 속 얼굴이 낯설다. 가족들이 눈치를 본다.',
+    text: '아침마다 손이 떨린다. 거울 속 얼굴이 낯설다. 술병을 쥔 손을 한참 내려다봤다.',
     choices: [
       { text: '금주 모임과 치료를 시작한다', effects: { fx: ['rehab'], happy: 1 }, log: '모임에서 처음으로 "제 이름은… 저는 알코올 중독입니다"라고 말했다.' },
       { text: '혼자 끊어 본다', check: { stat: 'grit', diff: 60 },
@@ -525,13 +525,13 @@
   // ================================================================ sponsor / lobby / bribe arcs (accept → money or a step up now, exposure later)
   var ENT = ['actor', 'idol', 'singer', 'model', 'comedian', 'rapper', 'band'];
   H({ id: 'spn_ent_patron', age: [19, 55], routes: ENT, cooldown: 6, weight: 12,
-    text: '소속사 대표가 "도움 줄 분"을 소개하겠다며 비공개 술자리에 부른다. 그분 말 한마디면 작품 하나쯤은 쉽게 꽂힌다고 한다. 대신 따로 만나는 자리가 이어질 거라고 한다.',
+    text: '업계 관계자가 "도움 줄 분"을 소개하겠다며 비공개 술자리에 부른다. 그분 말 한마디면 일거리 하나쯤은 쉽게 꽂힌다고 한다. 대신 따로 만나는 자리가 이어질 거라고 한다.',
     choices: [
       { text: '스폰서를 받아들인다', risky: true, effects: { money: 6000, alcohol: 3, happy: -4, fx: ['spnTake', 'rtBig'] }, log: '명품 가방과 카드, 그리고 다음 작품 계약서가 같은 주에 왔다. 밤마다 전화가 울렸다.' },
-      { text: '정중히 거절한다', effects: { rep: 2, happy: 1, fx: ['rtSetback'] }, log: '대표의 표정이 굳었다. 다음 오디션 명단에서 내 이름이 빠졌다.' },
+      { text: '정중히 거절한다', effects: { rep: 2, happy: 1, fx: ['rtSetback'] }, log: '소개자의 표정이 굳었다. 약속했던 다음 일거리에서 내 이름이 빠졌다.' },
       { text: '녹음해 두고 폭로한다', risky: true, check: { stat: 'social', diff: 55 },
         success: { effects: { fame: 4, fx: ['whistle'] }, log: '기사가 터졌다. 같은 일을 겪은 동료들이 하나둘 목소리를 냈다.' },
-        fail: { effects: { happy: -6, fx: ['rtSetback', 'rtSetback'] }, log: '소속사는 "허위 사실"이라며 소송을 걸었다. 방송국 문이 하나씩 닫혔다.' } }
+        fail: { effects: { happy: -6, fx: ['rtSetback', 'rtSetback'] }, log: '상대는 "허위 사실"이라며 소송을 걸었다. 일을 제안하는 연락이 하나씩 끊겼다.' } }
     ] });
   H({ id: 'spn_law_bribe', age: [27, 72], routes: ['law'], cooldown: 7, weight: 12, cond: { career: ['judge', 'prosecutor'] },
     text: '재벌가 사건을 맡았다. 상대 측 사람이 골프장에서 두툼한 봉투와 함께 "앞으로 잘 부탁드린다"고 한다.',
@@ -545,7 +545,7 @@
   H({ id: 'spn_pol_lobby', age: [25, 85], routes: ['politics', 'public'], cooldown: 7, weight: 12, cond: { career: ['politician', 'city_mayor_aide'] },
     text: '건설사 회장이 규정 하나만 손봐 주면 다음 선거 자금과 퇴임 뒤 자리를 책임지겠다고 한다.',
     choices: [
-      { text: '손잡는다', risky: true, effects: { money: 20000, fx: ['spnTake', 'rtBig'] }, log: '규정이 바뀌었다. 회장의 아파트 단지가 올라갔다. 내 지지율도 올랐다.' },
+      { text: '손잡는다', risky: true, effects: { money: 20000, fx: ['spnTake', 'rtBig'] }, log: '규정이 바뀌었다. 회장의 아파트 단지가 올라갔다. 정치권에 내 편도 늘었다.' },
       { text: '거절한다', effects: { rep: 4, fx: ['rtSetback'] }, log: '다음 선거에서 상대 후보 쪽 현수막이 두 배로 늘었다.' },
       { text: '대화 내용을 기자에게 넘긴다', risky: true, check: { stat: 'social', diff: 55 },
         success: { effects: { fame: 4, fx: ['whistle'] }, log: '로비 의혹이 1면에 실렸다. 청렴한 이름이 생겼다.' },
@@ -581,7 +581,7 @@
   H({ id: 'spn_biz_lobby', age: [28, 80], routes: ['startup', 'office'], cooldown: 7, weight: 10, cond: { career: ['entrepreneur', 'ceo'] },
     text: '인허가가 1년째 막혀 있다. 브로커가 담당 공무원과 "식사 자리"를 만들어 주겠다고 한다.',
     choices: [
-      { text: '돈 봉투를 준비한다', risky: true, effects: { money: 10000, fx: ['spnTake', 'promote'] }, log: '한 달 만에 도장이 찍혔다. 매출이 뛰었다.' },
+      { text: '브로커에게 뒷일을 맡긴다', risky: true, effects: { money: 10000, fx: ['spnTake', 'promote'] }, log: '한 달 만에 도장이 찍혔다. 매출이 뛰었고 내 몫도 들어왔다.' },
       { text: '정식 절차를 끝까지 기다린다', effects: { rep: 3, happy: -3 }, log: '1년이 더 걸렸다. 그래도 떳떳했다.' },
       { text: '브로커의 제안을 언론에 알린다', risky: true, check: { stat: 'social', diff: 55 },
         success: { effects: { fame: 3, fx: ['whistle'] }, log: '인허가 비리가 기사화됐다. 업계 사람들이 나를 피했다.' },
@@ -590,7 +590,7 @@
   H({ id: 'spn_press_hush', age: [24, 75], routes: ['media'], cooldown: 7, weight: 12, cond: { career: ['journalist', 'news_anchor', 'tv_producer'] },
     text: '대기업 홍보팀이 취재 중인 기사를 빼 주면 광고를 몰아주겠다고 한다.',
     choices: [
-      { text: '기사를 뺀다', risky: true, effects: { money: 7000, fx: ['spnTake', 'rtSkill'] }, log: '데스크가 웃었다. 그 기업 광고가 1면 아래를 채웠다.' },
+      { text: '기사를 뺀다', risky: true, effects: { money: 7000, fx: ['spnTake', 'rtSkill'] }, log: '책임자가 웃었다. 그 기업 광고가 주요 광고 자리를 채웠다.' },
       { text: '그대로 내보낸다', effects: { rep: 4, fame: 2 }, log: '광고가 끊겼다. 기사는 많이 읽혔다.' },
       { text: '회유 사실까지 기사로 쓴다', risky: true, check: { stat: 'smarts', diff: 55 },
         success: { effects: { fame: 4, fx: ['whistle'] }, log: '"기사를 사려 한 기업" 후속 보도가 상을 받았다.' },
@@ -625,7 +625,7 @@
         fail: { effects: { happy: -4, fx: ['rtSetback'] }, log: '사장 친척이 구의원이었다. 나는 야간 근무로만 돌았다.' } }
     ] });
   H({ id: 'spn_exposed', manual: true, age: [19, 100], cooldown: 0,
-    text: '📸 몇 년 전 받은 돈과 자리가 기사로 터졌다. 사진과 통화 기록까지 나왔다.',
+    text: '📸 과거에 받은 뒷돈이 기사로 터졌다. 사진과 통화 기록까지 나왔다.',
     choices: [
       { text: '인정하고 사과한다', effects: { rep: -12, happy: -8, fx: ['spnFall'] }, log: '카메라 앞에서 고개를 숙였다. 플래시가 그치지 않았다.' },
       { text: '끝까지 부인한다', risky: true, check: { stat: 'smarts', diff: 60 },
@@ -634,11 +634,11 @@
       { text: '윗선과 브로커를 불고 수사에 협조한다', effects: { rep: -6, happy: -5, fx: ['spnCooperate'] }, log: '받은 돈을 돌려주고 진술서를 썼다. 많은 사람이 나를 원망했다.' }
     ] });
   H({ id: 'spn_retaliation', age: [19, 100], cooldown: 0, manual: true,
-    text: '폭로 뒤 1년. 지지 문자와 협박 문자가 하루에 같은 수로 온다. 일하는 곳에서도 눈치가 보인다.',
+    text: '폭로 이후 지지 문자와 협박 문자가 하루에도 여러 통 온다. 사람들 앞에 서는 일이 부담스럽다.',
     choices: [
       { text: '버틴다', check: { stat: 'grit', diff: 55 },
         success: { effects: { rep: 6, fame: 2, fx: ['rtSkill'] }, log: '시간이 내 편이었다. 후배들이 나를 따라 목소리를 냈다.' },
-        fail: { effects: { happy: -8, health: -3 }, log: '불면증이 생겼다. 그래도 그만두지는 않았다.' } },
+        fail: { effects: { happy: -8, health: -3 }, log: '불면증이 생겼다. 그래도 폭로한 사실을 뒤집지는 않았다.' } },
       { text: '떠나서 새로 시작한다', effects: { happy: 2, fx: ['goStraight'] }, log: '짐을 쌌다. 옳은 일을 한 대가가 생각보다 컸다.' }
     ] });
 
@@ -659,10 +659,10 @@
       fail: { effects: { rep: -4, fx: ['rtScandal'] }, log: '"선을 넘었다"는 기사가 쏟아졌다.' } }
   ], { stages: ['crew', 'mixtape', 'show', 'debut'] });
   RP([18, 55], '큰 레이블이 계약서를 내밀었다. 계약금은 두둑하지만 저작권은 10년 동안 레이블 소유다.', [
-    { text: '사인한다', effects: { money: 8000, fx: ['rtBig'] }, log: '첫 정규 앨범이 대형 마케팅을 탔다. 내 곡인데 내 곡이 아닌 기분이 들었다.' },
+    { text: '사인한다', effects: { money: 8000, fx: ['rtBig'] }, log: '새 앨범이 대형 마케팅을 탔다. 내 곡인데 내 곡이 아닌 기분이 들었다.' },
     { text: '독립 레이블을 고집한다', check: { stat: 'grit', diff: 55 },
       success: { effects: { fame: 2, fx: ['rtSkill'] }, log: '느리지만 내 이름으로 쌓였다. 팬들이 굿즈를 사 줬다.' },
-      fail: { effects: { money: -2000, fx: ['rtSetback'] }, log: '앨범 제작비를 감당 못 해 빚이 생겼다.' } }
+      fail: { effects: { money: -2000, fx: ['rtSetback'] }, log: '앨범 제작비가 예상을 넘었다. 적자를 메우느라 돈이 나갔다.' } }
   ], { stages: ['debut', 'chart', 'legend'] });
   RP([20, 60], '어린 시절 살던 동네 이야기를 가사에 담을지 고민된다. 가족이 싫어할 수도 있다.', [
     { text: '있는 그대로 쓴다', check: { stat: 'social', diff: 45 },
