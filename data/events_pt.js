@@ -65,7 +65,7 @@
     choices: [
       { text: '섬 이야기를 재미있게 들려준다', check: { stat: 'social', diff: 40 },
         success: { effects: { social: 3, happy: 3 }, log: '바나나 계단밭 이야기에 다들 배를 잡고 웃었다. 그날부터 숙소의 이야기꾼이 됐다.' },
-        fail: { effects: { happy: -3 }, log: '이야기는 엇나갔다. 밤에 혼자 {mother}에게 편지를 썼다.' } },
+        fail: { effects: { happy: -3 }, log: '이야기는 엇나갔다. 밤에 혼자 고향을 떠올리며 일기를 썼다.' } },
       { text: '훈련장에서 실력으로 답한다', check: { stat: 'football', diff: 40 },
         success: { effects: { football: 2, fame: 2 }, log: '자체 경기에서 두 골. 억양 이야기는 그날로 끝났다.' },
         fail: { effects: { happy: -2, grit: 2 }, log: '오늘은 안 풀렸다. 그래도 내일 또 나간다.' } }
@@ -98,11 +98,11 @@
   E({
     id: 'pt_lisbon_derby', age: [17, 38], cooldown: 3,
     cond: { fb: ['pro'] },
-    text: '{bigClub}[과/와] {rivalClub}의 리스본 더비. 도시 전체가 초록과 빨강으로 갈렸다.',
+    text: '라이벌 팀과의 경기. 관중석이 두 팀의 응원으로 뜨겁다.',
     choices: [
       { text: '첫 터치부터 과감하게 돌파한다', check: { stat: 'football', diff: 68 },
-        success: { effects: { fame: 4, happy: 5 }, log: '결승골! 시내 광장이 밤새 노래로 가득 찼다.' },
-        fail: { effects: { happy: -3 }, log: '상대 수비에 막혔다. 다음 더비를 기약했다.' } },
+        success: { effects: { fame: 4, happy: 5 }, log: '결승골! 응원석이 노래로 가득 찼다.' },
+        fail: { effects: { happy: -3 }, log: '상대 수비에 막혔다. 다음 경기를 기약했다.' } },
       { text: '동료들을 살리는 패스에 집중한다', check: { stat: 'social', diff: 50 },
         success: { effects: { fame: 2, social: 2, happy: 3 }, log: '도움 두 개. 감독이 "팀을 위한 선수"라고 했다.' },
         fail: { effects: { happy: -1 }, log: '패스가 번번이 끊겼다. 호흡을 더 맞춰야 한다.' } }
@@ -121,7 +121,7 @@
   // ---------------------------------------------------------------- adult life and old age
   E({
     id: 'pt_fado_night', age: [20, 75], cooldown: 6,
-    text: '리스본 골목 작은 식당에서 파두 가수가 그리움에 대한 노래를 부른다.',
+    text: '작은 식당에서 파두 가수가 그리움에 대한 노래를 부르는 영상을 본다.',
     choices: [
       { text: '눈을 감고 끝까지 듣는다', effects: { happy: 3, smarts: 1 }, log: '섬과 가족 얼굴이 하나씩 떠올랐다.' },
       { text: '떠오르는 마음을 글로 남긴다', effects: { happy: 2, rel: { family: 4 } }, log: '"지금 노래가 나오는데, 그냥 생각나서." 한 줄을 적었다.' }
