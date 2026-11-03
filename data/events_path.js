@@ -19,11 +19,11 @@
   // The two school crossroads pick an education track (s.track); the choices are built by js/routes.js
   // from the hero's talents, body and current route, and named per country (data/routes.js trackNames).
   E({ id: 'path_13', age: [13, 14], once: true, priority: true,
-    text: '중학교 진로 상담 시간. 선생님이 묻는다. "{name}, 고등학교는 어떤 과정으로 갈래?" 고른 과정에 따라 열리는 길이 달라진다.',
+    text: '앞으로 무엇을 배울지 생각해 본다. "{name}, 어떤 분야에 관심이 있니?" 고른 과정에 따라 열리는 길이 달라진다.',
     choicesFn: function (s) { return RA.Engine.Routes.trackChoices13(s); } });
   E({ id: 'path_16', age: [16, 17], once: true, priority: true,
     when: function (s) { return s.route && s.route.id !== 'football'; },
-    text: '고등학교 갈림길. 문과·이과로 나뉘고, 특성화반과 예체능반은 진짜 실력을 보여 줘야 한다. 나는?',
+    text: '앞으로 공부와 훈련에 힘을 쏟을 분야를 고를 때다. 지금 내게 맞는 과정은 무엇일까?',
     choicesFn: function (s) { return RA.Engine.Routes.trackChoices16(s); } });
   E({ id: 'path_16_football', age: [16, 18], once: true, priority: true,
     cond: { fb: ['academy', 'youth'] },
@@ -35,14 +35,14 @@
     ] });
   E({ id: 'path_19', age: [19, 20], once: true, priority: true,
     cond: { career: 'none', edu: ['none'] },
-    text: '스무 살 문턱. 인생의 첫 큰 결정을 내려야 한다.',
+    text: '스무 살 무렵. 앞으로 걸어갈 길을 생각한다.',
     choices: [
-      { text: '💼 바로 취업한다', effects: { grit: 2, fx: ['quickJob'] }, log: '첫 출근길, 넥타이가 어색했다.' },
+      { text: '💼 바로 취업한다', effects: { grit: 2, fx: ['quickJob'] }, log: '일자리를 찾아 나섰다. 새로운 시작이 낯설었다.' },
       { text: '🚀 창업에 도전한다', risky: true, check: { odds: 0.45 },
         success: { effects: { money: 3000, fame: 2, happy: 4 }, log: '작은 가게로 시작했다. 첫 손님에게 고개를 깊이 숙였다.' },
-        fail: { effects: { money: -4000, happy: -5 }, log: '석 달 만에 문을 닫았다. 빚과 경험이 남았다.' } },
+        fail: { effects: { money: -4000, happy: -5 }, log: '석 달 만에 문을 닫았다. 손실과 경험이 남았다.' } },
       { text: '🎖️ 군에 입대한다', effects: { fx: ['enlist'] }, log: '머리를 짧게 깎고 거울을 봤다. 낯선 얼굴이었다.' },
-      { text: '✈️ 해외로 떠난다', req: { money: 3000 }, effects: { money: -3000, smarts: 2, fx: ['moveAbroad'] }, log: '공항에서 가족들이 손을 흔들었다. 새로운 세계가 기다린다.' }
+      { text: '✈️ 해외로 떠난다', req: { money: 3000 }, effects: { money: -3000, smarts: 2, fx: ['moveAbroad'] }, log: '공항에서 익숙한 풍경에 작별했다. 새로운 세계가 기다린다.' }
     ] });
   E({ id: 'path_19_football', age: [19, 20], once: true, priority: true,
     cond: { fb: ['academy', 'youth', 'pro'] },
@@ -69,10 +69,10 @@
 
   // ================================================================ aptitude discovery (8-17)
   E({ id: 'path_talent_math', age: [9, 16], once: true, cond: { stats: { smarts: [65, 100] } },
-    text: '수학 선생님이 남으라고 한다. "너, 경시대회 나가 볼래? 머리가 남다르다."',
+    text: '수학 문제를 푸는 모습을 본 선생님이 묻는다. "너, 경시대회 나가 볼래? 머리가 남다르다."',
     choices: [
       { text: '도전한다', check: { stat: 'smarts', diff: 60 },
-        success: { effects: { smarts: 3, fame: 2, flags: ['talent_science'] }, log: '은상! 처음으로 공부가 재밌어졌다.' },
+        success: { effects: { smarts: 3, fame: 2, flags: ['talent_science'] }, log: '은상! 공부하는 재미가 더 커졌다.' },
         fail: { effects: { smarts: 1, happy: -1 }, log: '본선에서 떨어졌지만 세상은 넓다는 걸 배웠다.' } },
       { text: '축구 시간이 줄어서 싫다', alt: { text: '{hobbyAct} 시간이 줄어서 싫다', effects: { happy: 1 } }, effects: { football: 1 }, log: '선생님이 아쉬워했다.' }
     ] });
@@ -82,10 +82,10 @@
       { text: '오디션을 본다', check: { stat: 'looks', diff: 65 },
         success: { effects: { fame: 3, happy: 4, flags: ['talent_star'] }, log: '연습생 계약 제안을 받았다. 진로에 "연예인"이 생겼다.' },
         fail: { effects: { happy: -2 }, log: '카메라 앞에서 얼어 버렸다. 그래도 신기한 경험이었다.' } },
-      { text: '수상해서 거절한다', effects: { smarts: 1 }, log: '명함은 버렸다. {mother}[이/가] 잘했다고 했다.' }
+      { text: '수상해서 거절한다', effects: { smarts: 1 }, log: '명함은 버렸다. 신중하게 판단하길 잘했다고 생각했다.' }
     ] });
   E({ id: 'path_talent_social', age: [10, 17], once: true, cond: { stats: { social: [65, 100] } },
-    text: '반 아이들이 반장 선거에 나가 보라고 등을 떠민다.',
+    text: '또래 모임에서 대표를 뽑는다. 사람들이 나가 보라고 등을 떠민다.',
     choices: [
       { text: '출마한다', check: { stat: 'social', diff: 55 },
         success: { effects: { social: 3, rep: 5, flags: ['talent_leader'] }, log: '당선! 연설하는 내내 손이 떨렸지만 아무도 몰랐다.' },
@@ -112,18 +112,18 @@
     text: '말재주로 친구들 간식을 모조리 따냈다. 누가 말한다. "너 나중에 장사하면 대박 나겠다."',
     choices: [
       { text: '이 재능으로 돈을 벌어 본다', risky: true, check: { stat: 'social', diff: 50 },
-          success: { effects: { mischief: 4, money: 50, flags: ['talent_trickster'] }, log: '시장 골목 어르신들이 "꼬마 장사꾼"이라 불렀다.' },
-          fail: { effects: { mischief: 3, money: -20, rep: -3, rel: { mother: -3 } }, log: '부풀린 값에 속은 손님이 집까지 찾아왔다. 번 돈을 다 돌려주고 용돈까지 털렸다.' } },
+          success: { effects: { mischief: 4, money: 50, flags: ['talent_trickster'] }, log: '시장 골목 어르신들이 "장사 수완이 좋다"며 웃었다.' },
+          fail: { effects: { mischief: 3, money: -20, rep: -3, rel: { mother: -3 } }, log: '부풀린 값에 속은 손님이 항의했다. 돈을 돌려주며 손해까지 봤다.' } },
       { text: '친구들에게 간식을 돌려준다', effects: { rep: 3, social: 2, mischief: -2 }, log: '다들 웃으며 다시 나눠 먹었다.' }
     ] });
 
   // ================================================================ teen part-time offers (15-19)
   [
-    ['path_pt_store', '편의점 사장님이 야간 알바를 구한다.', 'convenience_clerk', '밤샘 근무 첫날, 컵라면 냄새가 위로가 됐다.'],
-    ['path_pt_delivery', '배달 앱 광고가 뜬다. "학생도 가능, 원하는 시간에 일하세요."', 'delivery_rider', '첫 배달에서 길을 잃었지만 손님이 웃어 줬다.'],
-    ['path_pt_cafe', '단골 카페에 "알바 구함" 쪽지가 붙었다.', 'cafe_parttime', '라테 아트 하트가 처음으로 하트처럼 나왔다.'],
+    ['path_pt_store', '편의점 사장님이 알바를 구한다.', 'convenience_clerk', '근무 중 컵라면 냄새가 위로가 됐다.'],
+    ['path_pt_delivery', '배달 앱 광고가 뜬다. "원하는 시간에 일하세요."', 'delivery_rider', '배달 중 길을 잃었지만 손님이 웃어 줬다.'],
+    ['path_pt_cafe', '카페에 "알바 구함" 쪽지가 붙었다.', 'cafe_parttime', '라테 아트 하트가 예쁘게 나왔다.'],
     ['path_pt_ballboy', '{bigClub} 홈경기 볼보이를 모집한다.', 'ballboy', '프로 선수들의 땀 냄새를 바로 앞에서 맡았다.'],
-    ['path_pt_tutor', '옆집에서 초등학생 과외를 부탁한다.', 'tutor_parttime', '아이가 처음으로 백 점을 받아 왔다.'],
+    ['path_pt_tutor', '옆집에서 초등학생 과외를 부탁한다.', 'tutor_parttime', '아이가 백 점을 받아 왔다.'],
     ['path_pt_flyer', '전단지 아르바이트 자리가 났다. 일당은 바로 준다.', 'flyer_parttime', '하루 종일 걸어 다리가 퉁퉁 부었다. 그래도 내 돈이다.']
   ].forEach(function (x) {
     E({ id: x[0], age: [15, 19], once: true, decision: true, cond: { career: 'none' },
@@ -136,17 +136,17 @@
 
   // ================================================================ adult career changes
   E({ id: 'path_job_offer', age: [27, 55], cooldown: 6, decision: true, cond: { career: 'any' },
-    text: '경쟁사에서 연락이 왔다. 연봉은 더 주지만 처음부터 다시 시작해야 한다.',
+    text: '새 일자리를 소개받았다. 조건은 좋아 보이지만 익숙한 일을 떠나야 한다.',
     choices: [
       { text: '이직한다', risky: true, check: { odds: 0.6 },
         success: { effects: { money: 3000, happy: 3, fx: ['quitJob', 'quickJob'] }, log: '새 명함을 받았다. 공기가 달랐다.' },
         fail: { effects: { happy: -4, fx: ['quitJob'] }, log: '막상 가 보니 자리가 없어졌다고 한다. 실업자가 됐다.' } },
-      { text: '지금 자리를 지킨다', effects: { grit: 2, rep: 2 }, log: '상사가 소식을 듣고 처음으로 고맙다고 했다.' }
+      { text: '지금 자리를 지킨다', effects: { grit: 2, rep: 2 }, log: '익숙한 자리에서 계속 일하기로 했다.' }
     ] });
   E({ id: 'path_startup_itch', age: [28, 55], cooldown: 7, decision: true, cond: { career: 'any' },
     text: '일을 마치고 문득 생각한다. "내 사업을 시작해 보면 어떨까?"',
     choices: [
-      { text: '사표 내고 창업한다', risky: true, career: 'entrepreneur', effects: { money: -5000, happy: 3, grit: 2 }, log: '작은 사무실 열쇠를 받았다. 두렵고 설렌다.' },
+      { text: '하던 일을 그만두고 창업한다', risky: true, career: 'entrepreneur', effects: { money: -5000, happy: 3, grit: 2 }, log: '작은 사무실 열쇠를 받았다. 두렵고 설렌다.' },
       { text: '주말에 부업으로 시작해 본다', effects: { money: 500, health: -1, grit: 1 }, log: '주말이 사라졌지만 통장에 작은 숫자가 늘었다.' },
       { text: '지금이 좋다', effects: { happy: 1 }, log: '안정도 하나의 재능이다.' }
     ] });
@@ -157,29 +157,29 @@
       { text: '레시피만 공책에 적어 둔다', effects: { happy: 1, rel: { mother: 3 } }, log: '언젠가를 위한 공책이 생겼다.' }
     ] });
   E({ id: 'path_abroad_post', age: [25, 50], once: true, decision: true, cond: { career: 'any', flags: ['!abroad'] },
-    text: '회사가 해외 지사 파견을 제안한다. 3년이다.',
+    text: '해외에서 일할 기회를 소개받았다. 익숙한 생활을 떠나야 한다.',
     choices: [
       { text: '간다', effects: { smarts: 2, money: 2000, fx: ['moveAbroad'] }, log: '낯선 도시의 아침 공기가 차가웠다.' },
-      { text: '가족 곁에 남는다', effects: { rel: { family: 4 } }, log: '대신 저녁 식탁이 시끌벅적했다.' }
+      { text: '익숙한 곳에 남는다', effects: { rel: { family: 4 } }, log: '지금의 생활을 이어 가기로 했다.' }
     ] });
   E({ id: 'path_union', age: [25, 60], cooldown: 8, decision: true, cond: { career: 'any' },
-    text: '동료들이 처우 개선을 요구하며 노조를 만들자고 한다.',
+    text: '같은 업계 사람들이 일하는 환경을 개선하자며 함께 목소리를 내자고 한다.',
     choices: [
       { text: '앞장선다', risky: true, check: { stat: 'social', diff: 50 },
         success: { effects: { rep: 6, social: 3, money: 1000 }, log: '협상이 타결됐다. 동료들이 어깨를 두드렸다.' },
-        fail: { effects: { rep: 2, fx: ['fired'] }, log: '회사는 주동자를 내보냈다. 그래도 후회는 없다.' } },
+        fail: { effects: { rep: 2, fx: ['fired'] }, log: '반발을 산 끝에 하던 일을 떠나게 됐다. 그래도 후회는 없다.' } },
       { text: '조용히 지켜본다', effects: { happy: -1 }, log: '회의실 밖에서 결과를 기다렸다.' }
     ] });
   E({ id: 'path_promotion_exam', age: [25, 58], cooldown: 5, decision: true, cond: { career: 'any' },
-    text: '승진 시험 공고가 붙었다. 준비하려면 석 달은 저녁이 없다.',
+    text: '업무 능력을 평가받을 기회가 생겼다. 준비하려면 석 달은 저녁이 없다.',
     choices: [
       { text: '준비한다', check: { stat: 'smarts', diff: 50 },
-        success: { effects: { fx: ['promote'], health: -1 }, log: '합격! 새 명패가 책상에 올라왔다.' },
+        success: { effects: { fx: ['promote'], health: -1 }, log: '좋은 평가를 받았다. 쌓아 온 실력을 보여 줬다.' },
         fail: { effects: { happy: -3, health: -1 }, log: '떨어졌다. 다음 해를 기약했다.' } },
       { text: '지금 자리도 충분하다', effects: { happy: 2, health: 1 }, log: '저녁이 있는 삶을 택했다.' }
     ] });
   E({ id: 'path_second_act', age: [58, 75], once: true, decision: true, cond: { career: 'none' },
-    text: '은퇴하고 한 해가 지났다. 하루가 너무 길다. 2막을 시작해 볼까?',
+    text: '일을 쉬는 요즘, 하루가 길게 느껴진다. 새 일을 시작해 볼까?',
     choices: [
       { text: '작은 카페를 연다', career: 'barista', effects: { money: -3000, happy: 4 }, log: '단골 손님들이 이름을 불러 준다.' },
       { text: '노점을 연다', career: 'street_vendor', effects: { happy: 3, social: 2 }, log: '시장 사람들과 금세 친해졌다.' },
@@ -189,8 +189,8 @@
   E({ id: 'path_odd_job_offer', age: [20, 50], cooldown: 6, decision: true, cond: { career: 'none' },
     text: '구인 게시판에 특이한 일자리가 잔뜩 붙어 있다.',
     choices: [
-      { text: '스트리머가 되어 본다', career: 'streamer', effects: { happy: 2 }, log: '첫 방송 시청자는 세 명. 그중 하나는 {mother}였다.' },
-      { text: '대리운전을 시작한다', career: 'designated_driver', effects: { grit: 2 }, log: '첫 손님이 차에서 노래를 불렀다.' },
+      { text: '스트리머가 되어 본다', career: 'streamer', effects: { happy: 2 }, log: '방송을 켜자 시청자 세 명이 들어왔다. 채팅창에 인사를 건넸다.' },
+      { text: '대리운전을 시작한다', career: 'designated_driver', effects: { grit: 2 }, log: '손님이 차에서 노래를 불렀다.' },
       { text: '산으로 심마니를 따라간다', career: 'simmani', effects: { health: 2 }, log: '산은 조용했고, 바람은 차가웠다.' },
       { text: '좀 더 찾아본다', effects: { smarts: 1 }, log: '이력서를 다시 고쳐 썼다.' }
     ] });
@@ -239,7 +239,7 @@
         { text: '받는다', risky: true, check: { odds: 0.5 },
           success: { effects: { money: 30000, fame: 3, mischief: 5 }, log: '성전이 커졌다. 마음 한쪽이 서늘했다.' },
           fail: { effects: { rep: -20, record: 1, fx: ['jail'] }, log: '피해자 가족들이 고소했다. 뉴스 1면에 실렸다.' } },
-        { text: '돌려보낸다', effects: { rep: 3, mischief: -4 }, log: '"가족에게 돌아가세요." 처음으로 진심을 말했다.' }
+        { text: '돌려보낸다', effects: { rep: 3, mischief: -4 }, log: '"생활을 지키는 데 쓰세요." 진심을 담아 말했다.' }
       ] },
     { age: [25, 80], text: '방송국이 잠입 취재를 하고 있다는 제보가 들어왔다.',
       choices: [
@@ -262,12 +262,12 @@
       ] }
   ]);
   C2('mercenary', [
-    { age: [21, 55], text: '위험 지역 경호 임무가 들어왔다. 보수는 일 년 치 연봉이다.',
+    { age: [21, 55], text: '위험 지역 경호 임무가 들어왔다. 큰 보수를 제시한다.',
       choices: [
         { text: '간다', risky: true, check: { stat: 'grit', diff: 65 },
           success: { effects: { money: 30000, grit: 3, fx: ['promote'] }, log: '임무 완수. 몸 곳곳에 흉터가 늘었다.' },
           fail: { effects: { health: -35, fx: ['careerEndingInjury'] }, log: '매복에 걸렸다. 살아 돌아온 게 기적이다.' } },
-        { text: '이번엔 거절한다', effects: { health: 2, happy: 1 }, log: '{mother}[과/와] 통화하며 웃었다.' }
+        { text: '이번엔 거절한다', effects: { health: 2, happy: 1 }, log: '편히 쉴 시간을 얻었다. 긴장이 조금 풀렸다.' }
       ] },
     { age: [25, 60], text: '동료가 부상을 입고 쓰러졌다. 철수 명령이 떨어졌다.',
       choices: [
@@ -353,7 +353,7 @@
         { text: '오늘 밤도 송출한다', risky: true, check: { odds: 0.55 },
           success: { effects: { fame: 3, happy: 3 }, log: '동네 택시 기사들이 다 듣고 있었다.' },
           fail: { effects: { record: 1, fx: ['fired'] }, log: '장비를 압수당했다.' } },
-        { text: '합법 인터넷 라디오로 옮긴다', effects: { rep: 3, fame: 1 }, log: '청취자 대부분이 따라왔다.' }
+        { text: '오늘은 합법 인터넷 라디오에 출연한다', effects: { rep: 3, fame: 1 }, log: '청취자들이 찾아와 응원했다.' }
       ] },
     { age: [18, 70], text: '단골 청취자가 사연을 보냈다. 아버지가 아프시다고 한다.',
       choices: [
@@ -367,11 +367,11 @@
         { text: '재빨리 수레를 끌고 피한다', risky: true, check: { stat: 'health', diff: 45 },
           success: { effects: { money: 200, happy: 2 }, log: '골목을 두 번 돌자 단속반이 사라졌다.' },
           fail: { effects: { money: -500, happy: -3 }, log: '과태료를 물었다. 오늘 장사는 접었다.' } },
-        { text: '허가를 받으러 간다', effects: { money: -300, rep: 3, fx: ['promote'] }, log: '정식 노점이 됐다. 마음이 편하다.' }
+        { text: '영업 요건을 확인하고 정비한다', effects: { money: -300, rep: 3, fx: ['promote'] }, log: '필요한 절차와 시설을 정비했다. 마음이 편하다.' }
       ] },
     { age: [18, 85], text: '배고파 보이는 학생이 지폐를 세다가 내려놓는다.',
       choices: [
-        { text: '덤으로 하나 더 준다', effects: { rep: 4, happy: 3, money: -10 }, log: '학생이 몇 년 뒤 졸업 사진을 들고 찾아왔다.' },
+        { text: '덤으로 하나 더 준다', effects: { rep: 4, happy: 3, money: -10 }, log: '학생이 환하게 웃으며 고맙다고 인사했다.' },
         { text: '정가대로 받는다', effects: { money: 10 }, log: '장사는 장사다.' }
       ] }
   ]);
@@ -410,7 +410,7 @@
       choices: [
         { text: '받는다', risky: true, check: { odds: 0.45 },
           success: { effects: { money: 15000, mischief: 5 }, log: '말에게 미안했다. 아무도 몰랐다.' },
-          fail: { effects: { record: 1, rep: -20, fx: ['careerEndingInjury'] }, log: '승부 조작이 밝혀져 영구 제명됐다.' } },
+          fail: { effects: { record: 1, rep: -20, fx: ['careerEndingInjury'] }, log: '경기 중 큰 부상을 입었다. 승부 조작까지 밝혀져 선수 생활을 접었다.' } },
         { text: '거절하고 전력으로 달린다', check: { stat: 'grit', diff: 55 },
           success: { effects: { fame: 4, money: 5000, fx: ['promote'] }, log: '우승! 말 목을 끌어안았다.' },
           fail: { effects: { fame: 1 }, log: '3위. 그래도 떳떳하다.' } }
@@ -433,7 +433,7 @@
       choices: [
         { text: '달린다', risky: true, check: { odds: 0.5 },
           success: { effects: { money: 2000, mischief: 4, fame: 1 }, log: '압도적인 1등. 영상이 퍼졌다.' },
-          fail: { effects: { record: 1, rep: -8, health: -10 }, log: '경찰에 잡혔고 면허가 정지됐다.' } },
+          fail: { effects: { record: 1, rep: -8, health: -10 }, log: '위험하게 달리다 다쳤고 경찰 조사까지 받았다.' } },
         { text: '트랙에서만 달린다', effects: { rep: 2 }, log: '프로는 도로에서 레이스하지 않는다.' }
       ] }
   ]);
