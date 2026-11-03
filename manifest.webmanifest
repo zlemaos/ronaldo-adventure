@@ -1,6 +1,6 @@
 {
-  "name": "호날두의 모험",
-  "short_name": "호날두",
+  "name": "인생게임",
+  "short_name": "인생게임",
   "description": "도트 인생 시뮬레이션 · 비공식 팬 패러디",
   "lang": "ko",
   "start_url": "./index.html",

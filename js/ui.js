@@ -18,6 +18,32 @@
   function country() { return RA.data.countries[app.s ? app.s.country : app.sel.country]; }
   function money(v) { return T.money(v, country()); }
 
+  function applyGameName() {
+    var name = S.gameName();
+    doc.title = name;
+    $('#game-name').textContent = name;
+    var title = $('#start-game-name');
+    if (title) title.textContent = name;
+  }
+  function editGameName() {
+    var m = modal('<form id="name-form"><h2>게임 이름 바꾸기</h2>' +
+      '<div class="field"><label for="in-game-name">게임 이름 (최대 20자)</label>' +
+      '<input type="text" id="in-game-name" maxlength="20" autocomplete="off">' +
+      '<p class="muted">비우면 인생게임으로 돌아갑니다. 이 기기에 저장됩니다.</p></div>' +
+      '<div class="row"><button class="btn btn-green" type="submit">저장</button>' +
+      '<button class="btn" id="cancel-game-name" type="button">취소</button></div></form>');
+    var input = $('#in-game-name', m);
+    input.value = S.gameName();
+    $('#cancel-game-name', m).onclick = function () { closeModal(); $('#btn-rename').focus(); };
+    $('#name-form', m).onsubmit = function (e) {
+      e.preventDefault();
+      if (!S.setGameName(input.value)) { toast('저장 공간을 확인해 주세요. 이름을 저장하지 못했어요.'); return; }
+      applyGameName(); closeModal(); $('#btn-rename').focus();
+    };
+    input.onkeydown = function (e) { if (e.key === 'Escape') { e.preventDefault(); closeModal(); $('#btn-rename').focus(); } };
+    input.focus(); input.select();
+  }
+
   var STAT_COLORS = { health: '#ff5470', happy: '#f5c518', smarts: '#60a5fa', looks: '#f472b6', football: '#2fd171', grit: '#f97316', social: '#14b8a6', fame: '#a78bfa' };
   var SHORT = C.STAT_SHORT;
   var STAT_ICONS = C.STAT_ICONS;
@@ -162,7 +188,9 @@
       var cc = RA.data.countries[app.sel.country];
       return { age: 24, skin: cc.skin[0], hairColor: cc.hair, hair: 1, outfit: 'kit', gender: app.sel.gender, number: 7, mood: 'celebrate' };
     }, 128));
-    banner.appendChild(h('<div class="title-over"><h1>호날두의 모험</h1><p>도트 인생 시뮬레이션 · 비공식 팬 패러디</p></div>'));
+    banner.appendChild(h('<div class="title-over"><h1 id="start-game-name"></h1><button class="btn btn-sm" id="btn-rename" type="button">✏️ 이름 바꾸기</button><p>도트 인생 시뮬레이션 · 비공식 팬 패러디</p></div>'));
+    applyGameName();
+    $('#btn-rename', el).onclick = editGameName;
     // countries
     var grid = $('#countries', el);
     // the canon route (Portugal) comes first, as a wide card

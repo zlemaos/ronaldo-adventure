@@ -141,6 +141,14 @@
   }
 
   RA.Save = {
+    gameName: function (store) {
+      try { return (getStore(store).getItem('ronaldo-adventure.name') || '').trim().slice(0, 20) || '인생게임'; }
+      catch (e) { return '인생게임'; }
+    },
+    setGameName: function (name, store) {
+      try { getStore(store).setItem('ronaldo-adventure.name', String(name).trim().slice(0, 20) || '인생게임'); return true; }
+      catch (e) { return false; }
+    },
     KEY: KEY, SLOTS: SLOTS, MIGRATIONS: MIGRATIONS,
     migrate: migrate, serialize: serialize, deserialize: deserialize, memStorage: memStorage,
     save: function (slot, s, store) {

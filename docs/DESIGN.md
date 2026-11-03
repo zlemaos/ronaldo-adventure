@@ -1,4 +1,4 @@
-# 호날두의 모험 — Design document
+# 인생게임 — Design document
 
 This document records the research behind the game, the design decisions taken while building v1,
 the data schemas, and how to extend the game (events, careers, countries). Code and comments are in
