@@ -16,7 +16,7 @@
       { text: '이웃 할머니 집으로 뛰어가 도움을 청한다', check: { stat: 'social', diff: 35 },
         success: { effects: { social: 3, rel: { family: 4 }, flags: ['hardship'] }, log: '할머니가 쌀 한 포대와 방 한 칸을 내주셨다. 동네가 우리를 붙잡아 줬다.' },
         fail: { effects: { happy: -5, flags: ['hardship', 'lost_home'] }, log: '문은 열리지 않았다. 그해 겨울은 친척 집 창고에서 났다.' } },
-      { text: '동생들 손을 잡고 놀이터에 숨어 있는다', effects: { happy: -6, rel: { siblings: 5 }, flags: ['lost_home', 'trauma'] }, log: '해가 질 때까지 그네에 앉아 있었다. 이사 간 반지하 방에서 한동안 악몽을 꿨다.' }
+      { text: '놀이터로 가서 숨어 있는다', effects: { happy: -6, rel: { siblings: 5 }, flags: ['lost_home', 'trauma'] }, log: '해가 질 때까지 그네에 앉아 있었다. 새로 옮긴 좁은 방에서 한동안 악몽을 꿨다.' }
     ] });
   H({ id: 'cri_sibling_sick', age: [6, 12], once: true, weight: 12, cond: { rel: { sis2: 'alive' } },
     text: '{sis2}[이/가] 큰 병으로 입원했다. 병원비 이야기가 나올 때마다 어른들 목소리가 낮아진다.',
@@ -103,7 +103,7 @@
     text: '밤새 내린 폭우에 하천이 넘쳤다. 방바닥으로 흙탕물이 차오른다.',
     choices: [
       { text: '가족 사진첩부터 챙긴다', effects: { rel: { family: 4 }, happy: -3, money: -200, flags: ['lost_home'] }, log: '살림은 다 젖었지만 사진첩은 살렸다. 그 사진들이 지금도 거실에 걸려 있다.' },
-      { text: '동생 손을 잡고 먼저 높은 데로 피한다', effects: { grit: 3, rel: { siblings: 6 }, money: -400, flags: ['lost_home'] }, log: '교회 2층 대피소에서 밤을 새웠다. 집은 한 달 동안 말려야 했다.' },
+      { text: '위험하다고 소리치며 높은 데로 피한다', effects: { grit: 3, rel: { siblings: 6 }, money: -400, flags: ['lost_home'] }, log: '교회 2층 대피소에서 밤을 새웠다. 집은 한 달 동안 말려야 했다.' },
       { text: '물에 들어가 옆집 할머니를 돕는다', risky: true, check: { stat: 'health', diff: 55 },
         success: { effects: { rep: 6, fame: 1, grit: 3 }, log: '할머니를 업고 나왔다. 동네 신문에 사진이 실렸다.' },
         fail: { effects: { health: -12, flags: ['trauma'] }, log: '급류에 휩쓸려 전봇대를 붙잡았다. 구조대가 왔을 땐 손이 하얗게 질려 있었다. 그 뒤로 물이 무섭다.' } }
@@ -111,9 +111,9 @@
   H({ id: 'cri_mother_job', age: [6, 12], once: true, weight: 10, origin: ['poor', 'slum', 'middle'], cond: { rel: { mother: 'alive' } },
     text: '{mother}[이/가] 일하던 곳이 문을 닫았다. 저녁마다 {mother}[이/가] 구인 광고 신문을 펼친다.',
     choices: [
-      { text: '방과 후 동생들을 맡아 {mother}[이/가] 일을 구하게 돕는다', check: { stat: 'grit', diff: 40 },
-          success: { effects: { grit: 3, rel: { mother: 6, siblings: 3 }, smarts: -1, flags: ['hardship'] }, log: '동생들 숙제까지 봐 주며 저녁을 지었다. 석 달 뒤 {mother}[이/가] 새 일을 구했다.' },
-          fail: { effects: { grit: 1, smarts: -2, rel: { mother: 2 }, flags: ['hardship'] }, log: '막내가 열이 나는 걸 늦게 알았다. {mother}[은/는] 면접을 포기하고 약국으로 뛰었다.' } },
+      { text: '방과 후 집안일을 맡아 {mother}[이/가] 일을 구하게 돕는다', check: { stat: 'grit', diff: 40 },
+          success: { effects: { grit: 3, rel: { mother: 6, siblings: 3 }, smarts: -1, flags: ['hardship'] }, log: '숙제할 시간을 쪼개 청소와 설거지를 했다. 석 달 뒤 {mother}[이/가] 새 일을 구했다.' },
+          fail: { effects: { grit: 1, smarts: -2, rel: { mother: 2 }, flags: ['hardship'] }, log: '무리하다 열이 났다. {mother}[은/는] 면접을 포기하고 약국으로 뛰었다.' } },
       { text: '학원을 끊겠다고 먼저 말한다', effects: { smarts: -3, rel: { mother: 8 }, happy: -2 }, log: '{mother}[은/는] 대답 대신 등을 쓸어 줬다. 그 뒤로 혼자 공부하는 법을 익혔다.' },
       { text: '친구들 앞에서 아무렇지 않은 척한다', effects: { social: 1, happy: -3 }, log: '새 운동화 이야기에 웃으며 맞장구쳤다. 집에 와서는 말이 없었다.' }
     ] });
@@ -570,12 +570,12 @@
         fail: { effects: { happy: -6, fx: ['rtSetback'] }, log: '병원은 나를 "조직을 흔드는 사람"으로 찍었다.' } }
     ] });
   H({ id: 'spn_match_fix', age: [19, 36], routes: ['football', 'basketball', 'baseball', 'fighter', 'esports'], cooldown: 6, weight: 10,
-    text: '브로커가 접근했다. "다음 경기, 살짝만 져 주면 시즌 연봉의 반을 주지."',
+    text: '브로커가 접근했다. "다음 경기, 살짝만 져 주면 큰돈을 주지."',
     choices: [
-      { text: '돈을 받는다', risky: true, effects: { money: 12000, happy: -6, fx: ['spnTake'] }, log: '일부러 놓친 공 하나. 아무도 몰랐다. 나만 빼고.' },
+      { text: '돈을 받는다', risky: true, effects: { money: 12000, happy: -6, fx: ['spnTake'] }, log: '결정적인 순간, 일부러 실수했다. 들키지는 않았다. 나만은 그 이유를 알았다.' },
       { text: '거절한다', effects: { rep: 3, grit: 2 }, log: '브로커는 "생각 바뀌면 연락해"라며 명함을 남겼다. 찢어 버렸다.' },
-      { text: '구단과 협회에 신고한다', risky: true, check: { stat: 'grit', diff: 50 },
-        success: { effects: { fame: 4, fx: ['whistle'] }, log: '승부 조작 조직이 적발됐다. 리그가 나를 "클린 플레이어"로 표창했다.' },
+      { text: '경기 주최 측에 신고한다', risky: true, check: { stat: 'grit', diff: 50 },
+        success: { effects: { fame: 4, fx: ['whistle'] }, log: '승부 조작 조직이 적발됐다. 주최 측이 공정한 경기를 지켰다며 나를 표창했다.' },
         fail: { effects: { happy: -6, fx: ['rtSetback'] }, log: '증거 불충분. 브로커 쪽 사람들이 경기장 밖에서 기다렸다.' } }
     ] });
   H({ id: 'spn_biz_lobby', age: [28, 80], routes: ['startup', 'office'], cooldown: 7, weight: 10, cond: { career: ['entrepreneur', 'ceo'] },

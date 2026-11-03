@@ -267,7 +267,7 @@
   E({
     id: 'car_tech_startup_offer', age: [22, 55], cooldown: 6,
     cond: { career: ['programmer', 'game_developer', 'data_scientist', 'white_hacker', 'web_designer'], flags: ['!startup_bet'] },
-    text: '대학 동기가 창업했다며 연락해 왔다. "연봉은 반, 지분은 5%. 같이 세상 바꾸자."',
+    text: '같은 업계 지인이 창업했다며 연락해 왔다. "연봉은 반, 지분은 5%. 같이 세상 바꾸자."',
     choices: [
       { text: '뛰어든다', effects: { money: -10000, happy: 4, flags: ['startup_bet'], fx: ['quitJob'] }, log: '공유 오피스 구석 책상 하나. 심장이 오랜만에 빨리 뛰었다.',
         schedule: { id: 'car_startup_result', years: 3 } },
