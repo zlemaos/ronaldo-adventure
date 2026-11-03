@@ -175,7 +175,7 @@
   K('professor', '대학 교수', 'education', 'suit',
     { minAge: 28, maxAge: 70, degree: 'phd', stats: { smarts: 78 }, flags: NJ },
     [60000, 250000], ['시간 강사', '조교수', '부교수', '정교수', '총장'],
-    'smarts', [4, 5, 3, 1, 0], '같은 농담을 30년째, 매년 새 학생에게.');
+    'smarts', [4, 5, 3, 1, 0], '같은 농담도 새 학생 앞에서는 신작이다.');
   K('kindergarten_teacher', '유치원 교사', 'education', 'apron',
     { minAge: 21, maxAge: 60, degree: 'bachelor', majors: ['education'], flags: ['!jailed', '!ever_jailed'] },
     [28000, 80000], ['보조 교사', '담임 교사', '원감', '원장'],
@@ -225,7 +225,7 @@
   K('architect', '건축가', 'arts', 'hardhat',
     { minAge: 24, maxAge: 75, degree: 'bachelor', majors: ['architecture', 'engineering', 'arts'], stats: { smarts: 65 } },
     [45000, 700000], ['인턴 건축가', '설계 담당', '수석 건축가', '건축사무소 대표', '거장 건축가'],
-    'smarts', [3, 4, 4, 2, 0], '집 짓는 꿈을 꾸지만 정작 본인은 월세.');
+    'smarts', [3, 4, 4, 2, 0], '집 짓는 꿈을 도면으로 옮긴다. 수정 요청은 덤.');
 
   /* ---------------- entertainment ---------------- */
   K('idol', '아이돌', 'entertainment', 'idol',
@@ -235,15 +235,15 @@
   K('singer', '가수', 'entertainment', 'idol',
     { minAge: 16, maxAge: 80, degree: 'none', stats: { looks: 35, grit: 35 } },
     [5000, 6000000], ['무명 가수', '신인 가수', '실력파 가수', '국민 가수', '전설'],
-    'grit', [2, 4, 4, 5, 0], '노래 한 곡에 인생을 건다. 앨범 한 장에 대출을 건다.');
+    'grit', [2, 4, 4, 5, 0], '노래 한 곡에 마음을 건다. 녹음은 한 번에 끝나지 않는다.');
   K('actor', '배우', 'entertainment', 'suit',
     { minAge: 14, maxAge: 85, degree: 'none', stats: { looks: 55 } },
     [4000, 10000000], ['엑스트라', '단역', '조연', '주연', '대배우'],
-    'looks', [2, 5, 4, 5, 0], '시체 역할 3년 후, 대사 한 줄. 감격의 눈물.');
+    'looks', [2, 5, 4, 5, 0], '짧은 대사 한 줄에도 인생을 담는 일.');
   K('youtuber', '유튜버', 'entertainment', 'hoodie',
     { minAge: 14, maxAge: 80, degree: 'none' },
     [0, 4000000], ['구독자 10명', '실버 버튼', '골드 버튼', '다이아 버튼', '인터넷 황제'],
-    'looks', [1, 2, 4, 5, 0], '"구독과 좋아요, 알림 설정까지!" 엄마가 1호 구독자.');
+    'looks', [1, 2, 4, 5, 0], '"구독과 좋아요, 알림 설정까지!" 카메라 앞 인사부터 연습한다.');
   K('comedian', '개그맨', 'entertainment', 'casual',
     { minAge: 18, maxAge: 80, degree: 'none', stats: { smarts: 45 } },
     [5000, 3000000], ['공채 개그맨', '코너 고정', '예능 고정', 'MC', '국민 MC'],
@@ -259,7 +259,7 @@
   K('voice_actor', '성우', 'entertainment', 'casual',
     { minAge: 19, maxAge: 80, degree: 'high', stats: { smarts: 40 } },
     [20000, 600000], ['신인 성우', '전속 성우', '인기 성우', '목소리 장인'],
-    'smarts', [3, 4, 3, 3, 0], '얼굴은 몰라도 목소리는 전 국민이 안다.');
+    'smarts', [3, 4, 3, 3, 0], '얼굴 대신 목소리로 기억되는 일.');
   K('magician', '마술사', 'entertainment', 'suit',
     { minAge: 16, maxAge: 85, degree: 'none', stats: { smarts: 40, looks: 35 } },
     [8000, 1500000], ['길거리 마술사', '파티 마술사', '공연 마술사', '세계적 일루셔니스트'],
@@ -297,7 +297,7 @@
   K('lotto_shop_owner', '로또 판매점 사장', 'business', 'apron',
     { minAge: 25, maxAge: 85, degree: 'none' },
     [20000, 150000], ['동네 판매점', '1등 배출점', '명당 판매점'],
-    'happy', [4, 1, 1, 1, 0], '남의 꿈을 팔아 내 꿈을 이룬다. 본인은 안 산다.');
+    'happy', [4, 1, 1, 1, 0], '작은 종이 한 장에 담긴 큰 기대를 판다.');
   K('sales_rep', '영업 사원', 'business', 'suit',
     { minAge: 20, maxAge: 62, degree: 'high', stats: { looks: 40 } },
     [30000, 300000], ['영업 사원', '영업 대리', '영업 팀장', '영업 본부장'],
@@ -327,7 +327,7 @@
   K('crypto_trader', '코인 투자자', 'finance', 'hoodie',
     { minAge: 18, maxAge: 80, degree: 'none', stats: { grit: 30 } },
     [0, 5000000], ['개미', '고래 지망생', '고래', '전설의 존버러'],
-    'grit', [1, 2, 5, 1, 2], '"가즈아!" 그리고 한강 뷰… 또는 한강 수위 확인.');
+    'grit', [1, 2, 5, 1, 2], '"가즈아!" 차트가 오르내릴 때마다 마음도 출렁인다.');
 
   /* ---------------- government ---------------- */
   K('politician', '정치인', 'government', 'suit',
@@ -342,10 +342,10 @@
     { minAge: 20, maxAge: 60, degree: 'high', stats: { smarts: 50 }, flags: ['!jailed', '!ever_jailed'] },
     [35000, 140000], ['9급 주무관', '7급 주무관', '사무관', '서기관', '국장'],
     'smarts', [4, 3, 2, 0, 0], '정년, 연금, 그리고 끝없는 결재 도장.');
-  K('spy', '국정원 요원', 'government', 'suit',
+  K('spy', '정보기관 요원', 'government', 'suit',
     { minAge: 23, maxAge: 55, degree: 'bachelor', stats: { smarts: 70, health: 60, grit: 55 }, flags: ['!jailed', '!ever_jailed'] },
     [50000, 250000], ['신입 요원', '현장 요원', '베테랑 요원', '작전 팀장', '전설의 그림자'],
-    'smarts', [3, 5, 5, 0, 3], '가족에게는 "무역회사 다녀"라고 말한다.');
+    'smarts', [3, 5, 5, 0, 3], '직업을 물으면 "무역회사 다녀"라고 둘러댄다.');
   K('tax_auditor', '세무 공무원', 'government', 'suit',
     { minAge: 22, maxAge: 60, degree: 'bachelor', majors: ['business', 'economics', 'law'], stats: { smarts: 60 }, flags: ['!jailed', '!ever_jailed'] },
     [40000, 160000], ['조사관', '선임 조사관', '조사 팀장', '세무서장'],
@@ -422,7 +422,7 @@
     'health', [3, 1, 4, 0, 2], '새벽 3시 출항. 물고기도 그 시간엔 졸려 한다.');
   K('haenyeo', '해녀/해남', 'agri', 'farmer',
     { minAge: 16, maxAge: 85, degree: 'none', stats: { health: 60, grit: 50 } },
-    [12000, 90000], ['애기 해녀', '하군', '중군', '상군', '대상군'],
+    [12000, 90000], ['초보 잠수 어업인', '하군', '중군', '상군', '대상군'],
     'grit', [4, 3, 4, 1, 2], '숨 한 번에 전복 하나. 숨비소리가 출근 도장.');
   K('beekeeper', '양봉가', 'agri', 'farmer',
     { minAge: 18, maxAge: 85, degree: 'none', stats: { grit: 35 } },
@@ -431,14 +431,14 @@
   K('rancher', '목장주', 'agri', 'farmer',
     { minAge: 18, maxAge: 85, degree: 'none', stats: { health: 50 } },
     [15000, 400000], ['목장 일꾼', '목동', '목장주', '대목장주'],
-    'health', [3, 2, 3, 0, 1], '소 200마리의 이름을 다 안다. 조카 이름은 헷갈린다.');
+    'health', [3, 2, 3, 0, 1], '가축의 작은 변화도 놓치지 않는 눈이 필요하다.');
   K('forester', '산림 관리원', 'agri', 'farmer',
     { minAge: 19, maxAge: 65, degree: 'high', majors: ['agriculture', 'science'], stats: { health: 50 } },
     [28000, 90000], ['산림 보호원', '산림 관리원', '국립공원 소장'],
     'health', [4, 2, 2, 0, 1], '나무와 대화하는 시간이 사람과 대화하는 시간보다 길다.');
   K('smart_farmer', '스마트팜 농부', 'agri', 'farmer',
     { minAge: 22, maxAge: 75, degree: 'bachelor', majors: ['agriculture', 'engineering', 'cs', 'science'], stats: { smarts: 55 } },
-    [25000, 600000], ['청년 농부', '스마트팜 운영자', '농업 벤처 대표', '농업계 혁신가'],
+    [25000, 600000], ['새내기 농부', '스마트팜 운영자', '농업 벤처 대표', '농업계 혁신가'],
     'smarts', [3, 3, 3, 1, 0], '딸기에게 와이파이를 연결했다. 딸기가 더 빨라졌다.');
 
   /* ---------------- trades / manufacturing ---------------- */
@@ -511,7 +511,7 @@
   K('restaurant_owner', '식당 사장', 'service', 'chef',
     { minAge: 22, maxAge: 85, degree: 'none', stats: { grit: 40 } },
     [10000, 800000], ['동네 식당', '맛집', '체인점 대표', '외식 그룹 회장'],
-    'grit', [3, 3, 4, 2, 0], '국 한 그릇에 인생을 담는다. 월세도 담긴다.');
+    'grit', [3, 3, 4, 2, 0], '음식 한 접시에 정성을 담는다. 장부에는 재료비가 담긴다.');
   K('flight_attendant', '승무원', 'service', 'uniform',
     { minAge: 20, maxAge: 55, degree: 'high', stats: { looks: 55, health: 50 } },
     [28000, 120000], ['신입 승무원', '선임 승무원', '사무장', '객실 총괄'],
@@ -563,7 +563,7 @@
   K('shaman', '무당/점술가', 'religion', 'robe',
     { minAge: 18, maxAge: 95, degree: 'none' },
     [5000, 500000], ['신내림 받은 초보', '동네 점집', '용한 무당', '전국구 도사'],
-    'smarts', [3, 2, 3, 2, 0], '"올해 물을 조심하세요." 장마철이라 늘 맞는다.');
+    'smarts', [3, 2, 3, 2, 0], '"올해 물을 조심하세요." 듣는 사람의 표정부터 살핀다.');
   K('missionary', '선교사', 'religion', 'casual',
     { minAge: 22, maxAge: 75, degree: 'bachelor', majors: ['theology', 'humanities', 'education', 'medicine', 'nursing'], flags: NJ },
     [12000, 45000], ['단기 선교사', '선교사', '선교 센터장'],
@@ -589,7 +589,7 @@
   K('cyber_criminal', '사이버 범죄자', 'crime', 'hoodie',
     { minAge: 16, maxAge: 65, degree: 'none', stats: { smarts: 65 } },
     [5000, 4000000], ['스크립트 키디', '해커', '해킹 조직 간부', '어둠의 해커'],
-    'smarts', [2, 3, 4, 0, 4], '지하실에서 세계 은행을 흔든다. 엄마는 게임하는 줄 안다.', 'crime');
+    'smarts', [2, 3, 4, 0, 4], '화면 뒤에 숨지만 흔적까지 사라지는 것은 아니다.', 'crime');
   K('cat_burglar', '괴도', 'crime', 'hoodie',
     { minAge: 18, maxAge: 55, degree: 'none', stats: { health: 55, smarts: 50 } },
     [5000, 2500000], ['빈집털이', '금고털이', '괴도', '전설의 괴도'],
