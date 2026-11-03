@@ -140,7 +140,7 @@
     ]
   });
   E({
-    id: 'pt_island_hero', age: [18, 45], once: true, weight: 20,
+    id: 'pt_island_hero', age: [18, 40], once: true, weight: 20,
     cond: { fb: ['pro'], stats: { fame: [50, 100] } },
     text: '{region}에 돌아오자 공항에서 동네 꼬마들이 {localClub} 유니폼을 입고 기다리고 있다.',
     choices: [

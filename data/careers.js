@@ -671,7 +671,7 @@
     [7000, 22000], ['세차 알바', '광택 담당', '세차장 실장'],
     'health', [1, 1, 2, 0, 0], '남의 차가 내 얼굴보다 반짝인다.');
   K('ballboy', '경기장 볼보이', 'parttime', 'kit',
-    { minAge: 14, maxAge: 19, degree: 'none' },
+    { minAge: 14, maxAge: 19, ageOut: 22, degree: 'none' },
     [2000, 6000], ['볼보이', '선임 볼보이', '볼보이 반장'],
     'football', [1, 1, 1, 0, 0], '최고의 자리에서 경기를 본다. 공도 가끔 만진다.');
   K('mascot_parttime', '인형탈 알바', 'parttime', 'casual',

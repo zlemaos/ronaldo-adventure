@@ -525,7 +525,7 @@
         { text: '아직은 이르다', effects: { rel: { partner: -3 }, smarts: 1 }, log: '{partner}[은/는] 고개를 끄덕였지만 말이 줄었다.' }
       ] },
     { id: 'rl_temptation_partner', age: [18, 50], decision: true, cooldown: 5, cond: { rel: { partner: 'yes' } },
-      text: '모임에서 만난 사람이 노골적으로 호감을 표한다. {partner}[은/는] 출장 중이다.',
+      text: '모임에서 만난 사람이 노골적으로 호감을 표한다. {partner}[은/는] 며칠 집을 비웠다.',
       choices: [
         { text: '선을 긋고 집에 간다', effects: { rep: 2, rel: { partner: 4 } }, log: '{partner}에게 전화를 걸었다. 목소리가 반가웠다.' },
         { text: '몰래 만난다', risky: true, check: { odds: 0.45 },
@@ -558,14 +558,14 @@
           fail: { effects: { happy: -2, rel: { spouse: 3 } }, log: '올해는 소식이 없었다. 서로를 다독였다.' } },
         { text: '둘만의 삶을 즐긴다', effects: { happy: 3, money: 500, rel: { spouse: 3 } }, log: '둘이서 {food} 맛집 투어를 떠났다.' }
       ] },
-    { id: 'rl_kid_education', age: [30, 60], decision: true, cooldown: 4, cond: { rel: { children: 'yes' } },
+    { id: 'rl_kid_education', age: [30, 60], decision: true, cooldown: 4, cond: { rel: { children: 'yes' }, childAge: [6, 18] },
       text: '{child}의 교육 방향을 정해야 한다. 주변은 다 학원에 보낸다.',
       choices: [
         { text: '학원을 여러 개 보낸다', effects: { money: -2000, happy: -1, rel: { children: -3 } }, log: '{child}의 성적은 올랐지만 웃음이 줄었다.' },
         { text: '하고 싶은 걸 하게 둔다', effects: { happy: 3, rel: { children: 6 } }, log: '{child}[이/가] 그림 그리기에 푹 빠졌다.' },
         { text: '같이 책을 읽는 시간을 만든다', effects: { smarts: 1, money: -100, rel: { children: 5 } }, log: '저녁마다 둘이서 한 권씩 읽었다.' }
       ] },
-    { id: 'rl_kid_football', age: [30, 60], decision: true, cooldown: 5, cond: { rel: { children: 'yes' } },
+    { id: 'rl_kid_football', age: [30, 60], decision: true, cooldown: 5, cond: { rel: { children: 'yes' }, childAge: [6, 15] },
       text: '{child}[이/가] 축구를 하고 싶다고 조른다. 유소년 클럽 회비가 꽤 든다.',
       choices: [
         { text: '{localClub}에 보낸다', effects: { money: -800, happy: 3, rel: { children: 8 } }, log: '주말마다 사이드라인에서 목이 쉬었다.' },

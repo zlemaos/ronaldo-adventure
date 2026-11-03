@@ -758,7 +758,7 @@
     text: '{name}의 가게에서 1등 당첨자가 나왔다! 아침부터 가게 앞에 줄이 끝도 없다.',
     choices: [
       { text: '"1등 명당" 현수막을 건다', effects: { money: 15000, fame: 2, fx: ['promote'] }, log: '매출이 세 배가 됐다. 정작 비결은 아무것도 없다.' },
-      { text: '나도 한 장 사 본다', effects: { money: -5, fx: ['lottery'] }, log: '남의 꿈만 팔다가 처음으로 내 꿈을 하나 샀다.' }
+      { text: '나도 한 장 사 본다', effects: { fx: ['buyLottery'] }, log: '남의 꿈만 팔다가 처음으로 내 꿈을 하나 샀다.' }
     ]
   });
   E({

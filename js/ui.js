@@ -103,8 +103,8 @@
     setTimeout(function () { el.remove(); }, 1000);
   }
   function celebrate(kind, siuuPlayed) {
-    var label = { trophy: '우승!', ballon: '발롱도르!', worldcup: '월드컵 우승!', goal: '골!!', achieve: '업적 달성!' }[kind] || '축하해요!';
-    if (!siuuPlayed) A.play(kind === 'achieve' ? 'achieve' : 'trophy');
+    var label = { trophy: '우승!', ballon: '발롱도르!', worldcup: '월드컵 우승!', goal: '골!!', achieve: '업적 달성!', peak: '정상에 올랐다!', jackpot: '잭팟!', nobel: '노벨상 수상!' }[kind] || '축하해요!';
+    if (!siuuPlayed) A.play(kind === 'achieve' ? 'achieve' : kind === 'peak' ? 'cheer' : kind === 'jackpot' ? 'jackpot' : 'trophy');
     app.mood = 'celebrate'; app.moodUntil = performance.now() + 3000;
     var root = $('#fx-root');
     var conf = doc.createElement('canvas'); conf.width = 160; conf.height = 96; conf.className = 'px';
@@ -239,12 +239,13 @@
   function renderGame() {
     app.screen = 'game';
     var s = app.s;
+    prevMoney = null;
     var chip = $('#seed-chip'); chip.hidden = false; chip.textContent = '시드 ' + s.seed + (s.generation > 1 ? ' · ' + s.generation + '대' : '');
     var scr = $('#screen'); scr.innerHTML = '';
     var el = h('<div class="game">' +
       '<aside class="side">' +
       '  <section class="card portrait"><div class="portrait-row"><div class="pcv"></div><div class="who" id="who"></div></div></section>' +
-      '  <section class="card"><div class="card-h">능력치</div><div class="card-b stats" id="stats"></div><div class="traits" id="traits"></div></section>' +
+      '  <section class="card"><div class="card-h">능력치</div><div class="card-b stats" id="stats"></div><div class="traits" id="traits"></div><div class="bodytal" id="bodytal"></div></section>' +
       '  <div class="actionbar" id="actionbar"><button class="ab-auto" id="btn-auto" aria-pressed="false"></button><button class="ab-speed" id="btn-speed" aria-label="속도"></button><button class="age-btn" id="btn-age"></button></div>' +
       '</aside>' +
       '<section class="card logcol"><div class="card-h">인생 기록 <span class="muted" id="log-count"></span></div><div class="log" id="log"></div></section>' +
@@ -260,9 +261,10 @@
 
   function refresh(full) {
     if (app.screen !== 'game') return;
-    renderWho(); renderStats(); renderTraits(); renderAgeBtn(); renderLog(full); renderTabs(); renderPanel();
+    renderWho(); renderStats(); renderTraits(); renderBody(); renderAgeBtn(); renderLog(full); renderTabs(); renderPanel();
   }
 
+  var prevMoney = null;
   function renderWho() {
     var s = app.s, c = country();
     var ap = ''; for (var i = 0; i < E.AP_PER_YEAR; i++) ap += '<i class="' + (i < s.ap ? '' : 'off') + '"></i>';
@@ -271,9 +273,16 @@
       '<div class="nm"><span class="age">' + s.age + '살</span><span>' + esc(E.genName(s.generation)) + '</span></div>' +
       '<div class="sub">' + esc(c.name) + ' · ' + esc(where) + ' · ' + s.year + '년</div>' +
       '<div class="sub">' + esc(s.job ? E.jobTitle(s) : eduLabel(s)) + '</div>' +
+      (s.route && !E.isMontage(s) ? '<div class="sub route-chip">🧭 ' + esc(E.Routes.label(s)) + '</div>' : '') +
       '<div class="money">' + esc(money(s.money)) + '</div>' +
       (E.isMontage(s) ? '<div class="ap">아기 시절 · 자동으로 넘어가요</div>' : '<div class="ap">행동력 ' + ap + '</div>');
+    // a change of more than ~a tenth of the balance (or of a month's wage) makes the money bounce
+    if (prevMoney != null && s.money !== prevMoney && Math.abs(s.money - prevMoney) >= Math.max(Math.abs(prevMoney) * 0.1, 30 * c.wage)) {
+      $('#who .money').classList.add(s.money > prevMoney ? 'jump-up' : 'jump-down');
+    }
+    prevMoney = s.money;
   }
+  function inSchool(s) { return ['elem', 'middle', 'high', 'univ', 'grad'].indexOf(s.edu.stage) >= 0; }
   function eduLabel(s) {
     var c = country(), st = c.school[s.edu.stage];
     if (st && st.school) return st.school + ' 재학';
@@ -281,7 +290,12 @@
     if (s.edu.stage === 'grad') return s.edu.univ + ' 대학원';
     if (s.age < c.school.elem.from) return (s.eduFocus ? E.EDU_FOCUS[s.eduFocus].icon + ' ' + E.EDU_FOCUS[s.eduFocus].label + ' 집중 · ' : '') + (s.age < 3 ? '아기' : '미취학 어린이');
     if (s.fb.stage !== 'none' && s.fb.stage !== 'retired') return C.FB_STAGE_LABELS[s.fb.stage];
-    return s.retiredFromWork ? '은퇴' : '무직 · ' + C.DEGREE_LABELS[s.edu.degree];
+    var deg = C.DEGREE_LABELS[s.edu.degree];
+    if (s.job) return E.jobTitle(s) + ' · ' + deg;
+    var r = E.Routes.cur(s);
+    // an unpaid route stage (습작기, 연습생…) is still what the hero does, not 무직
+    if (r && !r.state) return E.Routes.stageTitle(s) + ' · ' + deg;
+    return s.retiredFromWork ? '은퇴' : '무직 · ' + deg;
   }
   var prevStats = {};
   function renderStats() {
@@ -313,6 +327,23 @@
     if (t.alcohol > 0) out.push('<span class="tchip' + (t.alcohol >= 50 ? ' bad2' : t.alcohol >= 25 ? ' bad1' : '') + '">' + C.TRAIT_ICONS.alcohol + ' 음주 ' + t.alcohol + '</span>');
     if (t.record > 0) out.push('<span class="tchip bad2">' + C.TRAIT_ICONS.record + ' 전과 ' + t.record + '범</span>');
     box.innerHTML = '<span class="traits-h">특성</span>' + out.join('');
+  }
+  // 타고난 몸·재능: body specs rolled at birth and base talents (태교 → 조기 교육 → 학교 과정)
+  var bodyOpen = false;
+  function renderBody() {
+    var s = app.s, box = $('#bodytal'); if (!box || !s.body) return;
+    var RT = E.Routes;
+    var cells = RA.data.bodyAttrs.map(function (a) {
+      var v = a.k === 'height' ? s.body.height + 'cm' : s.body[a.k];
+      return '<span class="bt" title="' + esc(a.desc) + '">' + a.icon + ' ' + esc(a.label) + ' <b>' + v + '</b></span>';
+    }).concat(RA.data.talents.map(function (a) {
+      return '<span class="bt tal" title="' + esc(a.desc) + '">' + a.icon + ' ' + esc(a.label) + ' <b>' + (s.talent ? s.talent[a.k] : 0) + '</b></span>';
+    }));
+    box.innerHTML = '<details' + (bodyOpen ? ' open' : '') + '><summary>🧬 타고난 몸 · 재능</summary>' +
+      '<p class="hint">몸(키·체격·반사신경…)은 태어날 때 정해져요. 재능(0~100)은 태교·조기 교육·학교 과정으로 자라요. 길마다 필요한 몸과 재능이 달라서, 맞을수록 더 멀리 갑니다.' + (s.age < 18 ? ' 예상 키는 다 자랐을 때의 키예요.' : '') + '</p>' +
+      '<div class="bts">' + cells.join('') + '</div></details>';
+    box.querySelector('details').addEventListener('toggle', function (e) { bodyOpen = e.target.open; });
+    void RT;
   }
   function renderAgeBtn() {
     var s = app.s, b = $('#btn-age'), au = $('#btn-auto'), sp = $('#btn-speed');
@@ -436,20 +467,33 @@
     p.appendChild(h('<p class="hint">관계는 "가족과 시간", "친구 만나기", "데이트" 활동과 사건 선택으로 바뀝니다.</p>'));
   }
 
+  // the current route: stage ladder, what the next stage needs, and where the route can lead
+  function routeHtml(s) {
+    var d = E.Routes.panel(s), r = d.route;
+    var html = '<div class="section-title">지금 걷는 길</div><div class="route-now"><b>' + esc(r.icon + ' ' + r.name) + '</b>' + (r.state ? '' : ' · ' + esc(d.title)) +
+      (d.track ? '<div class="muted">학교 과정: ' + esc(d.track) + '</div>' : '') +
+      (!r.state && r.fit != null && E.Routes.isLadder(r) ? '<div class="muted">이 길과 맞는 정도 ' + d.fit + '/100 · 길 실력 ' + d.skill + '/100 <span class="hint">(맞는 정도 = 이 길에 필요한 몸·재능·능력치의 평균)</span></div>' : '') + '</div>';
+    if (d.ladder.length) html += '<div class="ladder">' + d.ladder.map(function (x, i) { return '<div class="' + (x.cur ? 'cur' : x.done ? 'done' : '') + '">' + (i + 1) + '. ' + esc(x.t) + (x.peak ? ' 🏆' : '') + '</div>'; }).join('') + '</div>';
+    if (d.next) html += '<p class="hint">' + esc(d.next) + '</p>';
+    if (d.exits.length) html += '<p class="hint">이 길에서 갈 수 있는 곳: ' + d.exits.map(function (x) { return esc(x.name) + '(' + esc(x.why) + ')'; }).join(', ') + '</p>';
+    return html;
+  }
   function panelCareer(p) {
     var s = app.s, c = country();
-    var html = '<div class="section-title">학업</div><dl class="kv">' +
-      '<dt>현재</dt><dd>' + esc(eduLabel(s)) + '</dd>' +
+    var html = routeHtml(s) + '<div class="section-title">학업</div><dl class="kv">' +
+      '<dt>현재</dt><dd>' + esc(inSchool(s) || s.age < c.school.elem.from ? eduLabel(s) : '학교를 마쳤다') + '</dd>' +
       '<dt>최종 학력</dt><dd>' + esc(C.DEGREE_LABELS[s.edu.degree]) + (s.edu.major ? ' · ' + esc(C.MAJORS[s.edu.major]) : '') + '</dd>' +
       '<dt>학교 제도</dt><dd class="muted">' + esc(c.school.elem.name + ' ' + c.school.elem.from + '–' + c.school.elem.to + '세 · ' + c.school.middle.name + ' ' + c.school.middle.from + '–' + c.school.middle.to + '세 · ' + c.school.high.name + ' ' + c.school.high.from + '–' + c.school.high.to + '세 · ' + c.school.exam.name + ' ' + c.school.exam.age + '세') + '</dd>' +
       (s.edu.examScore != null ? '<dt>' + esc(c.school.exam.name) + '</dt><dd>' + s.edu.examScore + '점</dd>' : '') +
       '</dl><div class="section-title">직업</div>';
     if (s.job) {
       var k = E.careerIndex()[s.job.id];
-      html += '<dl class="kv"><dt>직업</dt><dd>' + esc(k.name) + ' <span class="muted">(' + esc(C.SECTORS[k.sector]) + ')</span></dd><dt>연봉</dt><dd class="money">' + esc(money(E.salaryOf(s, k, s.job.level))) + '</dd><dt>평판</dt><dd>' + Math.round(s.job.perf) + '/100</dd><dt>근속</dt><dd>' + s.job.years + '년</dd></dl>' +
-        '<div class="ladder">' + k.ladder.map(function (t, i) { return '<div class="' + (i === s.job.level ? 'cur' : i < s.job.level ? 'done' : '') + '">' + (i + 1) + '. ' + esc(E.ladderTitle(s, k, i)) + '</div>'; }).join('') + '</div>' +
+      // the route panel above already shows this job's ladder (route stages or the job's own ranks)
+      var shown = E.Routes.panel(s).ladder.length && E.Routes.ofCareer(s.job.id) === s.route.id;
+      html += '<dl class="kv"><dt>직업</dt><dd>' + esc(k.name) + ' · ' + esc(E.rankTitle(s)) + ' <span class="muted">(' + esc(C.SECTORS[k.sector]) + ')</span></dd><dt>연봉</dt><dd class="money">' + esc(money(E.salaryOf(s, k, s.job.level))) + '</dd><dt>평판</dt><dd>' + Math.round(s.job.perf) + '/100</dd><dt>근속</dt><dd>' + s.job.years + '년</dd></dl>' +
+        (shown ? '' : '<div class="ladder">' + k.ladder.map(function (t, i) { return '<div class="' + (i === s.job.level ? 'cur' : i < s.job.level ? 'done' : '') + '">' + (i + 1) + '. ' + esc(E.ladderTitle(s, k, i)) + '</div>'; }).join('') + '</div>') +
         '<p class="hint">' + esc(k.desc) + '</p>';
-    } else html += '<p class="muted">' + (s.age < 14 ? '아직 일할 나이가 아닙니다.' : '직업이 없습니다. 활동 탭의 "구직/이직"에서 120가지가 넘는 직업에 지원할 수 있어요.') + '</p>';
+    } else html += '<p class="muted">' + (s.age < 14 ? '아직 일할 나이가 아닙니다.' : (E.Routes.managesJob(s) ? '아직 급여를 받는 자리는 아니에요. 지금 걷는 길에서 다음 단계로 올라서면 직함이 생겨요.' : '직업이 없습니다. 활동 탭의 "구직/이직"에서 지금 길에서 갈 수 있는 직업에 지원할 수 있어요.')) + '</p>';
     if (s.jobHistory.length) html += '<div class="section-title">경력</div><div class="ladder">' + s.jobHistory.slice(-8).reverse().map(function (j) { return '<div>' + j.from + '–' + j.to + '세 · ' + esc(j.name) + ' · ' + esc(j.title) + ' <span class="muted">(' + esc(j.why) + ')</span></div>'; }).join('') + '</div>';
     p.innerHTML = html;
     var pb = h('<button class="btn" style="margin-top:12px;width:100%">🧭 진로 지도 (열린 길 · 잠긴 길)</button>');
@@ -568,7 +612,7 @@
       var pct = ch.bet ? '<span class="p odds">' + Math.round(ch.bet.odds * 100) + '% · 💰×' + ch.bet.mult + '</span>'
         : ch.chance != null ? '<span class="p">성공 ' + Math.round(ch.chance * 100) + '%</span>' : '';
       var extra = (ch.risky ? '<span class="risky-tag">⚠️ 위험한 선택</span>' : '') +
-        (ch.bet ? '<span class="desc">판돈 ' + esc(money(ch.bet.stake)) + ' · 이기면 ' + esc(money(Math.round(ch.bet.stake * (ch.bet.mult - 1)))) + ' 벌고, 지면 잃어요. 🎲 도박 중독 +' + ch.bet.addict + '</span>' : '') +
+        (ch.bet ? '<span class="desc">판돈 ' + esc(money(ch.bet.stake)) + ' · 이기면 ' + esc(money(Math.round(ch.bet.stake * (ch.bet.mult - 1)))) + ' 벌고, 지면 잃어요. 아주 드물게 잭팟(' + E.JACKPOT.x + '배 더)이 터져요. 🎲 도박 중독 +' + ch.bet.addict + '</span>' : '') +
         (ch.career ? '<span class="desc">💼 진로: ' + esc(ch.career) + '</span>' : '') +
         (ch.desc ? '<span class="desc">' + esc(ch.desc) + '</span>' : '') + (ch.preview ? chipsHtml(ch.preview, true) : '');
       var b = h('<button class="btn choice' + (ch.desc ? ' has-desc' : '') + (ch.risky ? ' is-risky' : '') + '" ' + (ch.enabled ? '' : 'aria-disabled="true"') + '><span class="ct"><span>' + esc(ch.text) + '</span>' + extra + '</span>' + (ch.enabled ? pct : '<span class="p">조건 부족</span>') + '</button>');
@@ -587,14 +631,45 @@
       cvHolder.appendChild(pc);
     } else cvHolder.appendChild(portraitCanvas('', function () { return scene; }, function () { return lookOf(app.s); }));
   }
+  // Bet result: the won/lost amount counts up in a banner, coins fall on a win, slot reels on a jackpot.
+  function betFx(bet) {
+    var root = $('#fx-root'); if (!root || !bet || !bet.delta) return;
+    var up = bet.delta > 0;
+    var el = h('<div class="bet-fx ' + (bet.jackpot ? 'jackpot' : up ? 'win' : 'lose') + '"><div class="bx">' +
+      (bet.jackpot ? '<div class="reels"><i>7</i><i>7</i><i>7</i></div><div class="bt">잭팟!</div>' : '<div class="bt">' + (up ? '땄다!' : '잃었다…') + '</div>') +
+      '<div class="amt">' + (up ? '+' : '−') + '0</div></div></div>');
+    root.appendChild(el);
+    var amt = el.querySelector('.amt'), total = Math.abs(bet.delta), t0 = performance.now(), dur = bet.jackpot ? 1400 : 900;
+    var coins = null;
+    if (up) {
+      coins = doc.createElement('canvas'); coins.width = 120; coins.height = 80; coins.className = 'px';
+      coins.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;pointer-events:none';
+      root.insertBefore(coins, el);
+    }
+    // purely visual particles (Math.random is fine: not outcome-affecting)
+    var parts = [];
+    for (var i = 0; up && i < (bet.jackpot ? 70 : 26); i++) parts.push({ x: Math.random() * 120, y: -Math.random() * 50, vy: .5 + Math.random(), r: Math.random() < .5 });
+    (function step(t) {
+      var k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+      amt.textContent = (up ? '+' : '−') + money(Math.round(total * e));
+      if (coins) {
+        var c = coins.getContext('2d'); c.clearRect(0, 0, 120, 80);
+        parts.forEach(function (p) { p.y += p.vy; c.fillStyle = '#b8860b'; c.fillRect(Math.round(p.x), Math.round(p.y), 3, 3); c.fillStyle = p.r ? '#f5c518' : '#ffe680'; c.fillRect(Math.round(p.x), Math.round(p.y), 2, 2); });
+      }
+      if (t - t0 < dur + 900) G.requestAnimationFrame(step); else { el.remove(); if (coins) coins.remove(); }
+    })(t0);
+  }
   function onChoose(i, ev) {
     var s = app.s;
     var res = E.choose(s, i);
     if (!res) return;
-    if (res.outcome === 'fail') { A.play('bad'); app.mood = 'sad'; app.moodUntil = performance.now() + 2000; }
-    else { A.play('good'); if (res.outcome === 'success') { app.mood = 'celebrate'; app.moodUntil = performance.now() + 1800; } }
+    if (res.bet) { A.play(res.bet.jackpot ? 'jackpot' : res.bet.won ? 'coins' : 'lose'); betFx(res.bet); app.mood = res.bet.won ? 'celebrate' : 'sad'; app.moodUntil = performance.now() + 2000; }
+    else if (res.outcome === 'fail') { A.play('bad'); app.mood = 'sad'; app.moodUntil = performance.now() + 2000; }
+    else { A.play(res.sound || 'good'); if (res.outcome === 'success') { app.mood = 'celebrate'; app.moodUntil = performance.now() + 1800; } }
     triumphCue();
     var m = $('.modal');
+    var pic = m && m.querySelector('.ev-pic');
+    if (pic && res.fx) { pic.classList.remove('fx-shake', 'fx-glow', 'fx-dim'); void pic.offsetWidth; pic.classList.add('fx-' + res.fx); }
     var body = m.querySelector('.card-b');
     body.innerHTML = categoryHtml(ev.category) + '<p class="ev-text muted">' + esc(ev.text) + '</p>' +
       '<div class="result ' + (res.outcome === 'fail' ? 'fail' : '') + '">' + (res.outcome === 'success' ? '✔ 성공! ' : res.outcome === 'fail' ? '✖ 실패… ' : '') + esc(res.log) +
@@ -659,7 +734,7 @@
     addCanvas(cv, function (t) {
       if (!cur) return;
       var ms = (RA.data.milestones || []).filter(function (m) { return m.id === cur.id; })[0];
-      P.drawMilestone(cv.getContext('2d'), cur.pic, t, c, lookOf(s), ms && ms.props);
+      P.drawMilestone(cv.getContext('2d'), cur.pic, t, c, lookOf(s), cur.props || (ms && ms.props));
     });
     function show() {
       var left = unseenCards();
@@ -801,18 +876,17 @@
   // ---------------------------------------------------------------- 진로 panel
   function showPaths() {
     var s = app.s; if (!s) return;
-    var cp = E.careerPaths(s);
-    var cur = s.job ? E.jobTitle(s) : (s.fb.stage !== 'none' && s.fb.stage !== 'retired' ? C.FB_STAGE_LABELS[s.fb.stage] : eduLabel(s));
-    var PATHS = { path_study: '📚 공부 올인', path_football: '⚽ 축구 올인', path_arts: '🎨 예체능', path_trade: '🔧 기술·장사', path_free: '🛹 자유로운 영혼', path_creator: '📹 내 길(창작)' };
+    var d = E.Routes.panel(s);
     var item = function (x, open) {
-      return '<div class="path ' + (open ? 'open' : 'locked') + '"><div class="pn">' + (open ? '🔓 ' : '🔒 ') + esc(x.name) + ' <span class="muted">· ' + esc(C.SECTORS[x.sector] || '') + (open && x.minAge > s.age ? ' · ' + x.minAge + '세부터' : '') + '</span></div>' +
-        '<div class="pl">' + x.ladder.map(esc).join(' → ') + '</div>' + (open ? '' : '<div class="ph">해금 조건: ' + esc(x.hint || '조건 미달') + '</div>') + '</div>';
+      return '<div class="path ' + (open ? 'open' : 'locked') + '"><div class="pn">' + (open ? '🔓 ' : '🔒 ') + esc(x.name) + ' <span class="muted">· ' + esc(x.group) + ' · 맞는 정도 ' + x.fit + '</span></div>' +
+        (x.ladder ? '<div class="pl">' + x.ladder.map(esc).join(' → ') + '</div>' : '') +
+        '<div class="ph">' + esc(x.how ? '시작: ' + x.how + '. ' : '') + esc(x.text) + (open ? '' : ' · 지금 부족한 것: ' + esc(x.miss.join(', '))) + '</div></div>';
     };
-    var m = modal('<div class="card-h">🧭 진로 <button class="btn btn-sm btn-ghost" id="x">닫기</button></div><div class="card-b">' +
-      '<div class="section-title">지금 걷는 길</div><p>' + esc(cur) + (cp.pathFlags.length ? '<br><span class="muted">진로 결정: ' + cp.pathFlags.map(function (f) { return PATHS[f] || f; }).join(', ') + '</span>' : '') + '</p>' +
-      '<p class="muted">지금 지원할 수 있는 직업 ' + cp.available + '개 · 활동 탭의 "구직/이직"에서 지원해요.</p>' +
-      '<div class="section-title">열린 특별 진로 ' + cp.open.length + '</div><div class="paths">' + (cp.open.map(function (x) { return item(x, true); }).join('') || '<p class="muted">아직 없어요.</p>') + '</div>' +
-      '<div class="section-title">잠긴 진로 ' + cp.locked.length + '</div><div class="paths">' + cp.locked.map(function (x) { return item(x, false); }).join('') + '</div>' +
+    var m = modal('<div class="card-h">🧭 진로 지도 <button class="btn btn-sm btn-ghost" id="x">닫기</button></div><div class="card-b">' +
+      routeHtml(s) +
+      '<p class="hint">길은 정해진 출구로만 바뀌어요: 실패·방출·부상·은퇴·지침·스캔들, 또는 갈림길에서 내가 고를 때. 운동·연예·예술·전문직 길은 입단·오디션·면허로 시작하고, 회사·장사 같은 길은 "구직/이직"으로 시작해요.</p>' +
+      '<div class="section-title">지금 시작할 수 있는 길 ' + d.open.length + '</div><div class="paths">' + (d.open.map(function (x) { return item(x, true); }).join('') || '<p class="muted">지금은 없어요. 나이·학교 과정·몸과 재능이 맞으면 열려요.</p>') + '</div>' +
+      '<div class="section-title">아직 닫힌 길 ' + d.locked.length + '</div><div class="paths">' + d.locked.map(function (x) { return item(x, false); }).join('') + '</div>' +
       '</div>', { dismiss: true });
     m.querySelector('#x').addEventListener('click', closeModalAndGo);
   }
@@ -845,7 +919,7 @@
       '<p>⓪ 아기 시절(0~4살)은 사진첩처럼 자동으로 흘러가요. 태교와 조기 교육, 두 가지만 직접 골라요.</p>' +
       '<p>① <b class="gold">활동</b> 탭에서 한 해에 행동력 3만큼 하고 싶은 일을 고르세요.</p>' +
       '<p>② <b class="gold">+1살 나이 먹기</b>를 누르면 한 해가 지나고 사건이 일어납니다. 선택지마다 결과가 다르고, 어떤 선택은 몇 년 뒤에 돌아옵니다.</p>' +
-      '<p>③ 축구 실력이 충분하면 동네 클럽 → 지역 클럽 → 12살 아카데미 → 프로로 이어지는 정석 루트가 열려요. 공부하면 의사·변호사·우주비행사, 범죄를 저지르면 감옥… 무엇이든 될 수 있습니다.</p>' +
+      '<p>③ 인생은 <b class="gold">길(루트)</b>을 따라 이어져요. 태어날 때 정해진 몸(키·체격·목소리…)과 태교·조기 교육으로 생긴 재능, 13살·16살에 고르는 학교 과정(진학반·문과·이과·예체능·특성화·연습생…)에 따라 열리는 길이 달라요. 축구·농구·야구·격투기, 아이돌·가수·밴드·배우·개그맨·모델, 미술·요식업, 법조계·의료계, 회사·공무원·장사… 한 길에 들어서면 그 길의 일만 일어나고, 실패·부상·은퇴나 갈림길의 선택으로만 다음 길로 넘어가요. 학업·직업 탭과 🧭 진로 지도에서 지금 단계와 다음 조건을 볼 수 있어요.</p>' +
       '<p>④ 생을 마치면 인생 결산과 칭호가 나오고, 자녀가 있으면 유산을 물려받아 자녀의 삶을 이어 갈 수 있어요.</p>' +
       '<p>⑤ 아래쪽 <b class="gold">▶ 자동 진행</b>을 켜면 해마다 저절로 넘어가고, 선택이 필요할 때만 멈춰요. 1x/2x로 속도를 바꿀 수 있어요.</p>' +
       '<p class="muted">같은 시드에서 같은 선택을 하면 똑같은 인생이 펼쳐집니다. Enter 키로도 나이를 먹을 수 있어요.</p></div>', { dismiss: true });

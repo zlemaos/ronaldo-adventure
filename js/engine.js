@@ -347,6 +347,8 @@
       else if (want === 'dead') { if (st !== 'dead') return false; }
       else if (want === 'no') { if (st === 'alive' || st === 'yes') return false; }
     }
+    // childAge [min, max]: some living child is that old (a teen-door scene needs a teenager)
+    if (cond.childAge && !peopleByRel(s, 'children').some(function (p) { return p.alive && p.age >= cond.childAge[0] && p.age <= cond.childAge[1]; })) return false;
     return true;
   };
 
@@ -528,7 +530,8 @@
   E.currentEvent = function (s) {
     if (!s.queue.length) return null;
     var ev = E.eventIndex()[s.queue[0]];
-    if (!ev || !E.careerStoryOk(s, ev) || (s.jail > 0 && !E.jailOk(ev)) ||
+    // `live`: a queued system prompt whose premise may lapse before it is shown (e.g. the job ended)
+    if (!ev || !E.careerStoryOk(s, ev) || (s.jail > 0 && !E.jailOk(ev)) || (ev.live && !ev.live(s)) ||
         (!ev.manual && (!E.personsOk(s, ev) || !E.condMatches(s, ev.cond) || (ev.when && !ev.when(s))))) { s.queue.shift(); return E.currentEvent(s); }
     var text = E.eventText(s, ev);
     var cat = E.eventCategory(ev);
@@ -536,10 +539,10 @@
       id: ev.id, text: E.render(s, text), scene: ev.scene || E.sceneFor(s, ev), pick: !!ev.pick, pic: ev.pic || null,
       category: { key: ev._cat, label: cat.label, icon: cat.icon, color: cat.color, pic: cat.pic },
       choices: eventChoices(s, ev).map(function (ch, i) {
-        var chance = ch.bet ? ch.bet.odds : ch.check ? E.checkChance(s, ch.check) : null;
+        var chance = ch.bet ? E.betWinChance(ch.bet) : ch.check ? E.checkChance(s, ch.check) : null;
         return { i: i, text: E.render(s, ch.text), enabled: E.choiceAvailable(s, ch), chance: chance,
           desc: ch.desc ? E.render(s, ch.desc) : null, preview: ch.preview || E.autoPreview(ch), risky: E.isRisky(ch),
-          bet: ch.bet ? { odds: ch.bet.odds, mult: ch.bet.mult, stake: E.betStake(s, ch.bet), addict: ch.bet.addict != null ? ch.bet.addict : 3 } : null,
+          bet: ch.bet ? { odds: E.betWinChance(ch.bet), mult: ch.bet.mult, stake: E.betStake(s, ch.bet), addict: ch.bet.addict != null ? ch.bet.addict : 3 } : null,
           career: ch.career ? (E.careerIndex()[ch.career] || {}).name : null };
       })
     };
@@ -573,17 +576,29 @@
     return Object.keys(out).length ? out : null;
   };
   // Money at stake for a bet (internal money units)
+  // Stakes scale with what the hero can actually lay on the table — savings or a year's income,
+  // whichever is larger — so a win is felt even when the savings are gone (gamblers bet their pay).
   E.betStake = function (s, bet) {
     var w = wage(s), m = Math.max(0, s.money);
+    var k = s.job && careerById(s.job.id);
+    var income = k ? E.salaryOf(s, k, s.job.level) : (s.pension || 0);
+    var base = Math.max(m, income);
     switch (bet.stake) {
-      case 'tiny': return Math.round(5 * w);
-      case 'small': return Math.round(Math.max(20 * w, m * 0.02));
-      case 'medium': return Math.round(Math.max(200 * w, m * 0.1));
-      case 'big': return Math.round(Math.max(1000 * w, m * 0.3));
-      case 'all': return Math.round(Math.max(2000 * w, m));
+      case 'tiny': return Math.round(Math.max(5 * w, income * 0.005));
+      case 'small': return Math.round(Math.max(20 * w, base * 0.1));
+      case 'medium': return Math.round(Math.max(200 * w, base * 0.25));
+      case 'big': return Math.round(Math.max(1000 * w, base * 0.5));
+      case 'all': return Math.round(Math.max(2000 * w, m, income));
     }
     return Math.round(20 * w);
   };
+  // A rare jackpot on top of an ordinary win. Base odds are scaled down by the same factor so the
+  // expected return of every bet is unchanged (still below 1 — the house wins over a life).
+  var JACKPOT_P = 0.04, JACKPOT_X = 5;
+  E.GAMBLER_SWING = [-1.4, 1.1];
+  E.JACKPOT = { p: JACKPOT_P, x: JACKPOT_X };
+  // the real chance of winning, shown to the player as is ('tiny' kid bets have no jackpot)
+  E.betWinChance = function (bet) { return bet.stake === 'tiny' ? bet.odds : bet.odds / (1 + JACKPOT_P * (JACKPOT_X - 1)); };
   E.checkChance = function (s, chk) {
     if (typeof chk.odds === 'number') return chk.odds; // fixed odds (dice, cards, being caught)
     return clamp(0.5 + ((s.stats[chk.stat] || 0) - chk.diff) / 40, chk.min != null ? chk.min : 0.05, chk.max != null ? chk.max : 0.95);
@@ -605,19 +620,23 @@
     if (choices.length >= 2) { s.dec = s.dec || {}; s.dec[s.age] = (s.dec[s.age] || 0) + 1; }
     var betNote = '';
     if (ch.bet) {
-      var stake = E.betStake(s, ch.bet), won = rnd(s) < ch.bet.odds;
+      var stake = E.betStake(s, ch.bet), won = rnd(s) < E.betWinChance(ch.bet);
+      var jackpot = won && ch.bet.stake !== 'tiny' && rnd(s) < JACKPOT_P;
       branch = won ? ch.success : ch.fail;
       res.outcome = won ? 'success' : 'fail';
-      var delta = won ? Math.round(stake * (ch.bet.mult - 1)) : (ch.bet.stake === 'tiny' ? 0 : -stake);
+      // a win returns stake × mult (× JACKPOT_X on a jackpot); the delta is the profit
+      var delta = won ? Math.round(stake * ch.bet.mult * (jackpot ? JACKPOT_X : 1) - stake) : -stake;
       s.money += delta;
       if (delta) res.changes.push({ k: 'money', d: delta });
-      var add = (ch.bet.addict != null ? ch.bet.addict : 3) + (won && ch.bet.mult >= 3 ? 5 : 0);
+      res.bet = { won: won, jackpot: jackpot, delta: delta, stake: stake };
+      if (jackpot) res.anim = 'jackpot';
+      var add = (ch.bet.addict != null ? ch.bet.addict : 3) + (won && ch.bet.mult >= 3 ? 5 : 0) + (jackpot ? 8 : 0);
       applyEffects(s, { gamble: add }, res.changes);
       s.gambleLog = s.gambleLog || { plays: 0, wins: 0, net: 0 };
       s.gambleLog.plays++; if (won) s.gambleLog.wins++; s.gambleLog.net += delta;
       s.y.bets = (s.y.bets || 0) + 1;
-      if (won && ch.bet.mult >= 3) E.triumph(s, 'jackpot');
-      betNote = delta ? ' (' + (delta > 0 ? '+' : '') + T.money(delta, country(s)) + ')' : '';
+      if (jackpot || (won && ch.bet.mult >= 3)) E.triumph(s, 'jackpot');
+      betNote = delta ? ' (' + (jackpot ? '🎰 잭팟! 걸었던 돈의 ' + Math.round(ch.bet.mult * JACKPOT_X) + '배 · ' : '') + (delta > 0 ? '+' : '') + T.money(delta, country(s)) + ')' : '';
     } else if (ch.check) {
       var ok = rnd(s) < E.checkChance(s, ch.check);
       branch = ok ? ch.success : ch.fail;
@@ -626,8 +645,7 @@
     applyEffects(s, branch.effects, res.changes);
     if (ch.career && E.careerIndex()[ch.career] && s.jail === 0) {
       var kc = E.careerIndex()[ch.career];
-      if (!s.job || s.job.id !== ch.career) {
-        E.startJob(s, ch.career, 0);
+      if ((!s.job || s.job.id !== ch.career) && E.startJob(s, ch.career, 0) !== false) {
         res.changes.push({ k: 'msg', t: kc.name + '(으)로 새 길을 시작했다. 첫 직함은 "' + E.ladderTitle(s, kc, 0) + '".' });
       }
     }
@@ -639,8 +657,15 @@
     res.log = E.render(s, log || '') + betNote;
     mem.chg = compactChanges(res.changes);
     res.category = E.eventCategory(ev);
+    // how the result card sounds and moves (js/ui.js): grief is quiet, big wins and stage peaks cheer
+    var scn = ev.scene || E.sceneFor(s, ev), cat = res.category.key;
+    var gain = res.changes.reduce(function (a, c) { return a + (c.k === 'happy' || c.k === 'fame' ? c.d : 0); }, 0);
+    res.scene = scn;
+    res.sound = cat === 'memorial' || scn === 'rain' ? 'sorrow' : res.outcome === 'fail' ? 'bad' : (scn === 'party' || gain >= 8 || (res.outcome === 'success' && /stage|hoops|ballpark|ring|runway|stadium/.test(scn))) ? 'cheer' : 'good';
+    res.fx = res.sound === 'sorrow' ? 'dim' : res.outcome === 'fail' ? 'shake' : res.sound === 'cheer' || res.outcome === 'success' ? 'glow' : null;
     if (res.log) addLog(s, res.log, res.outcome === 'fail' ? 'bad' : res.outcome === 'success' ? 'good' : 'event', mem);
     res.changes.forEach(function (c) { if (c.k === 'msg') addLog(s, c.t, 'info'); });
+    if (E.Routes) E.Routes.sync(s);
     dropJailBlocked(s);
     E.checkAchievements(s);
     E.checkDeath(s, true);
@@ -784,10 +809,12 @@
   }
 
   // ---------------------------------------------------------------- careers
+  // the title of the current job; js/routes.js makes it follow the route stage on stage-ladder routes
+  E.rankTitle = function (s) { return E.ladderTitle(s, careerById(s.job.id), s.job.level); };
   E.jobTitle = function (s) {
     if (!s.job) return '무직';
     var k = careerById(s.job.id);
-    return E.ladderTitle(s, k, s.job.level) + (k.special === 'football' ? '' : ' (' + k.name + ')');
+    return E.rankTitle(s) + (k.special === 'football' ? '' : ' (' + k.name + ')');
   };
   // Ladder titles may contain tokens like {leader}; render with a minimal var set (no recursion via vars()).
   E.ladderTitle = function (s, k, level) {
@@ -848,7 +875,7 @@
   function endJob(s, why) {
     if (!s.job) return;
     var k = careerById(s.job.id);
-    s.jobHistory.push({ id: s.job.id, title: E.ladderTitle(s, k, s.job.level), name: k.name, from: s.job.since, to: s.age, why: why, level: s.job.level, top: s.job.level === k.ladder.length - 1 });
+    s.jobHistory.push({ id: s.job.id, title: E.rankTitle(s), name: k.name, from: s.job.since, to: s.age, why: why, level: s.job.level, top: s.job.level === k.ladder.length - 1 });
     s.lastSalary = E.salaryOf(s, k, s.job.level);
     s.job = null;
   }
@@ -863,6 +890,7 @@
       startJob(s, id, 0);
       var msg = k.name + '(으)로 취직했다! 첫 직함은 "' + E.ladderTitle(s, k, 0) + '".';
       addLog(s, msg, 'good');
+      if (E.Routes) E.Routes.sync(s, true);
       E.checkAchievements(s);
       return { ok: true, log: T.fixJosa(msg) };
     }
@@ -878,29 +906,40 @@
     }
     var k = careerById(s.job.id);
     if (k.special === 'football') return; // football module handles pros
+    // youth-only jobs (req.ageOut) end when the hero grows out of them; a plain hiring limit (maxAge) does not
+    if (k.req && k.req.ageOut && s.age > k.req.ageOut) {
+      var note = '나이가 들어 ' + E.rankTitle(s) + ' 자리를 후배에게 넘겼다. ' + k.name + ' 일을 정리하고 어른의 일자리를 찾아 나섰다.';
+      endJob(s, '퇴사');
+      // a part-time state route has no job of its own to fall back on: leave it through its declared exit
+      if (E.Routes && s.route && s.route.id === 'parttime') E.Routes.leave(s, 'quit', note);
+      else { addLog(s, note, 'info'); if (E.Routes) E.Routes.sync(s, true); }
+      return;
+    }
     var j = s.job;
     j.years++; j.atLevel++;
     var st = s.stats[k.keyStat] || 0;
     var people = ['service', 'education', 'medical', 'entertainment', 'business', 'government', 'media', 'religion', 'public'].indexOf(k.sector) >= 0;
     j.perf = clamp(j.perf + (st - 55) / 10 + ((s.stats.social || 40) - 50) / (people ? 15 : 40) + (rnd(s) * 10 - 5) + (s.y.workHard ? 8 : 0) - (s.y.slack ? 10 : 0), 0, 100);
     var n = k.ladder.length - 1;
-    var gate = j.level < n - 1 || st >= 72; // the top rung needs real excellence
+    var managed = E.Routes && E.Routes.managesJob(s); // route stages set the level of route-ladder jobs
+    var gate = !managed && (j.level < n - 1 || st >= 72); // the top rung needs real excellence
     if (k.special === 'politics' && j.level >= n - 2) gate = gate && s.stats.fame >= 45 && rnd(s) < 0.4; // elections are hard to win
     if (gate && j.perf >= 66 && j.atLevel >= k.promoteYears && j.level < n && rnd(s) < 0.35 + (j.perf - 66) / 60) {
       E.FX.promote(s, true);
-    } else if (j.perf <= 12 && rnd(s) < 0.35) {
+    } else if (!managed && j.perf <= 12 && rnd(s) < 0.35) {
       addLog(s, '실적 부진으로 ' + k.name + ' 일자리에서 해고됐다.', 'bad');
       endJob(s, '해고'); addStat(s, 'happy', -8);
       return;
     }
     var sal = E.salaryOf(s, k, j.level);
     if (k.special === 'gamble') {
-      // a gambler's year swings wildly: from big losses to a fortune, and the habit deepens
-      var swing = Math.round(sal * (rnd(s) * 2.8 - 0.9));
+      // a gambler's year swings wildly: from big losses to a fortune, and the habit deepens.
+      // E.GAMBLER_SWING = [lo, hi] × the year's stake level; the average (-0.15) is a loss, like every bet
+      var swing = Math.round(sal * (E.GAMBLER_SWING[0] + rnd(s) * (E.GAMBLER_SWING[1] - E.GAMBLER_SWING[0])));
       s.money += swing;
       s.traits.gamble = clamp((s.traits.gamble || 0) + 2, 0, 100);
-      addLog(s, '🎲 ' + E.jobTitle(s) + '의 한 해: ' + (swing >= 0 ? '+' : '') + T.money(swing, country(s)) + (swing > sal ? ' 대박이 났다!' : swing < 0 ? ' 테이블에서 크게 잃었다.' : ''), swing >= 0 ? 'good' : 'bad');
-      if (swing > sal * 1.2) E.triumph(s, 'jackpot');
+      addLog(s, '🎲 ' + E.jobTitle(s) + '의 한 해: ' + (swing >= 0 ? '+' : '') + T.money(swing, country(s)) + (swing > sal * 0.8 ? ' 대박이 났다!' : swing < -sal * 0.5 ? ' 테이블에서 크게 잃었다.' : swing < 0 ? ' 조금씩 잃었다.' : ''), swing >= 0 ? 'good' : 'bad');
+      if (swing > sal * 0.9) E.triumph(s, 'jackpot');
     } else s.money += Math.round(sal * 0.78);
     s.y.income = (s.y.income || 0) + Math.max(0, sal);
     addStat(s, 'happy', -(k.stress - 2) + (j.perf > 70 ? 1 : 0));
@@ -915,7 +954,7 @@
     if ((k.sector === 'science' || k.id === 'professor') && j.level >= n - 1 && s.stats.smarts >= 92 && rnd(s) < 0.04) {
       addLog(s, '스톡홀름에서 전화가 왔다. 노벨상 수상자로 선정됐다!', 'milestone');
       addStat(s, 'fame', 25); s.money += Math.round(1000000 * wage(s)); E.unlock(s, 'nobel');
-      s.y.anim = 'trophy'; E.triumph(s, 'nobel');
+      s.y.anim = 'nobel'; E.triumph(s, 'nobel');
     }
     // mandatory retirement prompt
     if (s.age >= 65 && k.sector !== 'crime' && k.special !== 'politics') E.queueSys(s, 'sys_retire', 5);
@@ -1109,7 +1148,8 @@
     var mem = { mem: 1 };
     if (p.role === 'father') {
       s.flags.father_dead = s.age;
-      addLog(s, '아버지 ' + nm + '께서 ' + cause + '(으)로 세상을 떠나셨다. 마지막까지 막내의 경기를 이야기하셨다고 한다.', 'death', mem);
+      var played = s.fb.seasons > 0 || ['local', 'regional', 'academy', 'youth', 'pro'].indexOf(s.fb.stage) >= 0;
+      addLog(s, '아버지 ' + nm + '께서 ' + cause + '(으)로 세상을 떠나셨다. ' + (played ? '마지막까지 막내의 경기를 이야기하셨다고 한다.' : '마지막까지 막내 걱정을 하셨다고 한다.'), 'death', mem);
       addStat(s, 'happy', -18);
       E.queueSys(s, 'canon_father_farewell');
       s.y.bereaved = true;
@@ -1175,6 +1215,7 @@
     yearlyMoney(s);
     yearlyPeople(s);
     yearlyKids(s);
+    if (E.Routes) E.Routes.yearly(s);
     if (E.checkDeath(s)) return { events: [] };
     E.applyEduFocus(s);
     if (s.age === 1 && !s.eduFocus) E.queueSys(s, 'sys_edu_focus');
@@ -1195,7 +1236,7 @@
   E.addCard = function (s, card) {
     var text = T.fixJosa(card.text);
     s.cards = s.cards || [];
-    s.cards.push({ id: card.id, pic: card.pic, text: text, chg: card.chg || [], age: s.age });
+    s.cards.push({ id: card.id, pic: card.pic, props: card.props || null, text: text, chg: card.chg || [], age: s.age });
     addLog(s, text, 'card', { pic: card.pic, chg: compactChanges(card.chg), ev: card.id, mem: card.mem ? 1 : null });
   };
   function compactChanges(chg) {
@@ -1208,8 +1249,10 @@
   }
   E.compactChanges = compactChanges;
 
-  E.selectMilestones = function (s) {
+  // afterBirth: called right after the birth card (or first, when a life has no birth card)
+  E.selectMilestones = function (s, afterBirth) {
     var ids = [];
+    if (afterBirth && s.flags.heir) { afterBirth(s); afterBirth = null; }
     (RA.data.milestones || []).forEach(function (m) {
       if (m.age !== s.age && !(Array.isArray(m.age) && s.age >= m.age[0] && s.age <= m.age[1])) return;
       if (s.fired[m.id]) return;
@@ -1218,18 +1261,30 @@
       if (!E.personsOk(s, m)) return;
       if (m.chance != null && rnd(s) >= m.chance) return;
       s.fired[m.id] = 1;
-      var chg = applyEffects(s, m.effects, []);
-      E.addCard(s, { id: m.id, pic: m.pic, text: E.render(s, m.text), chg: chg });
+      // byTalent: the picture follows the child's strongest talent (돌잡이, first word…)
+      var top = m.byTalent ? E.topTalent(s) : null, v = top ? m.byTalent[top] : m;
+      var chg = applyEffects(s, v.effects, []);
+      if (v.talent && E.Routes) { E.Routes.addTalent(s, v.talent, 3); chg.push({ k: 'talent_' + v.talent, d: 3 }); }
+      // props 'doljabi:art' = the 돌잡이 picture with the item of the art talent in the child's hands
+      E.addCard(s, { id: m.id, pic: m.pic, props: top ? (m.props || '') + ':' + top : m.props, text: E.render(s, v.text), chg: chg });
       ids.push(m.id);
+      if (afterBirth && m.id === 'ms_birth') { afterBirth(s); afterBirth = null; }
     });
+    if (afterBirth) afterBirth(s);
     return ids;
   };
+  // the strongest base talent (ties: the order of RA.data.talents); 'sport' before talents exist
+  E.topTalent = function (s) {
+    var best = 'sport', v = -1;
+    (RA.data.talents || []).forEach(function (t) { var x = s.talent ? s.talent[t.k] || 0 : 0; if (x > v) { v = x; best = t.k; } });
+    return best;
+  };
 
-  // Birth happens right after the prenatal pick
+  // Birth happens right after the prenatal pick; E.birthExtras (the body card) comes right after the birth card
   E.birth = function (s) {
     s.born = true;
     addLog(s, T.render('{hometown}에서 태어났다. 집은 {houseLong}[이/]다.', vars(s)), 'milestone'); // "사남매의 막내" is told once, on the birth card
-    E.selectMilestones(s);
+    E.selectMilestones(s, E.birthExtras);
   };
 
   E.applyEduFocus = function (s) {
@@ -1237,9 +1292,11 @@
     if (!f || s.age < 1 || s.age > E.EDU_FOCUS_UNTIL || s.y.focusApplied) return;
     s.y.focusApplied = true;
     var chg = applyEffects(s, f.effects, []);
+    // early education keeps feeding the matching base talent
+    if (f.talent && E.Routes) { E.Routes.addTalent(s, f.talent, 4); chg.push({ k: 'talent_' + f.talent, d: 4 }); }
     var line = f.lines[(s.age - 1) % f.lines.length];
     var text = f.icon + ' 조기 교육(' + f.label + '): ' + line;
-    if (E.isMontage(s)) E.addCard(s, { id: 'focus_' + s.eduFocus, pic: 'focus_' + s.eduFocus, text: text, chg: chg });
+    if (E.isMontage(s)) E.addCard(s, { id: 'focus_' + s.eduFocus, pic: f.pic || 'focus_' + s.eduFocus, text: text, chg: chg });
     else addLog(s, text, 'focus', { chg: compactChanges(chg) });
   };
 
@@ -1276,11 +1333,22 @@
   };
 
   // ---------------------------------------------------------------- scene selection
+  // where each route is lived: the route's own `scene` (data/routes.js; the validator checks that js/pixel.js
+  // draws it). Football picks pitch/stadium by stage below.
+  var ROUTE_SCENE = {};
+  (RA.data.routes || []).forEach(function (r) { if (r.scene && r.id !== 'football') ROUTE_SCENE[r.id] = r.scene; });
+  E.ROUTE_SCENE = ROUTE_SCENE;
   E.sceneFor = function (s, ev) {
     if (s.jail > 0) return 'prison';
     if (ev && ev.id) {
       if (/^fb_|^canon_(join|regional|academy|youth|pro|late)/.test(ev.id)) return s.fb.stage === 'pro' ? 'stadium' : 'pitch';
-      if (/heart|hospital/.test(ev.id)) return 'hospital';
+      if (/surgery|operat|수술/.test(ev.id) || (s.route && s.route.id === 'medical' && /^rt_medical/.test(ev.id))) return 'surgery';
+      if (/heart|hospital|sick|cancer|injur/.test(ev.id)) return 'hospital';
+      if (/^gam_|casino|lotto|lottery|bet/.test(ev.id) || (ev.choices || []).some(function (c) { return c.bet; })) return 'casino';
+      if (/wedding|birthday|reunion|party|celebrat|graduat/.test(ev.id)) return 'party';
+      if (ev.memorial || /grief|funeral|grave|mourn/.test(ev.id) || (E.eventRefs && E.eventRefs(ev).isMemorial)) return 'rain';
+      var rr = E.Routes && E.Routes.eventRoutes(ev);
+      if (rr && rr.length === 1 && ROUTE_SCENE[rr[0]]) return ROUTE_SCENE[rr[0]];
     }
     return E.homeScene(s);
   };
@@ -1289,7 +1357,11 @@
     if (s.jail > 0) return 'prison';
     if (s.fb.stage === 'pro') return 'stadium';
     if (s.sick) return 'hospital';
+    // a route of one's own (농구부, 연습생, 습작기…) is lived in its own place, even while still at school
+    var rs = s.route && ROUTE_SCENE[s.route.id], own = rs && ['school', 'none', 'parttime', 'retired', 'prison'].indexOf(s.route.id) < 0;
+    if (own) return rs;
     if (['elem', 'middle', 'high', 'univ', 'grad'].indexOf(s.edu.stage) >= 0) return s.fb.stage !== 'none' && s.fb.stage !== 'retired' && s.age % 2 ? 'pitch' : 'school';
+    if (rs && s.route.id !== 'prison') return rs;
     if (s.job) {
       var sec = careerById(s.job.id).sector;
       if (sec === 'sports') return 'pitch';

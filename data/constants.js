@@ -6,7 +6,7 @@
   RA.data = RA.data || {};
 
   RA.C = {
-    SAVE_VERSION: 5,
+    SAVE_VERSION: 6,
     HERO_NAME: '호날두',          // the hero is always 호날두 (male or female)
     STATS: ['health', 'happy', 'smarts', 'looks', 'football', 'grit', 'social', 'fame'],
     STAT_LABELS: {
@@ -14,11 +14,14 @@
       football: '축구 실력', grit: '체력/근성', social: '공감/사교', fame: '명성', money: '돈'
     },
     STAT_SHORT: {
-      health: '건강', happy: '행복', smarts: '지능', looks: '외모', football: '축구', grit: '근성', social: '공감', fame: '명성', money: '돈'
+      health: '건강', happy: '행복', smarts: '지능', looks: '외모', football: '축구', grit: '근성', social: '공감', fame: '명성', money: '돈',
+      // base talents (재능), shown as change chips when early education feeds them
+      talent_music: '음악 재능', talent_art: '미술 재능', talent_sport: '운동 감각', talent_logic: '논리 재능', talent_lang: '언어 재능', talent_taste: '미각', talent_stage: '끼'
     },
     // the same icons are used for stat bars, change chips and pick previews
     STAT_ICONS: {
-      health: '❤️', happy: '😊', smarts: '🧠', looks: '✨', football: '⚽', grit: '💪', social: '🤝', fame: '⭐', money: '💰'
+      health: '❤️', happy: '😊', smarts: '🧠', looks: '✨', football: '⚽', grit: '💪', social: '🤝', fame: '⭐', money: '💰',
+      talent_music: '🎵', talent_art: '🎨', talent_sport: '🏅', talent_logic: '🧮', talent_lang: '📖', talent_taste: '🍳', talent_stage: '🎭'
     },
     // School stages (ages per country live in data/countries.js)
     EDU_STAGES: ['none', 'elem', 'middle', 'high', 'univ', 'grad'],
@@ -56,10 +59,12 @@
       'fatherSeekHelp', 'fatherRelapse', 'fatherRecover',
       'newFriend', 'loseFriend', 'recordFriendLoan', 'repayFriendLoan', 'forgetFriendLoan', 'friendDebtLost', 'acceptFriendReturn', 'newPartner', 'breakup', 'marry', 'divorce', 'haveChild',
       'jail', 'fired', 'promote', 'demote', 'quitJob', 'getSick', 'cure', 'adoptPet',
-      'buyHouse', 'buyCar', 'lottery', 'scam', 'moveAbroad', 'becomeMonk', 'leaveMonastery',
+      'buyHouse', 'buyCar', 'lottery', 'buyLottery', 'scam', 'moveAbroad', 'becomeMonk', 'leaveMonastery',
       // round 5: failure routes and life decisions
       'suspend', 'expel', 'holdBack', 'careerEndingInjury', 'deport', 'bankrupt', 'rehab', 'fbBan', 'quickJob',
-      'dropOut', 'enlist'
+      'dropOut', 'enlist',
+      // round 7: route moments (js/routes.js)
+      'rtSkill', 'rtBig', 'rtSetback', 'rtInjury', 'rtScandal', 'rtBurnout'
     ],
     // Traits: hidden/visible tendencies that bad (and good) choices build up. Effects and cond.traits use these keys.
     TRAITS: ['mischief', 'rep', 'gamble', 'alcohol', 'record'],

@@ -69,13 +69,18 @@ test('bets follow their odds, move money, and feed 도박 중독', () => {
   for (let i = 0; i < n; i++) {
     s.queue = ['test_bet']; const m0 = s.money;
     const shown = E.currentEvent(s).choices[0];
-    assert.ok(shown.bet && shown.risky && shown.chance === 0.5);
-    E.choose(s, 0);
-    if (s.money > m0) wins++;
+    assert.ok(shown.bet && shown.risky && shown.chance === E.betWinChance(ev.choices[0].bet) && shown.chance < 0.5);
+    const res = E.choose(s, 0);
+    if (s.money > m0) {
+      wins++;
+      // a win is felt: at least a quarter of the bankroll (medium stake × (mult − 1))
+      assert.ok(s.money - m0 >= Math.round(m0 * 0.25) - 1, 'win felt: ' + (s.money - m0) + ' of ' + m0);
+      if (res.bet.jackpot) assert.ok(s.money - m0 >= m0 * 0.25 * (2 * E.JACKPOT.x - 1) - 1, 'jackpot is big');
+    }
     assert.notStrictEqual(s.money, m0, 'a bet always moves money');
   }
   RA.data.events.pop(); E.resetCaches();
-  assert.ok(wins > n * 0.35 && wins < n * 0.65, 'about 50% wins: ' + wins);
+  assert.ok(wins > n * 0.3 && wins < n * 0.6, 'the shown chance is the real one: ' + wins);
   assert.ok(s.traits.gamble >= 45, 'heavy betting builds addiction');
   assert.ok(s.flags.gambler_unlocked, '2단계 unlocks the 겜블러 path');
   const k = E.careerIndex().pro_gambler;
@@ -83,6 +88,22 @@ test('bets follow their odds, move money, and feed 도박 중독', () => {
   assert.deepStrictEqual(E.jobMissing(s, k).filter(x => !/세/.test(x)), []);
   const fresh = E.newGame({ country: 'kr', seed: 'bet2' }); fresh.age = 30;
   assert.ok(E.jobMissing(fresh, k).some(x => /도박/.test(x)), 'locked paths show their unlock hint');
+});
+
+test('every bet in the game loses on average, jackpots included (the house wins over a life)', () => {
+  const J = E.JACKPOT;
+  for (const ev of RA.data.events) for (const c of ev.choices || []) {
+    if (!c.bet || c.bet.stake === 'tiny') continue;
+    const p = E.betWinChance(c.bet), ret = p * c.bet.mult * ((1 - J.p) + J.p * J.x);
+    assert.ok(ret < 1, ev.id + ': expected return ' + ret.toFixed(3));
+  }
+  // and across whole rascal lives the gambling balance is negative in most lives
+  let neg = 0, n = 0;
+  for (let i = 0; i < 40; i++) {
+    const s = autoplay(RA, { country: COUNTRIES[i % 9], seed: 'house-' + i, bot: 'rascal' });
+    if (s.gambleLog && s.gambleLog.plays >= 3) { n++; if (s.gambleLog.net < 0) neg++; }
+  }
+  assert.ok(n >= 20 && neg / n >= 0.6, 'gambling loses in most lives: ' + neg + '/' + n);
 });
 
 test('failure FX: suspension, expulsion, bankruptcy, deportation, rehab, career-ending injury', () => {
@@ -121,16 +142,16 @@ test('traits: shown as chips, saved, and migrated from v4 saves', () => {
   assert.strictEqual(m.traits.rep, 50);
 });
 
-test('the 진로 panel lists open and locked special paths with hints', () => {
+test('the 진로 panel lists open and locked routes with what is missing', () => {
   const s = E.newGame({ country: 'kr', seed: 'paths' });
   while (s.queue.length) E.choose(s, 0);
-  s.age = 25;
-  const cp = E.careerPaths(s);
+  s.age = 25; s.edu.stage = 'none'; s.edu.degree = 'high'; E.Routes.sync(s);
+  const cp = E.Routes.panel(s);
   assert.ok(cp.locked.length >= 5);
-  const g = cp.locked.find(x => x.id === 'pro_gambler');
-  assert.ok(g && /도박 중독/.test(g.hint));
+  const g = cp.locked.find(x => x.id === 'gamble');
+  assert.ok(g && /도박 중독/.test(g.miss.join(' ')));
   s.traits.gamble = 50;
-  assert.ok(E.careerPaths(s).open.some(x => x.id === 'pro_gambler'));
+  assert.ok(E.Routes.panel(s).open.some(x => x.id === 'gamble'));
 });
 
 test('진로 고민 decisions come at 13-14, 16-17 and 19-20', () => {

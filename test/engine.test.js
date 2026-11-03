@@ -79,15 +79,17 @@ test('career requirements, hiring and promotion ladder', () => {
   assert.deepStrictEqual(E.jobMissing(s, doctor), []);
   assert.ok(E.careerIndex().footballer, 'footballer exists');
   assert.ok(E.jobMissing(s, E.careerIndex().footballer).length > 0, 'pros come via the academy route');
-  E.startJob(s, 'doctor', 0);
+  const sal0 = E.salaryOf(s, doctor, 0), salTop = E.salaryOf(s, doctor, doctor.ladder.length - 1);
+  assert.ok(salTop > sal0, 'salary grows with ladder');
+  // doctors climb through the 의료계 route stages; salaried jobs climb by yearly performance
+  E.startJob(s, 'engineer', 0);
   s.job.perf = 100; s.job.atLevel = 10;
   E.FX.promote(s, true);
   assert.strictEqual(s.job.level, 1);
-  const sal0 = E.salaryOf(s, doctor, 0), salTop = E.salaryOf(s, doctor, doctor.ladder.length - 1);
-  assert.ok(salTop > sal0, 'salary grows with ladder');
   // yearly promotion through ageUp with strong performance
   let promoted = false;
-  for (let i = 0; i < 12 && s.alive; i++) { resolve(s); if (!s.alive) break; s.job && (s.job.perf = 95); E.ageUp(s); if (s.job && s.job.level >= 2) promoted = true; }
+  // (pending storylets are skipped: a first-choice bot would take every job offer and lose the job)
+  for (let i = 0; i < 12 && s.alive; i++) { s.queue = []; s.job && (s.job.perf = 95); E.ageUp(s); if (s.job && s.job.level >= 2) promoted = true; }
   assert.ok(promoted, 'promotes over years');
   // politician top title renders the country leader
   const pol = E.careerIndex().politician;
@@ -206,7 +208,8 @@ test('football canon route can be followed to a pro contract', () => {
   const pol = (s, acts) => acts.find(a => a.id === 'football') || null;
   let pros = 0;
   for (let i = 0; i < 20; i++) {
-    const s = autoplay(RA, { country: 'br', seed: 'pro' + i, policy: pol });
+    // a dedicated player also keeps choosing football at the school crossroads
+    const s = autoplay(RA, { country: 'br', seed: 'pro' + i, policy: pol, prefer: /축구|유스|클럽|입단|계약|사인|뛴다|간다|"네!"|하던 대로/ });
     if (s.fb.seasons > 0) pros++;
   }
   assert.ok(pros >= 8, 'dedicated players usually turn pro, got ' + pros);

@@ -70,14 +70,16 @@
       choices: [
         { text: '최고의 치료를 받게 한다', req: { money: 3000 }, effects: { money: -3000, rel: { father: 10 }, fx: ['fatherSeekHelp', 'fatherSeekHelp'] }, log: '전문 병동으로 옮겼다. {father}[이/가] 오랜만에 맑은 눈으로 웃었다.' },
         { text: '훈련을 쉬고 병상을 지킨다', effects: { rel: { father: 12 }, football: -2, happy: -2, fx: ['fatherSeekHelp'] }, log: '밤마다 손을 잡고 지난 경기 이야기를 들려 드렸다.' },
-        { text: '"가서 뛰어라"는 아버지의 부탁을 따른다', check: { stat: 'football', diff: 45 },
-          success: { effects: { rel: { father: 8 }, fame: 3 }, log: '골을 넣고 하늘을 향해 두 손을 들었다. 병실 TV 앞에서 {father}[이/가] 울었다고 한다.' },
-          fail: { effects: { happy: -4 }, log: '골은 없었다. 그래도 {father}[은/는] "끝까지 뛰는 모습이 좋았다"고 했다.' } }
+        { text: '"가서 네 할 일을 해라"는 아버지의 부탁을 따른다', check: { stat: 'grit', diff: 40 },
+          success: { effects: { rel: { father: 8 }, fame: 1 }, log: '맡은 일을 끝까지 해내고 병실에 소식을 전했다. {father}[이/가] 울었다고 한다.',
+            run: function (s) { if (s.route && s.route.id === 'football' && s.fb.stage === 'pro') return '골을 넣고 하늘을 향해 두 손을 들었다. 병실 TV 앞에서 아버지가 울었다고 한다.'; } },
+          fail: { effects: { happy: -4 }, log: '마음이 병실에 가 있어 일이 손에 잡히지 않았다. 그래도 {father}[은/는] "끝까지 버틴 게 좋았다"고 했다.' } }
       ] },
     { id: 'canon_father_farewell', manual: true, memorial: ['father'], jailOk: true, age: [1, 120],
       text: '장례식장에는 {localClub}의 꼬마 선수들이 낡은 유니폼을 입고 줄지어 섰다. {father}[이/가] 평생 빨고 개던 유니폼들이다.',
       choices: [
-        { text: '아버지의 이름을 가슴에 새기고 뛴다', effects: { grit: 5, football: 1, happy: 2 }, log: '그 뒤로 골을 넣을 때마다 하늘을 가리켰다.' },
+        { text: '아버지의 이름을 가슴에 새긴다', effects: { grit: 5, happy: 2 }, log: '그 뒤로 힘든 날마다 하늘을 올려다봤다.',
+          run: function (s) { if (s.route && s.route.id === 'football') return '그 뒤로 골을 넣을 때마다 하늘을 가리켰다.'; } },
         { text: '한동안 아무것도 하지 못한다', effects: { happy: -5, health: -2, rel: { family: 6 } }, log: '가족들이 번갈아 곁을 지켰다. 아무도 서두르라고 말하지 않았다.' },
         { text: '술은 평생 입에 대지 않기로 맹세한다', effects: { health: 3, flags: ['teetotal'], unflags: ['drinker'] }, log: '아버지를 앗아 간 병을 이해하게 됐다. 그리고 미워하지 않기로 했다.' }
       ] },
@@ -439,7 +441,7 @@
           fail: { effects: { health: -4, happy: 2 }, log: '전반 10분 만에 햄스트링이 올라왔다. 다들 웃었다.' } },
         { text: '벤치에서 웃으며 즐긴다', effects: { happy: 4 }, log: '팬들과 사진을 찍느라 경기를 거의 못 봤다.' }
       ] },
-    { id: 'fb_sunday_league', age: [25, 65], cooldown: 4, weight: 8, cond: { fb: ['none'], stats: { football: [30, 100] } },
+    { id: 'fb_sunday_league', age: [25, 55], cooldown: 4, weight: 8, cond: { fb: ['none'], stats: { football: [30, 100] } },
       text: '동네 조기축구회에서 "용병"으로 뛰어 달라는 연락이 왔다.',
       choices: [
         { text: '나간다', check: { stat: 'football', diff: 35 },

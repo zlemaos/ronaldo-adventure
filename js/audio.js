@@ -36,15 +36,24 @@
     goal: function () { seq([N.G4, N.C5, N.E5, N.G5, 0, N.E5, N.G5, N.C6], 0.08, 'square', 0.06); },
     trophy: function () { seq([N.C5, N.C5, N.G5, N.G5, N.A5, N.A5, N.G5, 0, N.E5, N.G5, N.C6], 0.09, 'square', 0.06); tone(130, 0, 0.9, 'triangle', 0.05); },
     death: function () { seq([N.A4, N.F4, N.D4, N.C4], 0.28, 'triangle', 0.07); },
-    achieve: function () { seq([N.C6, N.G5, N.C6], 0.06, 'square', 0.04); }
+    achieve: function () { seq([N.C6, N.G5, N.C6], 0.06, 'square', 0.04); },
+    // gambling: falling coins on a win, a slot-machine run on a jackpot, a sinking slide on a loss
+    coins: function () { seq([N.C6, N.G5, N.C6, N.E5, N.C6], 0.05, 'square', 0.04); },
+    jackpot: function () { seq([N.C5, N.E5, N.G5, N.C6, N.G5, N.C6, N.E5, N.G5, N.C6, 0, N.C6, N.C6], 0.06, 'square', 0.05); tone(196, 0, 0.8, 'triangle', 0.05); },
+    lose: function () { seq([N.G4, N.E4, N.D4, N.C4], 0.1, 'triangle', 0.06); },
+    // grief: a slow two-note sigh; cheer: a short crowd-ish triad for stage/route peaks
+    sorrow: function () { seq([N.E4, 0, N.C4], 0.32, 'triangle', 0.05); },
+    cheer: function () { seq([N.G4, N.C5, N.E5, N.G5, N.E5, N.G5], 0.07, 'triangle', 0.07); }
   };
 
   // SIUU celebration: a real recording played with an HTMLAudioElement (works from file://, no fetch).
+  // The file itself is mastered quiet (mean ≈ -28 dBFS, like the synth effects) because iOS ignores
+  // element.volume, so the level must live in the asset, not in code.
   // Phones only allow audio after a user gesture, so the element is created and "unlocked" on the first tap.
   var siuuEl = null, unlocked = false, realPlay = false;
   function siuuElement() {
     if (!siuuEl && G.Audio) {
-      try { siuuEl = new G.Audio('assets/audio/siuu.mp3'); siuuEl.preload = 'auto'; siuuEl.volume = 0.9; } catch (e) { siuuEl = null; }
+      try { siuuEl = new G.Audio('assets/audio/siuu.mp3'); siuuEl.preload = 'auto'; siuuEl.volume = 1; } catch (e) { siuuEl = null; }
     }
     return siuuEl;
   }
@@ -74,6 +83,7 @@
     isMuted: function () { return muted; },
     toggle: function () {
       muted = !muted;
+      if (muted && siuuEl) { try { siuuEl.pause(); } catch (e) { /* ignore */ } }
       try { G.localStorage && G.localStorage.setItem('ronaldo-adventure.muted', muted ? '1' : '0'); } catch (e) { /* ignore */ }
       return muted;
     }

@@ -124,7 +124,7 @@ function validate(RA) {
     if (ev.age && !(Array.isArray(ev.age) && ev.age[0] <= ev.age[1])) err(w + ': age');
     (ev.countries || []).forEach(c => { if (!COUNTRIES.includes(c)) err(w + ': bad country ' + c); });
     const cd = ev.cond || {};
-    const allowed = ['stats', 'money', 'flags', 'fb', 'edu', 'degree', 'career', 'sector', 'level', 'rel', 'gender', 'recent', 'family', 'traits', 'jailed'];
+    const allowed = ['stats', 'money', 'flags', 'fb', 'edu', 'degree', 'career', 'sector', 'level', 'rel', 'gender', 'recent', 'family', 'traits', 'jailed', 'childAge'];
     Object.keys(cd).forEach(k => { if (!allowed.includes(k)) err(w + ': unknown cond ' + k); });
     if (cd.family && cd.family !== 'all') err(w + ': cond.family must be "all"');
     if (ev.memorial && ev.memorial !== true && !Array.isArray(ev.memorial)) err(w + ': memorial must be true or a list');
@@ -139,7 +139,8 @@ function validate(RA) {
     if (Array.isArray(cd.career)) cd.career.forEach(c => { if (careers.length && !cids.has(c)) err(w + ': unknown career ' + c); });
     else if (cd.career && !['any', 'none'].includes(cd.career)) err(w + ': career must be array/any/none');
     if (cd.rel) Object.keys(cd.rel).forEach(r => { if (!['father', 'mother', 'partner', 'spouse', 'children', 'friend', 'bro', 'sis1', 'sis2'].includes(r)) err(w + ': bad cond rel ' + r); });
-    if (ev.choices) {
+    if (ev.choicesFn && !ev.choices) { /* choices built at runtime (js/routes.js track picks); checked by test/routes.test.js */ }
+    else if (ev.choices) {
       if (!Array.isArray(ev.choices) || ev.choices.length < 2 || ev.choices.length > 4) err(w + ': 2..4 choices');
       ev.choices.forEach((ch, i) => {
         const cw = w + ' choice' + i;
@@ -191,15 +192,108 @@ function validate(RA) {
   if (Object.keys(cs).length && ms.length < 10) err('need at least 10 milestones');
   for (const c of COUNTRIES) if (!ms.some(m => (m.countries || []).includes(c))) err('milestones: no country-specific milestone for ' + c);
 
+  if (D.routes && RA.Engine && RA.Engine.Routes) validateRoutes(RA, err);
+
   const byPrefix = {};
   events.forEach(e => { const p = e.id.split('_')[0]; byPrefix[p] = (byPrefix[p] || 0) + 1; });
-  return { errors, warns, counts: { milestones: ms.length, events: events.length, careers: careers.length, countries: Object.keys(cs).length, byPrefix } };
+  return { errors, warns, counts: { milestones: ms.length, events: events.length, careers: careers.length, countries: Object.keys(cs).length, routes: (D.routes || []).length, byPrefix } };
+}
+
+// Route rules (docs/DESIGN.md §2f). Needs the engine (js/routes.js) for event classification.
+const CAUSES = ['quit', 'fail', 'fired', 'release', 'burnout', 'scandal', 'disband', 'injury', 'deport', 'crime', 'retire', 'choice', 'calling', 'release_jail', 'entry', 'enroll'];
+// scenes js/pixel.js can draw (parsed from its source, so a typo in a route's scene is caught here)
+function drawnScenes() {
+  const src = require('fs').readFileSync(require('path').join(__dirname, '..', 'js', 'pixel.js'), 'utf8');
+  return new Set([...src.matchAll(/^\s{4}(\w+): function \(ctx, t, c\)/gm)].map(m => m[1]));
+}
+const YOUTH_SPORT = /스카우트|유소년|아카데미|입단 테스트|트라이아웃|드래프트|국가대표 선발/;
+const JOB_WORDS = /회사|출근|퇴근|직장|상사|야근|회식|사표|출장|월급날|동료 직원/;
+function validateRoutes(RA, err) {
+  const D = RA.data, RT = RA.Engine.Routes, C = RA.C;
+  const ids = new Set(D.routes.map(r => r.id));
+  const careerIds = new Set(D.careers.map(k => k.id));
+  const owner = {};
+  const scenes = drawnScenes();
+  const fitKeys = new Set([].concat(D.bodyAttrs.map(a => a.k), D.talents.map(a => a.k), C.STATS, C.TRAITS));
+  for (const r of D.routes) {
+    const w = 'route ' + r.id;
+    if (!r.name || !r.icon || !r.group) err(w + ': name/icon/group');
+    if (!scenes.has(r.scene)) err(w + ': scene "' + r.scene + '" is not drawn by js/pixel.js');
+    if (!r.state && (!r.fit || !Object.keys(r.fit).length)) err(w + ': fit (which body/talent/stat keys the route needs)');
+    Object.keys(r.fit || {}).forEach(k => { if (!fitKeys.has(k)) err(w + ': unknown fit key ' + k); });
+    (r.careers || []).forEach(c => { if (!careerIds.has(c)) err(w + ': unknown career ' + c); if (!owner[c]) owner[c] = r.id; });
+    for (const x of r.exits || []) {
+      if (x === '*entry') continue;
+      if (typeof x === 'string') { err(w + ': exit "' + x + '" needs causes: X(to, \'cause …\')'); continue; }
+      if (!ids.has(x.to)) err(w + ': exit to unknown route ' + x.to);
+      x.on.forEach(c => { if (!CAUSES.includes(c)) err(w + ': exit cause ' + c); });
+      if (x.career && RT.ofCareer(x.career) !== x.to) err(w + ': exit career ' + x.career + ' is not on route ' + x.to);
+      if (x.to === r.id) err(w + ': exit to itself');
+    }
+    if (r.state) continue;
+    if (!(r.exits || []).length) err(w + ': needs at least one exit');
+    if (!r.endings) err(w + ': endings');
+    if (!r.entry || !Array.isArray(r.entry.tracks) || !r.entry.tracks.length) err(w + ': entry.tracks');
+    else r.entry.tracks.forEach(t => { if (!D.tracks[t]) err(w + ': unknown track ' + t); });
+    if (RT.isLadder(r)) {
+      if (r.stages.length < 4) err(w + ': a ladder needs entry → peak → late (4+ stages)');
+      if (!r.stages.some(s => s.peak)) err(w + ': no peak stage');
+      // once a ladder pays (a stage with lvl), every later stage keeps a paid position: no job gap mid-career
+      const firstPaid = r.stages.findIndex(s => s.lvl != null);
+      if (firstPaid >= 0) r.stages.slice(firstPaid).forEach(s => { if (s.lvl == null) err(w + ': stage ' + s.id + ' has no lvl after a paid stage'); });
+      if (r.id !== 'football') {
+        if (!r.stages.some(s => s.late)) err(w + ': no late (decline) stage');
+        r.stages.forEach(s => { if (!(r.lines[s.id] || []).length || r.lines[s.id].length < 3) err(w + ': stage ' + s.id + ' needs 3+ yearly lines'); });
+        const own = D.events.filter(e => (e.routes || []).includes(r.id));
+        if (own.length < 3) err(w + ': needs 3+ own decision events (ev.routes)');
+        if (!r.athlete) err(w + ': athlete {decline, end} ages');
+        if (!r.endings || !Array.isArray(r.endings.win) || !Array.isArray(r.endings.fall)) err(w + ': endings [icon, name, desc] win+fall');
+        if (!r.entry.age) err(w + ': entry.age');
+      }
+      // sports have realistic age windows
+      if (r.group === '운동' && r.athlete && (r.athlete.end > 45 || (r.entry.age && r.entry.age[1] > 30))) err(w + ': sport age window too wide');
+    } else if (r.generic) ['early', 'mid', 'top', 'late'].forEach(p => { if (!(r.lines[p] || []).length) err(w + ': lines.' + p); });
+  }
+  D.careers.forEach(k => { if (!owner[k.id]) err('career ' + k.id + ': belongs to no route'); });
+  D.GLOBAL_EXITS.forEach(x => { if (!ids.has(x.to)) err('global exit to unknown route ' + x.to); x.on.forEach(c => { if (!CAUSES.includes(c)) err('global exit ' + x.to + ': cause ' + c); }); });
+  Object.keys(D.tracks).forEach(t => { if (!D.routes.some(r => r.entry && (r.entry.tracks || []).includes(t))) err('track ' + t + ': opens no route'); });
+  Object.keys(D.routeTags).forEach(id => { if (!D.events.some(e => e.id === id)) err('routeTags: unknown event ' + id); });
+  const groups = ['adrift', 'employee', 'working', '*'];
+  const expand = list => [].concat(...list.map(g => g === 'adrift' ? ['none', 'parttime'] : g === 'employee' ? D.routeGroups.employee : g === 'working' || g === '*' ? D.routes.map(r => r.id) : [g]));
+  for (const ev of D.events) {
+    const w = 'event ' + ev.id;
+    const rr = RT.eventRoutes(ev);
+    (ev.routes || []).forEach(g => { if (!ids.has(g) && !groups.includes(g)) err(w + ': unknown route ' + g); });
+    const tg = RT.eventTargets(ev);
+    if (tg.any && !rr && !tg.club) {
+      // a route-neutral event may only end a job (global exits), never start one
+      if (tg.careers.length || tg.quick || tg.monk) err(w + ': changes the career but is route-neutral (add ev.routes or a routeTags entry)');
+    }
+    if (tg.careers.length && rr) {
+      const from = expand(rr);
+      tg.careers.forEach(c => { if (!from.some(a => RT.legal(a, RT.ofCareer(c), 'choice'))) err(w + ': career ' + c + ' (' + RT.ofCareer(c) + ') is not an exit of ' + rr.join('/')); });
+    }
+    // age plausibility: an athlete route's events stop at its retirement age; youth-sport words
+    // (scouts, academy, try-outs, signing) never reach an older hero outside the football ladder
+    const age = ev.age || [0, 120];
+    (rr || []).forEach(g => { const r = D.routes.find(x => x.id === g); if (r && r.athlete && r.group === '운동' && age[1] > r.athlete.end) err(w + ': ages past ' + r.id + ' retirement (' + r.athlete.end + ')'); });
+    if (!(rr || []).includes('football') && age[1] > 30) {
+      const all = [ev.text].concat(ev.textVariants || [], ...(ev.choices || []).map(c => [c.text, c.log, c.success && c.success.log, c.fail && c.fail.log])).filter(Boolean).join(' ');
+      const m = all.match(YOUTH_SPORT);
+      if (m && !(ev.cond && (ev.cond.childAge || ev.cond.fb))) err(w + ': youth-sport word "' + m[0] + '" up to age ' + age[1]);
+    }
+    if (!rr && !(D.jobTalkOk || []).includes(ev.id)) {
+      const texts = [ev.text, ev.log].concat(ev.textVariants || [], ev.logVariants || [], ...(ev.choices || []).map(c => [c.text, c.log, c.success && c.success.log, c.fail && c.fail.log])).filter(Boolean).join(' ');
+      if (JOB_WORDS.test(texts)) err(w + ': route-neutral text talks about a job (' + texts.match(JOB_WORDS)[0] + '); tag it with ev.routes');
+    }
+  }
+  void C;
 }
 
 module.exports = { loadAll, validate };
 
 if (require.main === module) {
-  const res = validate(loadAll());
+  const res = validate(require('./sim-helpers.js').load());
   console.log(JSON.stringify(res.counts));
   if (res.errors.length) { console.log(res.errors.slice(0, 80).join('\n')); console.log(res.errors.length + ' error(s)'); process.exit(1); }
   console.log('OK');

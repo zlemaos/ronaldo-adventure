@@ -257,8 +257,26 @@
     s.money -= price; s.flags.car_owner = s.age;
     return '첫 차를 샀다.';
   };
+  // Lottery tickets (wage units). Each ticket wins one tier with these odds; the average return of a
+  // ticket is about two thirds of its price (test/gamble.test.js checks it stays below 1).
+  E.LOTTERY = { price: 5, first: { p: 1.5e-6, lo: 200000, hi: 3000000 }, tiers: [{ p: 3e-4, prize: 1500, name: '3등' }, { p: 0.02, prize: 25, name: '5등' }] };
+  // buy n tickets and draw them (one draw: each tier's chance is n × its per-ticket odds)
+  FX.buyLottery = function (s, n) {
+    var L = E.LOTTERY, w = W(s);
+    n = typeof n === 'number' ? n : 1;
+    s.money -= Math.round(L.price * n * w);
+    var r = E.rnd(s);
+    if (r < L.first.p * n) return FX.lottery(s);
+    r -= L.first.p * n;
+    for (var i = 0; i < L.tiers.length; i++) {
+      var t = L.tiers[i];
+      if (r < t.p * n) { var won = Math.round(t.prize * w); s.money += won; E.addStat(s, 'happy', i ? 2 : 6); return t.name + ' 당첨! +' + T.money(won, E.country(s)); }
+      r -= t.p * n;
+    }
+    return n > 1 ? n + '장 모두 꽝. 다음 주엔 될 것 같다.' : '꽝. 다음 주엔 될 것 같다.';
+  };
   FX.lottery = function (s) {
-    var prize = Math.round(E.rint(s, 200000, 3000000) * W(s));
+    var prize = Math.round(E.rint(s, E.LOTTERY.first.lo, E.LOTTERY.first.hi) * W(s));
     s.money += prize; E.addStat(s, 'happy', 15); s.flags.lottery_winner = s.age;
     E.unlock(s, 'lottery');
     E.triumph(s, 'lottery');
@@ -313,7 +331,8 @@
     return '추방 명령을 받았다. 짐 가방 하나로 고향에 돌아왔다.';
   };
   FX.bankrupt = function (s) {
-    s.money = 0; s.flags.bankrupt = s.age; delete s.flags.homeowner;
+    // savings are gone, but a debt (e.g. the stake just lost) stays: bankruptcy never forgives a bet
+    s.money = Math.min(s.money, 0); s.flags.bankrupt = s.age; delete s.flags.homeowner;
     E.addStat(s, 'happy', -12);
     return '파산했다. 집도 차도 남지 않았다.';
   };
@@ -394,17 +413,28 @@
     { id: 'story', label: '동화 읽어 주기', icon: '📖', desc: '매일 밤 들은 이야기로 말귀가 일찍 트인다.', effects: { smarts: 4, social: 1 } },
     { id: 'walk', label: '산책·운동', icon: '🚶', desc: '엄마와 함께 걸은 길이 튼튼한 몸이 된다.', effects: { health: 4, grit: 2 } },
     { id: 'talk', label: '태담(말 걸기)', icon: '💬', desc: '가족 목소리에 익숙해 사람을 좋아하는 아이로.', effects: { social: 4, happy: 2 } },
-    { id: 'rest', label: '잘 먹고 푹 쉬기', icon: '🍲', desc: '든든하게 먹고 쉬어 건강하고 뽀얀 아기로.', effects: { health: 3, looks: 3 } }
+    { id: 'rest', label: '잘 먹고 푹 쉬기', icon: '🍲', desc: '든든하게 먹고 쉬어 건강하고 뽀얀 아기로.', effects: { health: 3, looks: 3 } },
+    { id: 'art', label: '그림·색칠 태교', icon: '🖍️', desc: '색을 고르고 그리며 보낸 시간이 그림 보는 눈이 된다.', effects: { happy: 3, smarts: 1 } },
+    { id: 'cook', label: '제철 요리 태교', icon: '🥘', desc: '좋은 재료로 정성껏 만든 밥이 맛을 아는 혀가 된다.', effects: { health: 2, happy: 2 } },
+    { id: 'puzzle', label: '수학 퍼즐 태교', icon: '🧩', desc: '퍼즐과 숫자 놀이가 논리적인 머리가 된다.', effects: { smarts: 3 } }
   ];
+  // which base talent each 태교 raises (재능: 0-100, a head start for matching routes)
+  var PRENATAL_TALENT_TEXT = { music: '음악', lang: '언어', sport: '운동 감각', stage: '끼·무대', art: '미술', taste: '미각·요리', logic: '논리·수리' };
   E.EDU_FOCUS = {
-    lang: { label: '언어', icon: '🗣️', desc: '그림책과 말놀이로 어휘력과 지능이 자란다.', effects: { smarts: 3 },
+    lang: { label: '언어', icon: '🗣️', desc: '그림책과 말놀이로 어휘력과 지능이 자란다.', effects: { smarts: 3 }, talent: 'lang',
       lines: ['그림책을 함께 읽었다.', '처음으로 두 단어를 이어 말했다.', '동요 가사를 통째로 외웠다.', '간판 글자를 손가락으로 짚으며 읽는다.', '"왜?"를 하루에 백 번 묻는다.', '자기 이름을 삐뚤빼뚤 썼다.', '그림책 속 글자를 혼자 읽어 냈다.'] },
-    music: { label: '음악', icon: '🎵', desc: '노래와 리듬으로 감정을 표현하고 말 감각이 자란다.', effects: { happy: 3, smarts: 1 },
+    music: { label: '음악', icon: '🎵', desc: '노래와 리듬으로 감정을 표현하고 말 감각이 자란다.', effects: { happy: 3, smarts: 1 }, talent: 'music',
       lines: ['냄비 뚜껑을 두드리며 박자를 맞췄다.', '자장가를 따라 흥얼거렸다.', '실로폰으로 첫 곡을 쳤다.', '노래하며 춤추다 넘어져도 웃었다.', '동네 합창 교실에 갔다.', '기쁠 땐 신나는 노래, 슬플 땐 느린 노래를 고른다.', '가족 앞에서 작은 공연을 했다.'] },
-    play: { label: '소꿉놀이', icon: '🧸', desc: '역할 놀이로 친구 마음을 읽는 공감·사교성이 자란다.', effects: { social: 3 },
+    play: { label: '소꿉놀이', icon: '🧸', desc: '역할 놀이로 친구 마음을 읽는 공감·사교성과 끼가 자란다.', effects: { social: 3 }, talent: 'stage',
       lines: ['인형에게 밥을 먹여 줬다.', '가게 놀이에서 손님 역할을 맡았다.', '우는 친구에게 장난감을 건넸다.', '병원 놀이에서 의사가 됐다.', '놀이터에서 처음 보는 아이와 금세 친해졌다.', '싸운 친구와 먼저 화해했다.', '소꿉놀이 규칙을 친구들과 함께 정했다.'] },
-    sports: { label: '스포츠', icon: '⚽', desc: '뛰고 구르며 체력이 자라고 공과 친해진다.', effects: { health: 3, football: 1 },
-      lines: ['마당을 열 바퀴 뛰었다.', '공을 따라 아장아장 달렸다.', '세발자전거를 탔다.', '줄넘기를 처음 넘었다.', '골목 축구에서 첫 골을 넣었다.', '수영 교실에서 물에 떴다.', '달리기 시합에서 1등을 했다.'] }
+    sports: { label: '스포츠', icon: '⚽', desc: '뛰고 구르며 체력이 자라고 공과 친해진다.', effects: { health: 3, football: 1 }, talent: 'sport',
+      lines: ['마당을 열 바퀴 뛰었다.', '공을 따라 아장아장 달렸다.', '세발자전거를 탔다.', '줄넘기를 처음 넘었다.', '골목 축구에서 첫 골을 넣었다.', '수영 교실에서 물에 떴다.', '달리기 시합에서 1등을 했다.'] },
+    art: { label: '미술', icon: '🖍️', desc: '크레파스와 점토로 색과 모양을 보는 눈이 자란다.', effects: { happy: 2, smarts: 1 }, talent: 'art', pic: 'focus_play',
+      lines: ['크레파스로 벽에 해를 그렸다. 혼났다.', '점토로 강아지를 만들었다.', '손바닥 도장으로 나무를 찍었다.', '가족 얼굴을 그렸다. 다들 동그랗다.', '색종이로 배를 접었다.', '물감을 섞어 보라색을 만들어 냈다.', '그림 대회에서 칭찬 스티커를 받았다.'] },
+    logic: { label: '수·과학 놀이', icon: '🧩', desc: '블록과 숫자 놀이로 규칙을 찾는 머리가 자란다.', effects: { smarts: 3 }, talent: 'logic', pic: 'focus_lang',
+      lines: ['블록을 크기 순서대로 늘어놓았다.', '계단을 오르며 숫자를 셌다.', '자석에 붙는 것과 안 붙는 것을 나눴다.', '퍼즐 스무 조각을 혼자 맞췄다.', '시계 바늘 읽는 법을 물었다.', '돋보기로 개미를 관찰했다.', '덧셈 놀이에서 손가락이 모자랐다.'] },
+    cook: { label: '요리 놀이', icon: '🥄', desc: '맛보고 섞어 보며 맛을 아는 감각이 자란다.', effects: { health: 2, happy: 1 }, talent: 'taste', pic: 'focus_play',
+      lines: ['엄마 옆에서 콩나물을 다듬었다.', '반죽을 조물조물 만졌다.', '레몬을 맛보고 얼굴을 찡그렸다.', '처음으로 달걀을 깼다. 껍데기도 들어갔다.', '주먹밥을 동그랗게 빚었다.', '국 간을 보고 "짜요!"라고 했다.', '가족에게 샌드위치를 만들어 줬다.'] }
   };
 
   function previewOf(effects) { return effects; }
@@ -413,8 +443,16 @@
     text: '{mother}[이/가] {name}[을/를] 품은 지 일곱 달째. 어떤 태교를 할까요?',
     choicesFn: function () {
       return E.PRENATAL.map(function (o) {
-        return { text: o.icon + ' ' + o.label, desc: o.desc, preview: previewOf(o.effects), effects: o.effects,
-          run: function (s) { s.prenatal = o.id; E.birth(s); return o.label + ' 태교를 했다. 그리고 마침내 ' + C.HERO_NAME + '(이)가 태어났다!'; } };
+        var tal = E.Routes ? E.Routes.PRENATAL_TALENT[o.id] : null;
+        var tdesc = tal ? ' 재능: ' + Object.keys(tal).map(function (k) { return PRENATAL_TALENT_TEXT[k] + ' +' + tal[k]; }).join(', ') : '';
+        return { text: o.icon + ' ' + o.label, desc: o.desc + tdesc, preview: previewOf(o.effects), effects: o.effects,
+          run: function (s) {
+            s.prenatal = o.id;
+            if (tal) Object.keys(tal).forEach(function (k) { E.Routes.addTalent(s, k, tal[k]); });
+            if (o.id === 'walk' && s.body) s.body.endurance = Math.min(99, s.body.endurance + 6);
+            E.birth(s);
+            return (/태교$/.test(o.label) ? o.label : o.label + ' 태교') + '를 했다. 그리고 마침내 ' + C.HERO_NAME + '(이)가 태어났다!';
+          } };
       });
     }
   };
@@ -455,6 +493,7 @@
         list.push({ text: c.school.univMid + ' 진학', reqFn: function () { return sc >= 45; }, run: function (s) { return enroll(s, 'mid', c.school.univMid); } });
         list.push({ text: c.school.univAbroad + ' 유학 (학비 비쌈)', reqFn: function (s) { return sc >= 88 && s.money / W(s) >= 20000; }, run: function (s) { return enroll(s, 'abroad', c.school.univAbroad); } });
         if (['academy', 'youth', 'pro'].indexOf(s.fb.stage) >= 0) list.push({ text: '대학 대신 축구에 모든 것을 건다', run: function (s) { E.addStat(s, 'football', 2); return '책가방 대신 축구화를 택했다.'; } });
+        else if (E.Routes && E.Routes.isLadder(E.Routes.cur(s))) { var rr = E.Routes.cur(s); list.push({ text: '대학 대신 ' + rr.name + '에 집중한다', run: function (s) { s.route.sk = Math.min(100, s.route.sk + 3); return '책가방 대신 ' + rr.name + '의 길을 택했다.'; } }); }
         list.push({ text: '바로 사회로 나간다', run: function () { return '대학 대신 일을 해서 돈을 벌기로 했다.'; } });
         return list;
       }
@@ -465,8 +504,11 @@
       choicesFn: function (s) {
         return MAJOR_KEYS.map(function (m) {
           var hard = { medicine: 85, law: 75, aerospace: 80, cs: 60, engineering: 60, economics: 55 }[m] || 0;
+          // a major outside the school track (문과 → 의학, 이과 → 법학…) needs a higher score
+          var off = E.Routes && s.track && E.Routes.offTrackMajor(s.track, m);
+          if (off) hard = Math.max(hard, 40) + 15;
           return {
-            text: C.MAJORS[m] + (hard ? ' (커트라인 ' + hard + ')' : ''),
+            text: C.MAJORS[m] + (hard ? ' (커트라인 ' + hard + (off ? ', 다른 계열' : '') + ')' : ''),
             reqFn: function (s) { return (s.edu.examScore || 0) >= hard || s.edu.univTier === 'abroad' && (s.edu.examScore || 0) >= hard - 5; },
             run: function (s) { s.edu.major = m; return C.MAJORS[m] + '을(를) 전공하기로 했다.'; }
           };
@@ -488,7 +530,7 @@
       ]
     },
     {
-      id: 'sys_retire', manual: true, scene: 'office', text: '{job}[으로/로] 일한 지 오래다. 은퇴할 나이가 됐다.',
+      id: 'sys_retire', manual: true, live: function (s) { return !!s.job; }, scene: 'office', text: '{job}[으로/로] 일한 지 오래다. 은퇴할 나이가 됐다.',
       choices: [
         { text: '은퇴한다', run: function (s) { var k = E.careerIndex()[s.job.id]; s.pension = Math.round(E.salaryOf(s, k, s.job.level) * 0.3); E.endJob(s, '은퇴'); s.retiredFromWork = true; E.addStat(s, 'happy', 6); return '은퇴했다. 매년 연금이 나온다.'; } },
         { text: '아직 더 일한다', run: function (s) { E.addStat(s, 'health', -2); return '"평생 현역"을 외쳤다.'; } }
@@ -578,24 +620,6 @@
   };
   E.endingById = function (id) { return (RA.data.endings || []).filter(function (x) { return x.id === id; })[0] || null; };
 
-  // 진로 panel: the current path, special routes that are open, and locked ones with their unlock hints
-  E.careerPaths = function (s) {
-    var special = RA.data.careers.filter(function (k) {
-      return (k.req && k.req.traits) || ['crime', 'religion'].indexOf(k.sector) >= 0 || ['gamble', 'politics', 'space', 'crime', 'religion'].indexOf(k.special) >= 0 || k.unusual;
-    });
-    var open = [], locked = [];
-    special.forEach(function (k) {
-      if (k.special === 'football') return;
-      var miss = E.jobMissing(s, k).filter(function (m) { return m !== '학업 중' && m !== '수감 중'; });
-      var r = k.req || {};
-      var item = { id: k.id, name: k.name, sector: k.sector, ladder: k.ladder.map(function (t, i) { return E.ladderTitle(s, k, i); }), hint: r.unlockHint || miss.join(', '), minAge: r.minAge };
-      if (!miss.length || (miss.length === 1 && /세 이상$/.test(miss[0]))) open.push(item); else locked.push(item);
-    });
-    var flags = s.flags, path = [];
-    ['path_study', 'path_football', 'path_arts', 'path_trade', 'path_free', 'path_creator'].forEach(function (f) { if (flags[f]) path.push(f); });
-    return { open: open, locked: locked, pathFlags: path, available: E.jobList(s).filter(function (j) { return j.ok; }).length };
-  };
-
   E.lifeTitles = function (s) {
     var list = (RA.data.ribbons || []).filter(function (r) { return r.test(s, E); });
     list.sort(function (a, b) { return b.rank - a.rank; });
@@ -632,6 +656,15 @@
     if (s.flags.heart_fixed) out.push('15세의 심장 시술을 이겨 냈다.');
     if (fb.seasons) out.push('프로 축구 선수로 ' + fb.apps + '경기 ' + fb.goals + '골' + (fb.trophies.ballon ? ', 발롱도르 ' + fb.trophies.ballon + '회' : '') + (fb.trophies.wc ? ', 월드컵 우승' : '') + '. 거친 클럽: ' + fb.clubs.filter(function (x, i, a) { return a.indexOf(x) === i; }).join(' → ') + '.');
     else if (s.flags.fb_quit) out.push('한때 축구를 꿈꿨지만 다른 길을 택했다.');
+    // the routes walked, in order (states such as 학생·쉬는 중 left out)
+    // with the reason each one ended: "🎨 미술계 →(실패) 📐 디자인·사진"
+    var moves = (s.routeLog || []).filter(function (m) { var r = E.Routes && E.Routes.byId(m.to); return r && !r.state; });
+    var walked = moves.map(function (m) { return m.to; }).filter(function (id, i, a) { return a.indexOf(id) === i; });
+    if (walked.length) out.push('걸어온 길: ' + walked.map(function (id, i) {
+      var r = E.Routes.byId(id), prev = walked[i - 1];
+      var end = prev && (s.routeLog || []).filter(function (m) { return m.from === prev; })[0];
+      return (end ? '(' + E.Routes.causeLabel(end.cause) + ') ' : '') + r.icon + ' ' + r.name;
+    }).join(' → ') + '.');
     var best = s.jobHistory.slice().sort(function (a, b) { return b.level - a.level; })[0];
     if (best && best.id !== 'footballer') out.push(best.name + '(으)로 일하며 "' + best.title + '"까지 올랐다.');
     if (s.flags.father_sober) out.push('아버지의 회복을 끝까지 곁에서 도왔다.');

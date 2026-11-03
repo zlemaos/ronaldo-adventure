@@ -8,7 +8,8 @@ const RA = load();
 const E = RA.Engine, C = RA.C, T = RA.Text, S = RA.Save;
 const COUNTRIES = ['pt', 'kr', 'jp', 'cn', 'us', 'br', 'ar', 'za', 'in'];
 
-function pickFirst(s) { const ev = E.currentEvent(s); return E.choose(s, ev.choices.findIndex(c => c.enabled)); }
+// (a queued storylet can stop applying after an earlier choice that year, e.g. a route change; then nothing is shown)
+function pickFirst(s) { const ev = E.currentEvent(s); return ev ? E.choose(s, ev.choices.findIndex(c => c.enabled)) : null; }
 
 test('the hero is always 호날두 (male or female) and particles fit the name', () => {
   for (const g of ['m', 'f']) {
@@ -42,14 +43,18 @@ test('a life starts with one prenatal pick; each option gives a different, visib
   assert.deepStrictEqual(s.queue, ['sys_prenatal']);
   const ev = E.currentEvent(s);
   assert.ok(ev.pick);
-  assert.ok(ev.choices.length >= 4 && ev.choices.length <= 5);
-  const previews = ev.choices.map(c => JSON.stringify(c.preview));
-  assert.strictEqual(new Set(previews).size, ev.choices.length, 'each option differs');
-  ev.choices.forEach(c => { assert.ok(c.desc && c.desc.length < 40, 'one plain line'); assert.ok(c.preview); });
-  const smarts0 = s.stats.smarts;
+  // 태교 covers every base-talent axis (music, art, sport, logic, language, taste, stage presence)
+  assert.strictEqual(ev.choices.length, 8);
+  const talents = new Set();
+  Object.values(E.Routes.PRENATAL_TALENT).forEach(t => Object.keys(t).forEach(k => talents.add(k)));
+  assert.deepStrictEqual([...talents].sort(), RA.data.talents.map(t => t.k).sort());
+  ev.choices.forEach(c => { assert.ok(c.desc && c.desc.length < 70 && /재능/.test(c.desc), 'one plain line naming the talent'); assert.ok(c.preview); });
+  const smarts0 = s.stats.smarts, lang0 = s.talent.lang;
   E.choose(s, ev.choices.findIndex(c => /동화/.test(c.text)));
   assert.strictEqual(s.prenatal, 'story');
   assert.ok(s.stats.smarts > smarts0, 'story reading boosts smarts');
+  assert.strictEqual(s.talent.lang, lang0 + 25, 'story reading sets the language talent');
+  assert.ok(s.cards.some(c => c.id === 'birth_body' && /키 \d+cm/.test(c.text)), 'the birth card shows the body specs');
   assert.ok(s.born);
   assert.ok(s.cards.length >= 2, 'birth cards');
   assert.ok(s.cards.every(c => C.MILESTONE_PICS.includes(c.pic) && c.text.length > 4));
@@ -85,7 +90,7 @@ test('early-education focus: picked at 1, applied every year to 7, changeable on
   assert.strictEqual(s.age, 1);
   assert.deepStrictEqual(s.queue, ['sys_edu_focus']);
   const ev = E.currentEvent(s);
-  assert.deepStrictEqual(ev.choices.map(c => c.text.replace(/^\S+ /, '')), ['언어', '음악', '소꿉놀이', '스포츠']);
+  assert.deepStrictEqual(ev.choices.map(c => c.text.replace(/^\S+ /, '')), ['언어', '음악', '소꿉놀이', '스포츠', '미술', '수·과학 놀이', '요리 놀이']);
   ev.choices.forEach(c => assert.ok(c.desc && c.preview));
   E.choose(s, 2); // 소꿉놀이 → 공감
   assert.strictEqual(s.eduFocus, 'play');

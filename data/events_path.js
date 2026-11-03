@@ -16,29 +16,22 @@
   function C2(career, list) { list.forEach(function (ev, i) { ev.id = 'path_' + career + '_' + (i + 1); ev.cond = Object.assign({ career: [career] }, ev.cond || {}); ev.cooldown = ev.cooldown || 4; EV.push(ev); }); }
 
   // ================================================================ 진로 고민 milestones
+  // The two school crossroads pick an education track (s.track); the choices are built by js/routes.js
+  // from the hero's talents, body and current route, and named per country (data/routes.js trackNames).
   E({ id: 'path_13', age: [13, 14], once: true, priority: true,
-    text: '중학교 진로 상담 시간. 선생님이 묻는다. "{name}, 앞으로 뭘 하고 싶니?"',
-    choices: [
-      { text: '📚 공부에 올인한다', effects: { smarts: 4, happy: -1, flags: ['path_study'] }, log: '책상 앞에 "목표: 장학생"이라고 붙였다.' },
-      { text: '⚽ 축구에 올인한다', effects: { football: 3, grit: 2, flags: ['path_football'] }, log: '새벽 운동장이 내 교실이 됐다.' },
-      { text: '🎨 예체능·특기를 살린다', effects: { looks: 2, happy: 3, social: 1, flags: ['path_arts'] }, log: '방과 후 연습실 불이 늦게까지 켜져 있었다.' },
-      { text: '🛹 아직 모르겠다, 일단 논다', risky: true, effects: { happy: 4, mischief: 3, flags: ['path_free'] }, log: '선생님이 한숨을 쉬었다. 친구들과 오락실로 향했다.' }
-    ] });
+    text: '중학교 진로 상담 시간. 선생님이 묻는다. "{name}, 고등학교는 어떤 과정으로 갈래?" 고른 과정에 따라 열리는 길이 달라진다.',
+    choicesFn: function (s) { return RA.Engine.Routes.trackChoices13(s); } });
   E({ id: 'path_16', age: [16, 17], once: true, priority: true,
-    text: '고등학교 갈림길. 친구들은 학원, 알바, 운동장으로 흩어진다. 나는?',
-    choices: [
-      { text: '입시 학원에 등록한다', effects: { smarts: 4, money: -800, happy: -2, flags: ['path_study'] }, log: '밤 열한 시 학원 버스가 일상이 됐다.' },
-      { text: '기술·특성화 과정을 택한다', effects: { grit: 3, smarts: 1, flags: ['path_trade'] }, log: '기름 냄새 나는 실습실이 생각보다 좋았다.' },
-      { text: '알바로 돈부터 번다', career: 'convenience_clerk', effects: { money: 300, grit: 2, flags: ['path_trade'] }, log: '첫 월급으로 {mother}에게 {food}[을/를] 샀다.' },
-      { text: '자퇴하고 내 길을 간다', risky: true, effects: { mischief: 4, happy: 3, rep: -4, fx: ['dropOut'], flags: ['path_creator'] }, log: '교복을 벗던 날, 세상이 넓어 보이면서도 무서웠다.' }
-    ] });
+    when: function (s) { return s.route && s.route.id !== 'football'; },
+    text: '고등학교 갈림길. 문과·이과로 나뉘고, 특성화반과 예체능반은 진짜 실력을 보여 줘야 한다. 나는?',
+    choicesFn: function (s) { return RA.Engine.Routes.trackChoices16(s); } });
   E({ id: 'path_16_football', age: [16, 18], once: true, priority: true,
     cond: { fb: ['academy', 'youth'] },
     text: '유스 감독이 진지하게 묻는다. "학업과 축구, 이제 하나를 골라야 할 때다."',
     choices: [
       { text: '축구에 모든 것을 건다', effects: { football: 4, grit: 3, smarts: -1, flags: ['path_football'] }, log: '책가방을 사물함에 넣고 축구화 끈을 다시 묶었다.' },
       { text: '공부도 놓지 않는다', effects: { smarts: 3, football: 1, health: -1 }, log: '버스 안에서 단어장을 넘기고, 훈련장에선 이를 악물었다.' },
-      { text: '축구를 그만두고 공부한다', effects: { smarts: 4, fx: ['quitFootball'], flags: ['path_study'] }, log: '어려운 결정이었다. 그래도 내가 고른 길이다.' }
+      { text: '축구를 그만두고 공부한다', effects: { smarts: 4, fx: ['quitFootball'], flags: ['path_study'] }, run: function (s) { s.track = 'study'; }, log: '어려운 결정이었다. 그래도 내가 고른 길이다.' }
     ] });
   E({ id: 'path_19', age: [19, 20], once: true, priority: true,
     cond: { career: 'none', edu: ['none'] },
@@ -326,11 +319,19 @@
           fail: { effects: { health: -10, rep: -6, fame: 2 }, log: '다쳤고, 방송 정지 경고까지 받았다.' } },
         { text: '건전한 콘텐츠를 고집한다', effects: { rep: 3, fame: 1 }, log: '시청자는 적어도 단단한 팬이 생겼다.' }
       ] },
-    { age: [16, 70], text: '구독자 10만이 코앞이다. 축구 리프팅 챌린지를 할까?',
+    // the 100k milestone happens once (flag subs_100k); a young streamer tries a stunt, an older one a talk show
+    { age: [16, 39], cond: { flags: ['!subs_100k'] }, text: '구독자 10만이 코앞이다. 축구 리프팅 챌린지를 할까?',
       choices: [
         { text: '도전한다', check: { stat: 'football', diff: 40 },
-          success: { effects: { fame: 5, money: 2000, fx: ['promote'] }, log: '10만 돌파! 실버 버튼 언박싱 영상을 찍었다.' },
+          success: { effects: { fame: 5, money: 2000, flags: ['subs_100k'], fx: ['promote'] }, log: '10만 돌파! 실버 버튼 언박싱 영상을 찍었다.' },
           fail: { effects: { fame: 2, happy: 2 }, log: '공이 카메라를 맞혔다. 그 장면이 오히려 웃겨서 떴다.' } },
+        { text: '평소처럼 방송한다', effects: { happy: 1 }, log: '꾸준함이 이긴다고 믿는다.' }
+      ] },
+    { age: [40, 70], cond: { flags: ['!subs_100k'] }, text: '구독자 10만이 코앞이다. 오래 봐 준 시청자들과 인생 상담 라이브를 열어 볼까?',
+      choices: [
+        { text: '연다', check: { stat: 'social', diff: 45 },
+          success: { effects: { fame: 5, money: 2000, flags: ['subs_100k'], fx: ['promote'] }, log: '새벽까지 사연을 읽었다. 10만 돌파! 실버 버튼이 택배로 왔다.' },
+          fail: { effects: { fame: 1, happy: 2 }, log: '사연은 적었지만 단골 시청자들이 끝까지 남아 줬다.' } },
         { text: '평소처럼 방송한다', effects: { happy: 1 }, log: '꾸준함이 이긴다고 믿는다.' }
       ] }
   ]);

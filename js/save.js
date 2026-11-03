@@ -58,6 +58,13 @@
       if (s.ending === undefined) s.ending = null;
       s.saveVersion = 5;
       return s;
+    },
+    // v5 → v6 (round 7, routes): body specs and base talents are rolled from the seed (prenatal and
+    // early-education picks feed the talents), the school track is read from the old path flags and the
+    // current route is derived from the life state (prison, football club, job, school, retired, none).
+    5: function (s) {
+      s.saveVersion = 6;
+      return RA.Engine && RA.Engine.Routes ? RA.Engine.Routes.migrate(s) : s;
     }
   };
 

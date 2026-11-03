@@ -18,7 +18,8 @@
     fb_academy: ['발목에 모래주머니를 차고 드리블 연습을 했다.', '모두 잠든 밤, 체육관에서 코어 운동을 했다.', '코치에게 비디오 분석을 부탁해 위치 선정을 고쳤다.', '스프린트 30미터를 스무 번 반복했다.', '선배의 무회전 킥을 따라 하다 공을 담장 밖으로 넘겼다.', '세트피스 훈련 뒤 혼자 남아 코너킥을 더 찼다.', '식단 일지를 쓰며 탄산음료를 끊었다.', '왼발 크로스만 한 시간 동안 올렸다.', '기숙사 복도에서 몰래 리프팅을 하다 사감에게 걸렸다.', '수영장에서 물속 달리기로 하체를 단련했다.', '동기들과 패스 정확도 내기를 했다. 저녁 간식을 땄다.', '경기 하이라이트를 보며 실수한 장면만 골라 메모했다.'],
     fb_pro: ['훈련장에 가장 먼저 나와 가장 늦게 나갔다.', '아이스 배스에 몸을 담그며 회복 루틴을 지켰다.', '전담 코치와 무회전 프리킥 궤적을 연구했다.', '상대 수비수의 습관을 영상으로 분석했다.', '점프 헤딩을 위해 플라이오메트릭 훈련을 추가했다.', '수면 시간을 기록하며 컨디션을 관리했다.', '유소년 선수들과 함께 훈련하며 기본기를 다시 다졌다.', '페널티킥 루틴을 처음부터 다시 만들었다.', '개인 트레이너와 반응 속도 훈련을 했다.', '비 오는 날 젖은 공으로 크로스를 받아 내는 연습을 했다.', '영양사와 시즌 식단을 다시 짰다.', '경기 없는 날에도 같은 시간에 일어나 루틴을 지켰다.'],
     fb_veteran: ['필라테스로 유연성을 챙겼다. 젊을 때 할 걸 그랬다.', '전력 질주 대신 위치 선정 훈련에 집중했다.', '회복 시간이 길어져 훈련량을 조절했다.', '후배들에게 슈팅 요령을 알려 주며 같이 찼다.', '물리치료사와 무릎 강화 운동을 했다.', '경기 전날 일찍 잠들었다. 몸이 먼저 알아서 눕는다.', '젊은 동료들의 스프린트를 지켜보며 짧은 침투 타이밍을 다듬었다.', '경기 전 루틴에 명상 10분을 넣었다.', '헤딩 위치 선정만 반복해서 연습했다.', '훈련 뒤 냉찜질을 하며 다음 경기를 그려 봤다.'],
-    fb_amateur: ['주말 조기축구회에서 공을 찼다.', '공원에서 아이들과 미니 게임을 했다.', '풋살장을 빌려 옛 동료들과 뛰었다.', '퇴근길에 공 하나 들고 빈 운동장을 돌았다.', '리프팅 열 개에서 멈췄다. 예전엔 백 개였는데.', '동네 꼬마들에게 인사이드 패스를 가르쳐 줬다.', '회사 축구 동호회 경기에서 깔끔한 어시스트를 했다.', '아침 일찍 운동장 트랙을 돌고 슈팅 몇 번을 했다.', '옛날 축구화를 꺼내 신어 봤다. 아직 맞는다.', 'TV 중계를 보다 참지 못하고 공을 들고 나갔다.'],
+    fb_amateur: ['주말 조기축구회에서 공을 찼다.', '공원에서 아이들과 미니 게임을 했다.', '풋살장을 빌려 옛 동료들과 뛰었다.', '저녁에 공 하나 들고 빈 운동장을 돌았다.', '리프팅 열 개에서 멈췄다. 예전엔 백 개였는데.', '동네 꼬마들에게 인사이드 패스를 가르쳐 줬다.', '동호회 경기에서 깔끔한 어시스트를 했다.', '아침 일찍 운동장 트랙을 돌고 슈팅 몇 번을 했다.', '옛날 축구화를 꺼내 신어 봤다. 아직 맞는다.', 'TV 중계를 보다 참지 못하고 공을 들고 나갔다.'],
+    fb_senior: ['조기축구회에서 골키퍼를 맡았다. 뛰는 건 젊은 회원들 몫이다.', '전반만 뛰고 벤치에서 커피를 마셨다.', '무릎 보호대를 차고 천천히 패스만 주고받았다.', '동네 아이들 경기에서 심판을 봐 줬다.', '걷기 축구 모임에 나가 봤다. 뛰지 않아도 땀이 났다.', '공보다 스트레칭에 더 오래 시간을 썼다.', '경기 뒤 회원들과 국밥을 먹는 게 진짜 목적이다.', '옛날 같으면 넣었을 슛이 골대를 한참 넘어갔다.', '시니어 풋살 리그에서 10분씩 교대로 뛰었다.', '조기축구회 총무를 맡아 회비 장부를 정리했다.', '손주뻘 회원에게 프리킥 요령을 알려 줬다.', '공원 잔디밭에서 가볍게 볼 터치만 했다.', '비가 와서 실내 풋살장에서 패스 게임만 했다.', '회원들과 옛 월드컵 이야기를 하다 시간이 다 갔다.', '골대 앞에서 기다렸다가 굴러온 공을 툭 밀어 넣었다.'],
     study: ['도서관 문 닫을 때까지 버텼다.', '문제집 한 권을 끝냈다.', '졸면서도 단어장을 넘겼다.', '인터넷 강의를 2배속으로 정주행했다.', '오답 노트를 처음부터 다시 정리했다.', '친구와 서로 문제를 내 주며 공부했다.', '좋아하는 분야의 책을 밤새 읽었다.', '모르는 걸 선생님께 끝까지 물어봤다.', '타이머를 맞춰 놓고 집중 50분, 휴식 10분을 반복했다.', '외국어 라디오를 들으며 받아쓰기를 했다.'],
     exercise: ['새벽 달리기를 했다.', '팔굽혀펴기 100개. 내일 팔이 안 올라갈 것 같다.', '수영장에서 몇 바퀴를 돌았다.', '줄넘기 2단 뛰기에 성공했다.', '동네 뒷산을 뛰어서 올라갔다.', '헬스장에서 스쿼트 자세를 처음부터 다시 배웠다.', '자전거를 타고 강변을 한 바퀴 돌았다.', '요가 매트를 펴고 스트레칭을 했다.', '계단으로만 출퇴근했다.', '공원 철봉에서 턱걸이 기록을 하나 늘렸다.'],
     family: ['{mother}[이/가] 만들어 준 {food}[을/를] 다 같이 먹었다.', '{bro}[과/와] 낡은 소파에서 TV로 축구를 봤다.', '{sis1}[이/가] 머리를 땋아 주겠다며 쫓아왔다.', '{sis2}[과/와] 옛날 사진첩을 넘기며 깔깔 웃었다.', '{father}[과/와] 함께 화단에 물을 줬다.', '{mother}[과/와] 시장에 다녀왔다. 덤을 두 번이나 받았다.', '{siblings}[과/와] 보드게임을 하다가 판을 엎었다.', '가족 단체 대화방에 오래된 사진을 올렸다.', '가족과 둘러앉아 옛날 이야기를 했다.', '오랜만에 고향 집에 전화를 걸어 한참 수다를 떨었다.', '가족 식사 자리에서 설거지를 도맡았다.', '가족과 동네 시장 구경을 했다.', '명절 사진을 정리해 앨범을 만들었다.', '가족들 생일을 달력에 하나하나 적어 두었다.', '집안 고장 난 곳을 손봤다. 박수를 받았다.'],
@@ -33,7 +34,7 @@
     exercise_jail: ['운동장 한 귀퉁이에서 팔굽혀펴기를 했다.', '좁은 방에서 스쿼트를 반복했다.', '배식 시간 전까지 제자리 달리기를 했다.', '운동 시간에 농구 골대 아래서 슛을 쐈다.', '복도 끝까지 오리걸음을 했다.', '플랭크 3분을 버텼다.', '동료 수감자에게 줄넘기 대신 뛰는 법을 배웠다.', '침상에 발을 걸고 윗몸일으키기를 했다.', '운동장 트랙을 스무 바퀴 돌았다.'],
     doctor: ['건강검진을 받았다. "운동 꾸준히 하세요."', '혈압을 쟀다. 의사가 짠 음식을 줄이라고 했다.', '치과 정기 검진을 받았다. 무서웠지만 충치는 없었다.', '종합검진 결과지를 받아 형광펜으로 줄을 그었다.', '한의원에서 침을 맞았다. 어깨가 가벼워졌다.', '안과 검진을 받았다. 시력이 조금 떨어졌다.', '피검사를 받았다. 콜레스테롤을 조심하라고 한다.', '물리치료를 받았다. 허리가 시원하다.', '독감 예방 주사를 맞았다.', '심전도 검사를 받았다. 심장은 튼튼하다.'],
     blood: ['헌혈을 했다. 간호사가 건넨 과자가 유난히 달았다.', '헌혈의 집에서 영화표를 받았다.', '헌혈을 했다. 내 피가 누군가에게 닿기를.', '헌혈 증서가 한 장 더 늘었다.', '혈장 헌혈을 했다. 생각보다 오래 걸렸다.', '헌혈 후 주스를 두 잔 마셨다.', '헌혈 버스에서 반가운 이웃을 만났다.', '헌혈 기념품으로 우산을 받았다.', '긴급 헌혈 문자를 받고 바로 달려갔다.', '헌혈 50회 달성자의 사진을 보고 결심을 다졌다.'],
-    family_dad: ['{father} 곁에 앉아 오래 이야기를 나눴다. 오늘은 술병 대신 내 경기 이야기를 하셨다.', '{father}[과/와] 공원 벤치에서 탄산수를 나눠 마셨다.', '{father}의 일터에 따라가 화단 정리를 도왔다.', '{father}에게 내 경기 영상을 보여 드렸다. 한참을 말없이 보셨다.', '{father}[과/와] 함께 장비실 유니폼을 갰다.', '{father}[이/가] 오늘은 일찍 들어오셨다. 저녁을 같이 먹었다.', '{father}의 손을 잡고 바닷가를 걸었다.', '{father}에게 편지를 썼다. "아빠가 자랑스러워요."', '{father}[과/와] 낚시를 갔다. 물고기는 못 잡았지만 많이 웃었다.', '{father}[과/와] 상담 센터 앞까지 같이 걸어갔다.'],
+    family_dad: ['{father} 곁에 앉아 오래 이야기를 나눴다. 오늘은 술병 대신 내 이야기를 들으셨다.', '{father}[과/와] 공원 벤치에서 탄산수를 나눠 마셨다.', '{father}의 일터에 따라가 화단 정리를 도왔다.', '{father}에게 요즘 하는 일을 사진으로 보여 드렸다. 한참을 말없이 보셨다.','{father}[과/와] 함께 장비실 유니폼을 갰다.', '{father}[이/가] 오늘은 일찍 들어오셨다. 저녁을 같이 먹었다.', '{father}의 손을 잡고 바닷가를 걸었다.', '{father}에게 편지를 썼다. "아빠가 자랑스러워요."', '{father}[과/와] 낚시를 갔다. 물고기는 못 잡았지만 많이 웃었다.', '{father}[과/와] 상담 센터 앞까지 같이 걸어갔다.'],
     kids: ['{child}[과/와] 공원에서 공을 찼다. 슈팅 자세가 누굴 닮았다.', '{child}에게 자전거 타는 법을 가르쳤다. 손을 놓은 줄도 모르고 달려갔다.', '{child}[과/와] 그림을 그렸다. 내 얼굴이 감자처럼 생겼다.', '{child}의 학교 발표회에 갔다. 맨 앞줄에서 제일 크게 박수 쳤다.', '{child}[과/와] 동물원에 갔다.', '{child}[과/와] 마주 앉아 숙제를 했다.', '아이들과 베개 싸움을 했다. 졌다.', '아이들에게 어릴 적 동네 축구 이야기를 해 줬다.', '아이들과 김밥을 싸서 소풍을 갔다.', '아이들의 키를 문틀에 표시했다.']
   };
   E.ACTIVITY_LINES = LINES;
@@ -55,6 +56,7 @@
     var st = s.fb.stage;
     if (st === 'pro') return s.age >= 31 ? 'fb_veteran' : 'fb_pro';
     if (st === 'academy' || st === 'youth') return 'fb_academy';
+    if (s.age >= 40) return 'fb_senior';
     if (s.age >= 18) return 'fb_amateur';
     return s.age < 12 ? 'fb_child' : 'fb_teen';
   }
@@ -65,14 +67,39 @@
       eff(s, { happy: E.rint(s, 3, 6), smarts: E.chance(s, 0.3) ? 1 : 0 });
       return E.line(s, 'play');
     } },
-    { id: 'football', label: '축구 연습', icon: '⚽', min: 3, max: 60, run: function (s) {
-      var g = s.age < 30 ? E.rint(s, 1, 3) + (s.stats.grit > 60 ? 1 : 0) : E.rint(s, 0, 1);
+    // off the football route an adult only kicks a ball for fun: 조기축구 (amateur weekend football) up to 60
+    { id: 'football', label: '축구 연습', icon: '⚽', min: 3, max: 60, labelFn: function (s) {
+      return s.route && s.route.id === 'football' ? '축구 훈련' : s.age >= 18 ? '조기축구' : '축구 연습';
+    }, avail: function (s) {
+      return s.age > 40 && s.stats.health < 35 ? '몸이 버티지 못한다' : true;
+    }, run: function (s) {
+      // adults off the football route play only for fun (조기축구) and stop at 55
+      var onRoute = s.route && s.route.id === 'football';
+      var g = !onRoute && s.age >= 18 ? (s.age < 30 && E.chance(s, 0.5) ? 1 : 0) : s.age < 30 ? E.rint(s, 1, 3) + (s.stats.grit > 60 ? 1 : 0) : E.rint(s, 0, 1);
       var cap = E.Football.cap(s);
       if (s.stats.football + g > cap) g = Math.max(0, cap - s.stats.football);
       eff(s, { football: g, health: 1, grit: E.chance(s, 0.5) ? 1 : 0, happy: 1 });
       s.y.trainedFb = (s.y.trainedFb || 0) + 1;
       var key = fbKey(s);
       return E.line(s, key) + (g ? ' (축구 실력 +' + g + ')' : (s.age < 30 ? ' 재능의 한계에 가까워졌다. 근성을 기르면 한계가 조금 올라간다.' : ' 몸이 예전 같지 않다.'));
+    } },
+    // on a route: train for its next stage. A school-track student (미술·음악·연기·체육·연습생·조리·기술)
+    // practises the track before any route starts (실기 연습, 운동부 훈련…), raising its talent
+    { id: 'route', label: '실력 쌓기', icon: '🔥', min: 8, max: 90, labelFn: function (s) {
+      var p = E.Routes.trackPractice(s); return p ? p.label : '실력 쌓기';
+    }, iconFn: function (s) { var p = E.Routes.trackPractice(s); return p ? p.icon : '🔥'; }, avail: function (s) {
+      var r = E.Routes && E.Routes.cur(s);
+      if (E.Routes.trackPractice(s)) return true;
+      return r && E.Routes.isLadder(r) && r.id !== 'football' ? true : '특별한 길(운동·연예·예술·전문직)이나 예체능·특성화 과정에 들어서야 할 수 있다';
+    }, run: function (s) {
+      if (E.Routes.trackPractice(s)) { eff(s, { grit: 1, happy: -1 }); return E.Routes.practiceTrack(s); }
+      var r = E.Routes.cur(s), fit = E.Routes.fit(s, r);
+      var g = Math.max(1, Math.round(E.rint(s, 1, 3) * (0.5 + fit / 100)));
+      s.route.sk = Math.min(100, s.route.sk + g);
+      s.y.trainedRoute = (s.y.trainedRoute || 0) + 1;
+      eff(s, r.group === '운동' ? { health: 1, grit: 1, happy: -1 } : { grit: 1, happy: -1 });
+      var lines = E.Routes.trainLines(r);
+      return E.line(s, 'rtact_' + r.id, lines) + ' (' + r.name + ' 실력 +' + g + ')';
     } },
     { id: 'study', label: '공부', icon: '📚', min: 6, max: 120, run: function (s) {
       var g = E.rint(s, 2, 4);
@@ -164,10 +191,7 @@
       return (gain >= 0 ? '투자 수익 +' : '투자 손실 ') + T.money(gain, E.country(s)) + (mult > 2 ? ' 대박이다!' : mult < 0.3 ? ' 휴지 조각이 됐다…' : '');
     } },
     { id: 'lotto', label: '복권 사기', icon: '🎟️', min: 18, max: 120, run: function (s) {
-      s.money -= Math.round(5 * W(s));
-      if (E.chance(s, 0.0015)) return E.FX.lottery(s);
-      if (E.chance(s, 0.05)) { var w = Math.round(200 * W(s)); s.money += w; return '4등 당첨! +' + T.money(w, E.country(s)); }
-      return '꽝. 다음 주엔 될 것 같다.';
+      return '복권 열 장을 샀다. ' + E.FX.buyLottery(s, 10);
     } },
     { id: 'crime', label: '범죄', icon: '🦹', min: 14, max: 100, opts: [['shoplift', '가게 물건 훔치기'], ['pickpocket', '소매치기'], ['burglary', '빈집 털기'], ['fraud', '사기 치기']], run: function (s, arg) {
       var t = { shoplift: [0.25, 80], pickpocket: [0.3, 300], burglary: [0.4, 3000], fraud: [0.35, 8000] }[arg || 'shoplift'];
@@ -184,7 +208,10 @@
     } },
     { id: 'jobs', label: '구직/이직', icon: '🔎', min: 14, max: 75, ui: 'jobs' },
     { id: 'quitjob', label: '퇴사', icon: '🚪', min: 14, max: 120, avail: function (s) { return s.job ? true : '직장이 없다'; }, ap: 0, run: function (s) { return E.FX.quitJob(s); } },
-    { id: 'joinclub', label: '동네 축구클럽 입단', icon: '🥅', min: 5, max: 16, avail: function (s) { return s.fb.stage === 'none' && !s.flags.fb_quit ? true : '이미 소속팀이 있다'; }, run: function (s) { return E.FX.joinLocalClub(s); } },
+    { id: 'joinclub', label: '동네 축구클럽 입단', icon: '🥅', min: 5, max: 15, avail: function (s) {
+      if (s.fb.stage !== 'none' || s.flags.fb_quit) return '이미 소속팀이 있거나 축구를 그만뒀다';
+      return !s.route || s.route.id === 'school' ? true : '지금 걷는 길이 따로 있다';
+    }, run: function (s) { var t = E.FX.joinLocalClub(s); if (E.Routes) E.Routes.sync(s); return t; } },
     { id: 'quitfb', label: '축구 그만두기', icon: '🥾', min: 8, max: 45, avail: function (s) { return ['local', 'regional', 'academy', 'youth', 'pro'].indexOf(s.fb.stage) >= 0 ? true : '소속팀이 없다'; }, ap: 0, run: function (s) { return s.fb.stage === 'pro' ? E.FX.retireFootball(s) : E.FX.quitFootball(s); } },
     { id: 'kids', label: '아이와 놀기', icon: '👶', min: 18, max: 120, avail: function (s) { return E.peopleByRel(s, 'children').length ? true : '아이가 없다'; }, run: function (s) {
       eff(s, { happy: 4, rel: { children: 7 } });
@@ -220,7 +247,7 @@
       var cost = a.ap === 0 ? 0 : 1;
       if (av === true && s.jail > 0 && ['study', 'exercise', 'meditate', 'family'].indexOf(a.id) < 0) av = '수감 중에는 할 수 없다';
       if (av === true && cost && s.ap <= 0) av = '올해 행동력을 다 썼다';
-      return { id: a.id, label: a.label, icon: a.icon, ok: av === true, reason: av === true ? '' : av, opts: a.opts || null, ui: a.ui || null, cost: cost };
+      return { id: a.id, label: a.labelFn ? a.labelFn(s) : a.label, icon: a.iconFn ? a.iconFn(s) : a.icon, ok: av === true, reason: av === true ? '' : av, opts: a.opts || null, ui: a.ui || null, cost: cost };
     });
   };
 
@@ -232,11 +259,13 @@
     if (list.cost) s.ap--;
     var before = JSON.parse(JSON.stringify(s.stats)), m0 = s.money;
     s.y.lineKey = null;
+    var icon = a.iconFn ? a.iconFn(s) : a.icon;
     var text = a.run(s, arg) || '';
     var changes = [];
     Object.keys(before).forEach(function (k) { if (s.stats[k] !== before[k]) changes.push({ k: k, d: s.stats[k] - before[k] }); });
     if (s.money !== m0) changes.push({ k: 'money', d: s.money - m0 });
-    E.addLog(s, a.icon + ' ' + text, 'act', { line: s.y.lineKey || null, chg: E.compactChanges(changes) });
+    E.addLog(s, icon + ' ' + text, 'act', { line: s.y.lineKey || null, chg: E.compactChanges(changes) });
+    if (E.Routes) E.Routes.sync(s);
     E.checkAchievements(s);
     E.checkDeath(s, true);
     return { ok: true, log: T.fixJosa(text), changes: changes };

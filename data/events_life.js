@@ -1128,7 +1128,7 @@
     },
     {
       id: 'life_mid_child_teen', age: [40, 60], cooldown: 4,
-      cond: { rel: { children: 'yes' } },
+      cond: { rel: { children: 'yes' }, childAge: [13, 18] },
       text: '사춘기가 된 {child}[이/가] 방문을 쾅 닫았다. 데자뷔다.',
       choices: [
         { text: '문 앞에 간식만 놓는다', effects: { happy: 1, rel: { children: 5 } }, log: '한 시간 뒤 빈 접시와 "고마워"라는 쪽지가 나왔다.' },
@@ -1137,7 +1137,7 @@
     },
     {
       id: 'life_mid_child_football', age: [36, 60], once: true,
-      cond: { rel: { children: 'yes' } },
+      cond: { rel: { children: 'yes' }, childAge: [7, 17] },
       text: '{child}[이/가] 주말 동네 축구 경기에 와 달라고 한다.',
       choices: [
         { text: '목이 쉬도록 응원한다', effects: { happy: 6, rel: { children: 8 } }, log: '{child}[이/가] 골을 넣고 관중석을 향해 손가락을 뻗었다. {name}[을/를] 향해.' },
@@ -1156,7 +1156,7 @@
     },
     {
       id: 'life_mid_father_aging', age: [30, 65], cooldown: 6,
-      cond: { rel: { father: 'alive' }, flags: ['father_sober'] },
+      cond: { rel: { father: 'alive', children: 'yes' }, flags: ['father_sober'] },
       text: '맑은 정신으로 늙어 가는 {father}[이/가] 손주들에게 화단 가꾸는 법을 가르친다.',
       effects: { happy: 5, rel: { father: 6 } },
       log: '"그때 네가 내 손을 잡아 줘서 고맙다." {father}[이/가] 처음으로 그 이야기를 꺼냈다.'
@@ -1459,9 +1459,7 @@
       id: 'life_any_lottery', age: [18, 110], cooldown: 6,
       text: '편의점에서 잔돈으로 복권 한 장을 샀다.',
       choices: [
-        { text: '긁는다', check: { stat: 'happy', diff: 92, min: 0.004, max: 0.01 },
-          success: { effects: { fx: ['lottery'], happy: 10, achieve: 'lottery' }, log: '숫자가 하나, 둘, 셋… 전부 맞았다! 편의점 사장님과 부둥켜안았다.' },
-          fail: { effects: { money: -5, happy: -1 }, log: '꽝. 다음 주에 또 사겠지.' } },
+        { text: '긁는다', effects: { fx: ['buyLottery'] }, log: '동전으로 은박을 긁었다. 숨을 참고 숫자를 하나씩 맞춰 봤다.' },
         { text: '{mother}에게 선물한다', effects: { rel: { mother: 2 } }, log: '{mother}[은/는] 당첨되면 {house}에 새 지붕을 올리겠다고 했다. 꽝이었다.' }
       ]
     },
@@ -1866,9 +1864,9 @@
       cond: { money: [1000, 99999999] },
       text: '친구가 "확실한 정보"라며 경마장에 같이 가자고 한다.',
       choices: [
-        { text: '크게 건다', check: { stat: 'happy', diff: 70 },
-          success: { effects: { money: 3000, happy: 5, flags: ['gambler'] }, log: '7번 말이 기적처럼 들어왔다. 그게 함정이었다.' },
-          fail: { effects: { money: -1500, happy: -5, flags: ['gambler'] }, log: '"확실한 정보"는 꼴찌로 들어왔다.' } },
+        { text: '크게 건다', bet: { odds: 0.3, mult: 3, stake: 'medium', addict: 4 },
+          success: { effects: { happy: 5, flags: ['gambler'] }, log: '7번 말이 기적처럼 들어왔다. 그게 함정이었다.' },
+          fail: { effects: { happy: -5, flags: ['gambler'] }, log: '"확실한 정보"는 꼴찌로 들어왔다.' } },
         { text: '구경만 한다', effects: { happy: 2 }, log: '핫도그가 제일 맛있었다.' }
       ]
     },
@@ -1878,9 +1876,9 @@
       text: '"이번엔 진짜 딴다." 손가락이 또 베팅 앱을 열었다.',
       choices: [
         { text: '도박 상담 전화를 건다', effects: { grit: 4, happy: 2, unflags: ['gambler'] }, log: '앱을 지우고 통장을 가족에게 맡겼다. 첫걸음이었다.' },
-        { text: '한 번만 더', check: { stat: 'happy', diff: 75 },
-          success: { effects: { money: 1500 }, log: '땄다. 그래서 더 위험해졌다.' },
-          fail: { effects: { money: -4000, happy: -6, rel: { family: -4 } }, log: '전세 보증금까지 손댔다. 가족의 얼굴을 볼 수 없었다.' } }
+        { text: '한 번만 더', bet: { odds: 0.3, mult: 2.5, stake: 'big', addict: 5 },
+          success: { effects: { happy: 2 }, log: '땄다. 그래서 더 위험해졌다.' },
+          fail: { effects: { happy: -6, rel: { family: -4 } }, log: '전세 보증금까지 손댔다. 가족의 얼굴을 볼 수 없었다.' } }
       ]
     },
     {

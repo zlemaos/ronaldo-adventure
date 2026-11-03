@@ -25,13 +25,16 @@ function load() {
 // Play a whole life with random-but-seeded choices. Returns final state.
 function autoplay(RA, opts) {
   const E = RA.Engine;
-  const s = E.newGame(opts);
+  // opts.state: continue an existing (e.g. loaded) life instead of starting a new one
+  const s = opts.state || E.newGame(opts);
   const pick = RA.RNG.create('player|' + (opts.seed || ''));
   let guard = 0;
   // Choice policy. opts.bot: 'rascal' (악동 봇: always the risky option), 'model' (모범생 봇: the safe, studious option)
   const choiceIndex = (ev) => {
     const en = ev.choices.filter(c => c.enabled);
     if (!en.length) return ev.choices[0].i;
+    // opts.prefer: a regex for choices this player always takes when offered (e.g. a dedicated footballer)
+    if (opts.prefer) { const p = en.find(c => opts.prefer.test(c.text)); if (p) return p.i; }
     if (opts.bot === 'rascal') {
       const risky = en.find(c => c.risky) || en.find(c => c.bet) || en.slice().sort((a, b) => (a.chance == null ? 1 : a.chance) - (b.chance == null ? 1 : b.chance))[0];
       return risky.i;

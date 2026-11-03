@@ -285,6 +285,203 @@ Results are in section 7.
 Phone screenshots: `docs/screenshots/phone-r5-bet.png` (a bet with odds and chips), `phone-r5-bet-result.png`,
 `phone-r5-traits.png`, `phone-r5-paths.png` (진로 panel), `phone-r5-ending.png` and `phone-r5-hall.png` (엔딩 도감).
 
+## 2f. Round 6: routes (진로 루트) — every life follows one coherent path
+
+The owner's complaint: lives were 짬뽕. About 800 storylets fired by age and stat conditions, any choice
+could swap the career to any of 156 flat rows, and a footballer could suddenly found a company. Round 6
+replaces that with a **route** entity. Each year the hero is on exactly one route; only that route's
+events and route-neutral life events fire; the route changes only through declared exits with a cause.
+
+### Birth: body specs and talents
+
+- `RT.rollBody` (js/routes.js) rolls, on its own seeded stream (`seed|body|country|generation`, so the main
+  life RNG is untouched), the body specs in `data/routes.js` `bodyAttrs`: 예상 키 (cm, around the country
+  and gender average, 7 % chance of a tall outlier), 체격, 반사신경, 지구력, 유연성, 손재주, 목소리 (0–100;
+  외모 stays the existing stat). Heirs average with the parent. Shown on the `birth_body` montage card and in
+  the 🧬 "타고난 몸 · 재능" drawer under the stats (each item has a one-line explanation).
+- `RT.rollTalent` rolls 7 talents (`talents`): 음악, 미술, 운동 감각, 논리·수리, 언어, 미각·요리, 끼·무대
+  (5–25 at birth). The 태교 pick adds +22–25 to one axis (`RT.PRENATAL_TALENT`, 8 options cover all 7);
+  early education (`sys_edu_focus`, 7 options) feeds +4 a year to its axis until 7 (`RT.FOCUS_TALENT`); a
+  school track feeds +2 a year to its axes.
+- `RT.fit(s, route)` = weighted average of the route's `fit` keys (body, talent or stat; height is scored
+  relative to the national average, +1 cm = +3). Fit gates entry chances and stage promotions
+  (`stage.fit`) and multiplies 🔥 실력 쌓기 gains, so a tall hero climbs basketball and modelling faster,
+  a heavy build helps fighting, voice helps singing, hand dexterity helps surgery.
+
+### School tracks
+
+`path_13` and `path_16` build their choices at runtime (`RT.trackChoices13/16`): 진학반, 문과, 이과, 미술,
+음악, 연기·방송, 체육특기생, 축구 유스, 기획사 연습생, 조리 특성화, 기술 특성화, 일반 과정. Names are
+localized per country in `trackNames` (e.g. 한국 예술고 미술과·체육고 특기생·마이스터고, 미국 예술 마그넷 스쿨·직업기술고(CTE), 인도 산업훈련원(ITI)). `s.track` is saved; each
+route's `entry.tracks` lists the tracks that open it, and the validator fails if a track opens nothing.
+Majors outside the track (문과 ↔ 이과) need +15 exam points (`RT.offTrackMajor`).
+
+### Route schema (`data/routes.js`)
+
+```
+{ id, name, icon, group, careers: [career ids],           // every career belongs to exactly one route
+  fit: { height: 3, sport: 2, ... },                      // body/talent/stat weights
+  entry: { tracks: [...], age: [min, max], how, text, degree?, majors?, need? },
+  athlete: { decline, end, endCause? },                   // ladder routes: decline age and forced end
+  stages: [{ id, t, lvl?, skill?, fit?, min?, max?, peak?, late?, train? }],   // ladder routes
+  lines: { stageId: [yearly lines ≥ 3] },                 // no empty or repeated years
+  exits: [X(to, 'cause cause', { career?, stage?, ignoreReq? })],
+  endings: { win: [icon, name, desc], fall: [...] },      // installed as route_<id>_win / _fall
+  generic?: true,   // career-ladder route (office, IT, trades…): yearly lines early/mid/top/late
+  state?: true }    // school, none (쉬는 중), parttime, prison, retired
+```
+
+`lvl` is the paid position on that stage (the route career's ladder level, `-1` = top); once a ladder pays,
+every later stage must pay too. `max` years without promotion ends the route (`fail`/`release`). `athlete.end`
+forces retirement. Causes: fail, release, injury, retire, burnout, scandal, disband, quit, fired, choice,
+crime, deport, calling, release_jail (state routes also use entry, enroll, graduate). Every exit is
+`X(to, 'cause …')`: a move is legal only when **both** the destination and the cause match a declared exit
+(or a `GLOBAL_EXITS` entry); a move without a cause is never legal (`RT.legal(from, to, cause)`).
+`RT.enter` and `E.startJob` refuse an illegal move before any state changes. `GLOBAL_EXITS` are reachable
+from every route (rest, school, prison, retirement, and the dark routes by choice). Every route names a
+`scene` that `js/pixel.js` draws and a `fit` (body/talent/stat weights); the validator checks both.
+
+### Engine (`js/routes.js`, `E.Routes` = `RT`)
+
+- `RT.sync` reconciles the route with what other systems did (jail → prison, academy → football, a job
+  → its route, a lost job → `RT.leave` with the cause). `RT.yearly` runs the ladder year: train, promote
+  by skill/fit/years, decline after `athlete.decline`, forced end at `athlete.end`, one stage line a year.
+- `RT.enter`/`RT.leave` narrate every move; `RT.leave` offers the plausible next routes of that cause
+  (`sys_route_next`: retired athlete → coach/commentator/restaurant, disbanded idol → actor/solo/vocal coach,
+  doctor → professor/clinic…). `sys_route_entry` is the entry audition/test, `sys_route_branch` picks the
+  specialty (변호사/검사/판사, 의사/외과/간호사…), `sys_route_cross` is the crossroads (stay or move).
+- Every move is logged in `s.routeLog` with its cause and `legal = RT.legal(from, to, cause)`; leaving and
+  coming back in the same year (graduating, then starting grad school) removes the entry instead. The
+  summary shows the walked routes with the cause each one ended (`RT.causeLabel`).
+- `sys_route_adrift`: every 3 years a hero on 쉬는 중 / 아르바이트 (19–62) meets ordinary ways forward —
+  정직원 제안 (서비스직), 자격증 → 기술직, 배달 → 운송, 노점 (장사), 공채 (직장인), 귀향 (농어업) — so an
+  auto-played life does not idle for decades.
+- School-track practice: before a route starts, a student on an 예체능·특성화 track uses 🔥 as the track's
+  practice (실기 연습, 보컬·악기 연습, 연기 연습, 운동부 훈련, 보컬·안무 연습, 조리 실습, 기술 실습):
+  +1–2 to the matching talent and `s.trackPrep` (≤ 25), added to the starting skill of a route the track opens.
+- One ladder per job: on a stage-ladder route the job title is the stage title (`E.rankTitle`); the old
+  job ladder is shown only for jobs whose route has no stage ladder. A youth footballer's chip names the
+  club stage (동네 클럽, 지역 클럽…).
+- **Event gating:** `E.careerStoryOk` = `RT.eventOk`. An event belongs to routes via `ev.routes`, a
+  `routeTags` entry, or inference (`fb_`/canon football ids, `cond.fb`, `cond.career`, `cond.sector`, any job
+  → `employee`). Groups: `adrift` (쉬는 중 + 아르바이트), `employee`, `working`, `*`. An event that changes the
+  career is shown only if the move is a legal exit of the current route; `ev.stages` limits an event to stages.
+  Route-neutral events (family, love, health, money, friends, mischief, gambling) may end a job but never
+  start one and never talk about a job (`JOB_WORDS` in the validator).
+- Job hunting (`E.jobList`) only lists careers reachable from the current route.
+- The 진로 panel (`RT.panel`, 학업·직업 tab and ☰ → 🧭 진로 지도) shows the route and stage, the stage ladder,
+  what the next stage needs, the possible exits with their causes, and open/locked routes with what is
+  missing. The route chip sits under the hero's name.
+
+### Route map
+
+| 길 | 단계 (🏆 정점, ⤵ 쇠퇴) | 들어가는 조건 | 나가는 곳 (원인) |
+|---|---|---|---|
+| ⚽ 축구선수 | 동네 클럽 → 지역 클럽 → 아카데미 → 유스 → 프로 🏆 → 베테랑 ⤵ → 은퇴 (js/football.js) | 트랙 축구 유스/체육특기생 · 5–15세 · 동네 클럽 입단 | 스포츠 지도자·해설(은퇴·부상·방출), 요식업(은퇴), 학생(그만둠·방출·실패) |
+| 🏀 농구선수 | 학교 농구부 → 대학·실업 농구 → 프로 신인 → 주전 선수 → 올스타 🏆 → 노장 선수 ⤵ | 트랙 체육특기생 · 10–17세 · 학교 농구부 입부 | 스포츠 지도자·해설(은퇴·부상·방출), 요식업(은퇴), 학생(그만둠·실패·방출) |
+| ⚾ 야구선수 | 학교 야구부 → 드래프트·2군 → 1군 데뷔 → 주전 선수 → 팀의 에이스 🏆 → 베테랑 선수 ⤵ | 트랙 체육특기생 · 9–17세 · 학교 야구부 입부 | 스포츠 지도자·해설(은퇴·부상·방출), 요식업(은퇴), 학생(그만둠·실패·방출) |
+| 🥊 격투가 | 도장 수련생 → 아마추어 선수 → 프로 데뷔 → 랭커 → 챔피언 🏆 → 노장 파이터 ⤵ | 트랙 체육특기생/일반 과정 · 12–26세 · 체육관(도장) 입관 | 스포츠 지도자·해설(은퇴·부상·방출), 공연·스턴트(은퇴·부상), 경찰·소방(은퇴·그만둠) |
+| 🎤 아이돌 | 연습생 → 데뷔 → 신인 아이돌 → 대세 아이돌 → 월드 스타 🏆 → 재계약 갈림길 ⤵ | 트랙 기획사 연습생/연기·방송/음악 · 12–22세 · 기획사 오디션 | 배우(해체·그만둠·방출), 가수(해체·그만둠·방출), 교육(해체·그만둠), 크리에이터(해체·그만둠·스캔들), 모델(해체·그만둠), 학생(실패·그만둠) |
+| 🎙️ 가수 | 버스킹·오디션 준비 → 데뷔 가수 → 신인 가수 → 히트곡 가수 → 국민 가수 🏆 → 관록의 가수 ⤵ | 트랙 음악/기획사 연습생/연기·방송 · 15–35세 · 오디션·버스킹 | 교육(그만둠·실패·번아웃), 밴드(그만둠·선택), 배우(선택·그만둠), 크리에이터(실패·그만둠·스캔들), 서비스직(실패·그만둠) |
+| 🎸 밴드 | 합주실 밴드 → 클럽 공연 → 첫 정규 앨범 → 페스티벌 무대 → 헤드라이너 🏆 → 재결성 투어 ⤵ | 트랙 음악/일반 과정/미술 · 14–35세 · 밴드 결성 | 가수(해체·그만둠), 교육(해체·그만둠·실패), 방송·언론(해체·그만둠), 서비스직(실패·그만둠) |
+| 🎬 배우 | 연기 지망생 → 단역 배우 → 조연 → 주연 → 톱 배우 🏆 → 중견 배우 ⤵ | 트랙 연기·방송/기획사 연습생/미술 · 10–40세 · 오디션 | 방송·언론(선택·그만둠), 정치(선택), 교육(실패·그만둠), 크리에이터(실패·스캔들·그만둠), 개그맨(선택) |
+| 😂 개그맨 | 개그 지망생 → 공채 개그맨 → 코너 고정 → 유행어 스타 → 국민 MC 🏆 → 원로 코미디언 ⤵ | 트랙 연기·방송/일반 과정 · 17–35세 · 방송사 공채 시험 | 방송·언론(선택·그만둠), 배우(선택), 크리에이터(실패·그만둠·스캔들), 요식업(그만둠·실패) |
+| 👠 모델 | 모델 지망생 → 신인 모델 → 전속 모델 → 런웨이 모델 → 톱 모델 🏆 → 베테랑 모델 ⤵ | 트랙 연기·방송/미술/기획사 연습생/일반 과정 · 15–25세 · 에이전시 캐스팅 | 배우(선택·그만둠), 디자인·사진(그만둠·은퇴), 크리에이터(그만둠·실패), 서비스직(실패·그만둠) |
+| 🎨 미술계 | 습작기 → 신진 작가 → 첫 개인전 → 전업 작가 → 거장 🏆 → 원로 작가 ⤵ | 트랙 미술 · 16–60세 · 작업실 마련 | 교육(실패·그만둠), 디자인·사진(실패·그만둠·선택), 글·웹툰 작가(선택·그만둠) |
+| 🍳 요식업 | 주방 막내 → 라인 쿡 → 수셰프 → 헤드 셰프 → 스타 셰프 🏆 → 원로 셰프 ⤵ | 트랙 조리 특성화/일반 과정 · 15–50세 · 주방 취업 | 크리에이터(선택·그만둠), 장사·자영업(실패·그만둠), 교육(그만둠·은퇴), 서비스직(실패·그만둠) |
+| ⚖️ 법조계 | 시험 준비생 → 신입 변호사 → 어쏘 변호사 → 파트너 변호사 → 대형 로펌 대표 🏆 → 원로 법조인 ⤵ | 트랙 문과/진학반 · 22–45세 · 법학 학위 → 시험 | 정치(선택·그만둠), 직장인(선택·번아웃·그만둠), 교육(은퇴·그만둠) |
+| 🩺 의료계 | 인턴 → 레지던트 → 전문의 → 과장 🏆 → 원로 의료인 ⤵ | 트랙 이과/진학반 · 20–45세 · 의료 학위 → 면허 | 교육(선택·은퇴), 정치(선택), 창업가(선택·번아웃) |
+| 🏢 직장인 | 직업 사다리 (12개 직업) | 트랙 문과/이과/진학반/일반 과정 · 취업 | 창업가(선택·번아웃), 요식업(선택·번아웃), 장사·자영업(해고·번아웃·선택), 공무원·외교(선택) |
+| 🚀 창업가 | 직업 사다리 (1개 직업) | 트랙 진학반/이과/일반 과정 · 취업 | 직장인(실패·선택), 장사·자영업(실패) |
+| 🏪 장사·자영업 | 직업 사다리 (5개 직업) | 트랙 일반 과정/조리 특성화 · 취업 | 서비스직(실패·선택), 요식업(선택) |
+| 🏛️ 공무원·외교 | 직업 사다리 (7개 직업) | 트랙 문과/진학반/일반 과정 · 취업 | 정치(선택), 교육(선택) |
+| 🗳️ 정치 | 직업 사다리 (1개 직업) | 트랙 문과 · 취업 | 직장인(실패·스캔들), 방송·언론(실패·그만둠) |
+| 🍎 교육 | 직업 사다리 (7개 직업) | 트랙 문과/이과/진학반/음악/미술/체육특기생 · 취업 | 공무원·외교(선택), 글·웹툰 작가(선택) |
+| 💻 IT·개발 | 직업 사다리 (6개 직업) | 트랙 이과/기술 특성화/진학반/일반 과정 · 취업 | 창업가(선택·번아웃), 과학·우주(선택) |
+| 🔬 과학·우주 | 직업 사다리 (7개 직업) | 트랙 이과 · 취업 | 교육(선택), IT·개발(선택) |
+| 📺 방송·언론 | 직업 사다리 (7개 직업) | 트랙 문과/연기·방송/일반 과정 · 취업 | 정치(선택), 글·웹툰 작가(선택·그만둠), 크리에이터(그만둠·실패) |
+| ✍️ 글·웹툰 작가 | 직업 사다리 (2개 직업) | 트랙 문과/미술/진학반/일반 과정 · 취업 | 방송·언론(선택), 교육(실패·그만둠) |
+| 📐 디자인·사진 | 직업 사다리 (4개 직업) | 트랙 미술/이과/일반 과정 · 취업 | 미술계(선택), 교육(실패·그만둠) |
+| 🎻 클래식 연주자 | 직업 사다리 (1개 직업) | 트랙 음악 · 취업 | 교육(선택·그만둠·실패), 밴드(선택) |
+| 📹 크리에이터 | 직업 사다리 (4개 직업) | 트랙 연기·방송/일반 과정/미술/음악 · 취업 | 방송·언론(선택), 창업가(선택), 장사·자영업(실패) |
+| 🎪 공연·스턴트 | 직업 사다리 (5개 직업) | 트랙 체육특기생/연기·방송/일반 과정 · 취업 | 스포츠 지도자·해설(은퇴·부상), 배우(선택) |
+| 🎮 e스포츠·바둑 | 직업 사다리 (2개 직업) | 트랙 일반 과정/이과/진학반 · 취업 | 크리에이터(은퇴·그만둠), 스포츠 지도자·해설(은퇴) |
+| 📋 스포츠 지도자·해설 | 직업 사다리 (6개 직업) | 트랙 체육특기생/축구 유스/일반 과정 · 취업 | 요식업(선택), 방송·언론(선택) |
+| 🔧 기술직 | 직업 사다리 (8개 직업) | 트랙 기술 특성화/이과/일반 과정 · 취업 | 장사·자영업(선택·해고), 운송(해고·선택) |
+| 🌾 농어업 | 직업 사다리 (8개 직업) | 트랙 일반 과정/기술 특성화/이과 · 취업 | 장사·자영업(선택·실패), 요식업(선택) |
+| 🎖️ 군인 | 직업 사다리 (6개 직업) | 트랙 기술 특성화/체육특기생/일반 과정 · 취업 | 경찰·소방(은퇴·선택), 운송(은퇴), 공무원·외교(은퇴·선택) |
+| 🚓 경찰·소방 | 직업 사다리 (7개 직업) | 트랙 체육특기생/기술 특성화/일반 과정 · 취업 | 공무원·외교(선택), 스포츠 지도자·해설(선택) |
+| 🚚 운송 | 직업 사다리 (8개 직업) | 트랙 기술 특성화/일반 과정 · 취업 | 장사·자영업(선택·해고), 서비스직(선택) |
+| 🛎️ 서비스직 | 직업 사다리 (8개 직업) | 트랙 조리 특성화/일반 과정/미술 · 취업 | 장사·자영업(선택), 요식업(선택) |
+| 🙏 종교 | 직업 사다리 (7개 직업) | 트랙 문과/일반 과정 · 취업 | 쉬는 중(선택), 교육(선택) |
+| 🕶️ 뒷골목 | 직업 사다리 (10개 직업) | 트랙 일반 과정 · 취업 | 도박꾼(선택), 장사·자영업(그만둠·선택) |
+| 🎲 도박꾼 | 직업 사다리 (1개 직업) | 트랙 일반 과정 · 취업 | 장사·자영업(그만둠·선택), 뒷골목(선택·실패) |
+| 🎒 학생 | 상태 | — | (모든 길)(입문·선택·진학·졸업·은퇴) |
+| 🛋️ 쉬는 중 | 상태 | — | (모든 길)(입문·선택·진학·졸업·은퇴) |
+| 🧾 아르바이트 | 상태 | — | (모든 길)(입문·선택·진학·졸업·은퇴) |
+| ⛓️ 수감 | 상태 | — | 쉬는 중(출소), 학생(출소), 뒷골목(선택) |
+| 🌅 은퇴 생활 | 상태 | — | 아르바이트, 장사·자영업, 서비스직, 운송, 농어업 (입문·선택) |
+
+모든 길 공통 출구(`GLOBAL_EXITS`): 쉬는 중(그만둠·실패·해고·방출·번아웃·스캔들·해체·부상·추방·은퇴), 학생(같은 원인 + 선택·진학), 수감(수감), 은퇴 생활(은퇴), 뒷골목(선택), 도박꾼(선택), 종교(부름·선택).
+
+학교 트랙이 여는 길: **진학반** → 법조계/의료계/직장인/창업가/공무원·외교/교육/IT·개발/글·웹툰 작가/e스포츠·바둑; **문과** → 법조계/직장인/공무원·외교/정치/교육/방송·언론/글·웹툰 작가/종교; **이과** → 의료계/직장인/창업가/교육/IT·개발/과학·우주/디자인·사진/e스포츠·바둑/기술직/농어업; **미술** → 밴드/배우/모델/미술계/교육/글·웹툰 작가/디자인·사진/크리에이터/서비스직; **음악** → 아이돌/가수/밴드/교육/클래식 연주자/크리에이터; **연기·방송** → 아이돌/가수/배우/개그맨/모델/방송·언론/크리에이터/공연·스턴트; **체육특기생** → 축구선수/농구선수/야구선수/격투가/교육/공연·스턴트/스포츠 지도자·해설/군인/경찰·소방; **축구 유스** → 축구선수/스포츠 지도자·해설; **기획사 연습생** → 아이돌/가수/배우/모델; **조리 특성화** → 요식업/장사·자영업/서비스직; **기술 특성화** → IT·개발/기술직/농어업/군인/경찰·소방/운송; **일반 과정** → 격투가/밴드/개그맨/모델/요식업/직장인/창업가/장사·자영업/공무원·외교/IT·개발/방송·언론/글·웹툰 작가/디자인·사진/크리에이터/공연·스턴트/e스포츠·바둑/스포츠 지도자·해설/기술직/농어업/군인/경찰·소방/운송/서비스직/종교/뒷골목/도박꾼.
+
+### What happened to the old content
+
+- **Rewritten:** `path_13`/`path_16` (now track picks), the 진로 panel, `E.careerStoryOk` (the football
+  blacklist is gone), `sys_edu_focus`/`sys_prenatal` effects (talents), the summary's route history.
+- **Moved:** every career row (156 + 17 + new route careers in `data/careers_routes.js`) is folded into a
+  route; old `car_` events follow their career's route automatically through `cond.career`/`cond.sector`;
+  49 route-neutral events that changed careers got a `routeTags` entry so they only fire on routes where that
+  move is a declared exit. New content: `data/events_routes.js` (40 `rt_` decisions, ≥ 3 per new route),
+  yearly stage lines, 🔥 실력 쌓기 lines per route.
+- **Dropped:** none of the events; the flat "any choice may set any career" behaviour is gone — such a choice
+  is now hidden unless the move is legal. `path_arts` and the other display flags are read only by the save
+  migration (they map to a track).
+
+### Round 6 addition: sound, gambling, scenes, plausibility
+
+- SIUU (`assets/audio/siuu.mp3`) re-mastered −19 dB and played at volume 1, so it is no louder than the
+  synthesized effects; mute pauses it.
+- Gambling: stakes are a share of what the hero can lay down — the larger of savings and a year's income
+  (small 10 %, medium 25 %, big 50 %, all-in = everything) — and a win returns stake × multiplier. A 4 %
+  jackpot pays ×5 on top; base win odds are divided by 1.16 so every bet's expected return is unchanged and
+  below 1 (`E.betWinChance`, shown to the player). Wins count up in a banner with falling coins, a jackpot
+  spins 7-7-7 reels, the money line bounces. A lost bet always costs its stake (kids' 'tiny' bets too).
+  Lottery tickets (`E.LOTTERY`, `FX.buyLottery`, the 🎟️ activity buys 10) return about two thirds of their
+  price; the gambler career's yearly swing (`E.GAMBLER_SWING`) averages a loss; fixed-money wagers in events
+  lose on average even at the best odds. `test/gamble.test.js` checks all of these analytically, and a
+  simulation test that most gambling lives lose money.
+- Scenes: 13 new pixel scenes in `js/pixel.js` — court, surgery, stage, studio, runway, kitchen, ring, hoops,
+  ballpark, gallery, casino, party, rain — chosen by `E.ROUTE_SCENE` and `E.sceneFor` (gambling → casino,
+  weddings/birthdays → party, grief → rain). Results carry `res.sound` (sorrow / cheer / good / bad) and
+  `res.fx` (dim / shake / glow one-shot CSS on the picture); route peaks celebrate with "정상에 올랐다!".
+  All motion is short and respects `prefers-reduced-motion`.
+- Plausibility: off the football route an adult's football activity is 조기축구 (amateur weekend football,
+  age 18–60, 40+ gets senior lines); `cond.childAge` gates scenes about a child of a given age; the
+  validator rejects an athlete-route event past its retirement age and youth-sport words (스카우트,
+  아카데미, 트라이아웃…) reaching heroes over 30 outside the football ladder.
+
+### Save v6
+
+`SAVE_VERSION` 6. `RT.migrate` defaults `body`, `talent` (with the old 태교 and focus applied), `track`
+(from the old `path_*` flags), `routeLog`, `routeYears`, closes v5's never-ended youth-club spells for adults
+(v5 kept `fb.stage = 'regional'` forever), then `RT.sync` puts the life on its route (job → its route,
+jail → prison, pro → football, none → 쉬는 중). The ending hall (`ronaldo-adventure.endings`) and
+achievements are untouched; all 31 old ending ids and 38 achievements still exist. `test/fixtures/v5-saves.json`
+holds six saves made by the v5 build (child, fisher, idle, prison, 68-year-old, pro footballer); the test
+loads each and plays it to an ending with only legal moves.
+
+### Tests that keep it from coming back
+
+`tools/validate-data.js` `validateRoutes` (run by `test/data.test.js`) and `test/routes.test.js`:
+every career has a route, every track opens a route, exits point to real routes with known causes, ladder
+routes have entry → peak → decline, ≥ 3 lines per stage and ≥ 3 own events, no unpaid stage after a paid
+one, sports have realistic age windows, a route-neutral event never starts a career or talks about a job,
+career-changing events are legal exits of their routes; 90 simulated lives never make an illegal move and
+never see another route's event; old heroes get no academy/pro content; body specs vary and are seeded;
+v5 saves load; every event resolves to a drawn scene; same seed + same choices = same life.
+
 ## 3. Architecture
 
 ```
@@ -293,6 +490,8 @@ css/style.css         theme tokens, layout, responsive rules, animations
 data/constants.js     enums: stats, majors, sectors, outfits, FX names, text tokens (RA.C)
 data/countries.js     8 localized countries
 data/careers.js       156 careers
+data/careers_r5.js    17 unusual round-5 careers; data/careers_routes.js: careers added for the routes
+data/routes.js        routes, tracks, body specs, talents, route tags, global exits (§2f)
 data/achievements.js  achievements + end-of-life ribbons (with test functions)
 data/events_*.js      storylets: football/canon, life, country, career
 js/rng.js             seeded RNG
@@ -300,6 +499,7 @@ js/text.js            token rendering, Korean particles, currency formatting
 js/engine.js          state, conditions, events, education, careers, yearly simulation, death
 js/systems.js         FX effects, system events (exam, major, grad school, retire, proposal), generations, summary
 js/football.js        football growth and pro seasons
+js/routes.js          route engine: body/talents, tracks, stages, entry/exits, event gating, 진로 panel, save migration (§2f)
 js/activities.js      activities menu
 js/save.js            slots + migrations
 js/pixel.js           pixel renderer (sprites, scenes, flags, trophies)
@@ -538,6 +738,14 @@ choice `run: function (s) {…}`, choice `reqFn`, and `check.min/max` to clamp a
 `index.html` before `js/rng.js`). Give it a unique prefixed id, an `age` window, `cond` so it reacts to
 state, and either `effects`+`log` or 2–4 `choices`. Use tokens (`{father}`, `{food}`, `{exam}`…) and
 particle helpers. Run `node tools/validate-data.js`, then `npm test`.
+
+**Add a route.** Push a `route({...})` into `data/routes.js` (schema in §2f): list its careers (add new
+rows to `data/careers_routes.js` if needed), `fit`, `entry.tracks`/`age`/`how`, 4+ `stages` with one `peak`
+and one `late`, `lvl` on every paid stage, ≥ 3 `lines` per stage, `athlete` decline/end ages, `exits` with
+causes into plausible next routes, `endings` (win + fall). Add ≥ 3 decision events with `routes: ['id']`
+to `data/events_routes.js` (optionally `stages: [...]`), training lines in `TRAIN_LINES` (js/routes.js) and
+a scene in `E.ROUTE_SCENE`. If an existing route should lead to it, add an exit there. Run
+`node tools/validate-data.js` and `npm test`; the validator names anything missing.
 
 **Add a career.** Push a row into `data/careers.js` with `req`, `salary`, `ladder` (3–7 titles, tokens
 like `{leader}` allowed), `keyStat`, `promoteYears`, `difficulty`, `stress`, `fame`, `risk`, `sector`,
