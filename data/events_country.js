@@ -1043,7 +1043,7 @@
       { text: '도서관 문 열 때 가서 닫을 때 나온다',
         check: { stat: 'grit', diff: 50 },
         success: { effects: { smarts: 4, grit: 2, flags: ['za_matric_done', 'za_matric_good'] }, log: '사서가 {name}의 자리를 맡아 줄 정도였다.' },
-        fail: { effects: { smarts: 1, health: -1, flags: ['za_matric_done'] }, log: '버스비가 모자라 일주일은 걸어 다녔다.' },
+        fail: { effects: { smarts: 1, health: -1, flags: ['za_matric_done'] }, log: '오가는 길에 지쳐 공부에 집중하기 어려웠다.' },
         schedule: { id: 'za_matric_results', years: 1 } }
     ]
   });
@@ -1153,16 +1153,16 @@
     text: '{mother}[이/가] 동네 아주머니들과 수십 년째 이어 온 계모임(스토크벨) 연말 잔치에 초대받았다.',
     choices: [
       { text: '잔치 음식을 통째로 대접한다', effects: { money: -500, rel: { mother: 6 }, happy: 3 },
-        log: '아주머니들이 "{mother}의 막내는 보물"이라고 노래를 지어 불렀다.' },
+        log: '아주머니들이 "{mother}도 기쁘겠네"라며 노래를 지어 불렀다.' },
       { text: '설거지 담당을 자청한다', effects: { rel: { mother: 4 }, happy: 2 },
         log: '접시가 백 개였다. 그래도 웃음소리에 시간이 금방 갔다.' }
     ]
   });
   E({
     id: 'za_youth_day', age: [14, 25], countries: ['za'], cooldown: 5,
-    text: '6월 16일 청소년의 날. 학교에서 1976년 교육 평등을 외친 학생들의 이야기를 듣는다. 그들도 지금의 {name} 또래였다.',
+    text: '6월 16일 청소년의 날. 기념행사에서 1976년 교육 평등을 외친 학생들의 이야기를 듣는다.',
     effects: { smarts: 2, grit: 2 },
-    log: '집에 와서 {father}에게 그 시절 이야기를 물었다. {father}[은/는] 오래 말했다.'
+    log: '집에 와서 {father}에게 그 역사에 관해 물었다. {father}[은/는] 오래 말했다.'
   });
 
   /* =============================================================== INDIA */
@@ -1185,7 +1185,7 @@
     text: '10학년 보드시험 시즌. 집안 어른들이 모일 때마다 "몇 퍼센트 나올 것 같니?"가 첫 인사다.',
     choices: [
       { text: '저녁 과외(튜션)를 다닌다', effects: { money: -200, smarts: 4, happy: -2 },
-        log: '{sis1}[이/가] 자기 월급에서 과외비를 보탰다.' },
+        log: '과외 수업에서 모르는 문제를 하나씩 물었다.' },
       { text: '{sis2}의 노트로 독학한다',
         check: { stat: 'smarts', diff: 50 },
         success: { effects: { smarts: 4, rel: { sis2: 3 }, flags: ['in_board_done', 'in_board_good'] }, log: '{sis2}의 노트엔 별표가 빼곡했다.' },
@@ -1248,7 +1248,7 @@
         log: '신부님이 마르가오의 회복 모임을 알아봐 주겠다고 했다.',
         schedule: { id: 'in_father_recovery', years: 1 } },
       { text: '{sis1}에게 하소연한다', effects: { rel: { sis1: 4 }, happy: -1 },
-        log: '{sis1}[은/는] "넌 아직 아이야. 이건 어른들이 같이 짊어질 일"이라고 했다.' }
+        log: '{sis1}[은/는] "네가 혼자 짊어질 일이 아니야. 같이 방법을 찾자"고 했다.' }
     ]
   });
   E({
@@ -1274,13 +1274,13 @@
   E({
     id: 'in_aunty_match', age: [25, 36], countries: ['in'], cooldown: 4,
     cond: { flags: ['!married'], rel: { partner: 'no' } },
-    text: '결혼식에 갈 때마다 이모들이 다가온다. "좋은 사람 있는데, 한번 만나 볼래?"',
+    text: '결혼식에 갈 때마다 아는 어른들이 다가온다. "좋은 사람 있는데, 한번 만나 볼래?"',
     choices: [
       { text: '한번 만나 본다', check: { stat: 'looks', diff: 40 },
         success: { effects: { happy: 4, fx: ['newPartner'] }, log: '어색한 차 한잔이 세 시간짜리 산책이 되었다.' },
         fail: { effects: { happy: -1 }, log: '서로 크리켓 이야기만 하다 헤어졌다.' } },
       { text: '"인연은 제가 찾을게요" 웃으며 사양한다', effects: { happy: 1 },
-        log: '이모들은 "다음 결혼식에서 보자"며 물러났다.' }
+        log: '어른들은 "다음 결혼식에서 보자"며 물러났다.' }
     ]
   });
   E({
@@ -1300,7 +1300,7 @@
     text: '마을 성당 축일. 나이 든 {mother}[이/가] 여전히 부엌 봉사를 하겠다고 고집한다.',
     choices: [
       { text: '내려가서 같이 부엌을 지킨다', effects: { money: -300, happy: 3, rel: { mother: 6 } },
-        log: '{mother}[은/는] 모두에게 "우리 막내가 카레를 젓는다"고 자랑했다.' },
+        log: '{mother}[은/는] 모두에게 "오늘은 같이 카레를 만든다"고 자랑했다.' },
       { text: '봉사팀에 기부금을 보낸다', effects: { money: -500, rel: { mother: 3 }, fame: 1 },
         log: '{mother}[이/가] "다음엔 얼굴도 같이 보내라"고 답장했다.' }
     ]
@@ -1308,11 +1308,11 @@
   E({
     id: 'in_all_souls', age: [22, 85], countries: ['in'], cooldown: 5,
     cond: { flags: ['father_dead'] },
-    text: '위령의 날, 마을 묘지가 촛불로 환하다. 가족들이 {father}의 묘에 화환과 작은 축구공을 놓았다.',
+    text: '위령의 날, 마을 묘지가 촛불로 환하다. {father}의 묘에 화환을 놓았다.',
     textVariants: [
-      '위령의 날, 마을 묘지가 촛불로 환하다. 가족들이 {father}의 묘에 화환과 작은 축구공을 놓았다.',
+      '위령의 날, 마을 묘지가 촛불로 환하다. {father}의 묘에 화환을 놓았다.',
       '위령의 날 미사가 끝나고, 성당 마당에서 {father}[을/를] 기억하는 이웃들과 이야기를 나눴다.',
-      '올해 위령의 날에는 아이들이 {father}의 묘에 직접 그린 그림을 놓았다.'
+      '올해 위령의 날에는 {father}의 묘 앞에서 오래된 사진을 꺼내 봤다.'
     ],
     effects: { happy: -1, rel: { family: 4 } },
     log: '"아버지는 공원 꽃을 이렇게 가꾸셨지"라며 화환을 다듬었다.',
