@@ -626,6 +626,11 @@
   E.choose = function (s, idx) {
     var ev = E.eventIndex()[s.queue[0]];
     if (!ev) return null;
+    if ((E.Routes && !E.Routes.eventOk(s, ev)) ||
+        (!ev.manual && !E.condMatches(s, ev.cond))) {
+      s.queue.shift();
+      return null;
+    }
     var choices = eventChoices(s, ev);
     var ch = choices[idx];
     if (!ch || !E.choiceAvailable(s, ch)) return null;
