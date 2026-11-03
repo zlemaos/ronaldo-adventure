@@ -10,7 +10,7 @@
   /* =============================================================== KOREA */
   E({
     id: 'kr_seollal_sebae', age: [3, 10], countries: ['kr'], once: true, cond: { family: 'all' },
-    text: '설날 아침, 좁은 방에 여섯 식구가 줄지어 앉았다. {name}[이/가] 서툰 세배를 하자 {father}[이/가] 꼬깃꼬깃한 지폐를 내밀었다.',
+    text: '설날 아침, 가족들이 줄지어 앉았다. {name}[이/가] 서툰 세배를 하자 {father}[이/가] 세뱃돈을 내밀었다.',
     effects: { happy: 4, money: 20, rel: { family: 3 } },
     log: '절하다 앞으로 굴렀지만 세뱃돈은 받았다.'
   });
@@ -158,7 +158,7 @@
   E({
     id: 'kr_hoesik', age: [24, 58], countries: ['kr'], cooldown: 5,
     cond: { career: 'any', sector: ['business', 'finance', 'government', 'tech', 'trade', 'media'] },
-    text: '회식 2차. 부장님이 잔을 내밀며 "한 잔 받아야지?" 한다.',
+    text: '일로 만난 사람들과 저녁 자리. 옆 사람이 잔을 내밀며 "한 잔 받아야지?" 한다.',
     choices: [
       { text: '받아서 분위기를 맞춘다', effects: { health: -2, happy: 1 },
         log: '다음 날 아침 해장국이 유난히 짰다.' },
@@ -186,7 +186,7 @@
     text: '{mother}[이/가] 전화로 무릎이 시리다는 말을 지나가듯 한다. 그래도 매년 귤 상자는 꼬박꼬박 부친다.',
     choices: [
       { text: '주말마다 제주에 내려간다', effects: { money: -600, happy: 3, rel: { mother: 6 } },
-        log: '{mother}[은/는] 바닷가 산책길에서 막내의 팔짱을 꼭 꼈다.' },
+        log: '{mother}[은/는] 바닷가 산책길에서 내 팔짱을 꼭 꼈다.' },
       { text: '병원비와 용돈을 보낸다', effects: { money: -1000, rel: { mother: 3 } },
         log: '"돈은 됐고 얼굴이나 보여 줘." 목소리가 조금 쓸쓸했다.' }
     ]
@@ -194,19 +194,19 @@
   E({
     id: 'kr_father_jesa', age: [22, 85], countries: ['kr'], cooldown: 5,
     cond: { flags: ['father_dead'] },
-    text: '{father}의 기일. 형제들이 서귀포 집에 모여 상 위에 {father}[이/가] 좋아하던 {food}[을/를] 올렸다.',
+    text: '{father}의 기일. 상 위에 {father}[이/가] 좋아하던 {food}[을/를] 올렸다.',
     textVariants: [
-      '{father}의 기일. 형제들이 서귀포 집에 모여 상 위에 {father}[이/가] 좋아하던 {food}[을/를] 올렸다.',
-      '또 {father}의 기일이 돌아왔다. 올해는 조카들이 절하는 법을 배워 상 앞에 줄지어 섰다.',
+      '{father}의 기일. 상 위에 {father}[이/가] 좋아하던 {food}[을/를] 올렸다.',
+      '또 {father}의 기일이 돌아왔다. 상 앞에서 잠시 고개를 숙였다.',
       '{father}의 기일. 지방을 쓰는 손이 예전보다 느려졌다. 향 냄새가 방 안에 오래 머물렀다.'
     ],
     effects: { happy: -1, rel: { family: 4 } },
-    log: '장비 가방 냄새가 아직도 기억난다는 이야기에 다 같이 웃다가 울었다.',
-    logVariants: ['장비 가방 냄새가 아직도 기억난다는 이야기에 다 같이 웃다가 울었다.', '아이들에게 할아버지가 꽃을 얼마나 잘 가꿨는지 이야기해 줬다.', '상을 물린 뒤 다 같이 {food}[을/를] 나눠 먹으며 옛날 이야기를 했다.']
+    log: '함께했던 기억을 떠올리다 웃음과 눈물이 함께 났다.',
+    logVariants: ['함께했던 기억을 떠올리다 웃음과 눈물이 함께 났다.', '사진 속 얼굴을 한참 바라봤다.', '상을 물린 뒤 {food}[을/를] 먹으며 옛날을 떠올렸다.']
   });
   E({
     id: 'kr_olle_old', age: [62, 90], countries: ['kr'], cooldown: 5,
-    text: '고향 올레길을 천천히 걷는다. 어린 시절 공을 차던 돌담 골목이 카페 거리가 되어 있다.',
+    text: '고향 올레길을 천천히 걷는다. 기억 속 돌담 골목이 카페 거리가 되어 있다.',
     effects: { health: 3, happy: 3 },
     log: '카페 주인이 {nick}[을/를] 알아보고 귤차를 내 왔다.'
   });
@@ -339,7 +339,7 @@
   E({
     id: 'jp_nomikai', age: [23, 60], countries: ['jp'], cooldown: 5,
     cond: { career: 'any', sector: ['business', 'finance', 'tech', 'trade', 'government'] },
-    text: '금요일 회식(노미카이). 과장님이 "2차 가라오케 가는 사람?" 하고 손을 든다.',
+    text: '일로 만난 사람들과 금요일 술자리(노미카이). 한 사람이 "2차 가라오케 가는 사람?" 하고 손을 든다.',
     choices: [
       { text: '마이크를 잡는다', effects: { happy: 3, health: -1 },
         log: '고향 민요를 불렀더니 의외로 기립 박수가 나왔다.' },
@@ -373,7 +373,7 @@
   });
   E({
     id: 'jp_senior_life', age: [65, 90], countries: ['jp'], cooldown: 5,
-    text: '동네 공민관에서 어르신 게이트볼 대회가 열렸다. 다들 {nick}의 발재간이 반칙이라고 투덜댄다.',
+    text: '동네 공민관에서 어르신 게이트볼 대회가 열렸다. 다들 {nick}의 정확한 타격에 감탄한다.',
     effects: { health: 3, happy: 3 },
     log: '우승 상품은 고야 한 봉지였다.'
   });
@@ -483,14 +483,14 @@
   E({
     id: 'cn_overtime', age: [23, 55], countries: ['cn'], cooldown: 5,
     cond: { career: 'any', sector: ['tech', 'business', 'finance', 'trade'] },
-    text: '회사 단체 채팅방에 밤 11시 메시지가 뜬다. "내일 아침까지 수정본 부탁해요." 이번 달만 벌써 세 번째다.',
+    text: '일로 연락하는 사람에게 밤 11시 메시지가 온다. "내일 아침까지 수정본 부탁해요."',
     choices: [
       { text: '밤새 고친다', effects: { money: 300, health: -3, happy: -2 },
-        log: '팀장의 엄지 이모티콘 하나를 받았다.' },
+        log: '답장으로 엄지 이모티콘 하나를 받았다.' },
       { text: '정중하게 내일 오전으로 미룬다',
         check: { stat: 'grit', diff: 45 },
         success: { effects: { happy: 3, health: 1 }, log: '의외로 "그래요"라는 답이 왔다.' },
-        fail: { effects: { happy: -2 }, log: '다음 날 회의에서 은근히 눈치를 받았다.' } }
+        fail: { effects: { happy: -2 }, log: '다음 날에도 재촉하는 연락이 왔다.' } }
     ]
   });
   E({
@@ -511,7 +511,7 @@
     textVariants: [
       '청명절, 가족들이 {father}의 묘를 찾아 풀을 뽑고 꽃을 놓는다. 공원 정원사였던 {father}[이/가] 봤다면 잘 다듬었다고 했을 것이다.',
       '청명절 아침, 이슬비가 내렸다. {father}의 묘 앞에 차 한 잔을 따랐다.',
-      '올해 청명절에는 아이들이 직접 심은 꽃모종을 {father}의 묘에 옮겨 심었다.'
+      '올해 청명절에는 꽃모종을 {father}의 묘에 옮겨 심었다.'
     ],
     effects: { happy: -1, rel: { family: 4 } },
     log: '무덤가에 작은 축구공 모양 장식을 놓았다.',
