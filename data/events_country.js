@@ -803,12 +803,12 @@
   E({
     id: 'br_13th_salary', age: [20, 60], countries: ['br'], cooldown: 5,
     cond: { career: 'any' },
-    text: '12월, 13번째 월급이 들어왔다. {mother}[은/는] 지붕 누수 얘기를 꺼냈다가 얼른 "아니다" 하고 웃는다.',
+    text: '12월, 한 해 수입과 지출을 돌아본다. {mother}[은/는] 지붕 누수 얘기를 꺼냈다가 얼른 "아니다" 하고 웃는다.',
     choices: [
       { text: '{mother}의 집 지붕을 고친다', effects: { money: -800, happy: 4, rel: { mother: 6 } },
         log: '비 오는 밤, {mother}[이/가] "이제 양동이가 필요 없다"고 문자를 보냈다.' },
       { text: '저축하고 크리스마스 선물만 산다', effects: { money: 400, rel: { family: 2 } },
-        log: '조카들 선물로 장난감 세 개를 샀다.' }
+        log: '작은 선물을 고르고 남은 돈을 모았다.' }
     ]
   });
   E({
@@ -819,7 +819,7 @@
       { text: '밴드도 부르고 동네 전체를 초대한다', effects: { money: -2000, happy: 6, rel: { family: 5, partner: 4 } },
         log: '새벽 4시, {mother}[이/가] 마지막까지 춤을 췄다.' },
       { text: '작은 성당에서 가족만 모인다', effects: { money: -400, happy: 4, rel: { partner: 4 } },
-        log: '{father}의 빈자리에 꽃 한 송이를 놓았다.' }
+        log: '성당 의자마다 꽃 한 송이를 놓았다.' }
     ]
   });
   E({
@@ -837,7 +837,7 @@
   });
   E({
     id: 'br_domino_old', age: [65, 90], countries: ['br'], cooldown: 5,
-    text: '광장 나무 그늘에서 도미노 판이 벌어졌다. 옆 골목에선 손주들이 슬리퍼 골대로 펠라다를 한다.',
+    text: '광장 나무 그늘에서 도미노 판이 벌어졌다. 옆 골목에선 동네 아이들이 슬리퍼 골대로 펠라다를 한다.',
     effects: { happy: 4, health: 1 },
     log: '"심판 좀 봐 주세요!" 도미노는 잠시 미뤘다.'
   });
@@ -866,9 +866,9 @@
     choices: [
       { text: '축구 선수가 되고 싶다고 털어놓는다', alt: { text: '좋아하는 {hobbyAct} 이야기를 털어놓는다', log: '{mother}[은/는] "그럼 엄마는 제일 큰 소리로 응원할게"라고 했다.' }, effects: { happy: 3, rel: { mother: 5 }, grit: 1 },
         log: '{mother}[은/는] "그럼 엄마는 제일 큰 소리로 응원할게"라고 했다.' },
-      { text: '학교 이야기를 한다', check: { stat: 'smarts', diff: 40 },
-          success: { effects: { smarts: 2, rel: { mother: 3 } }, log: '{sis1}[이/가] 숙제를 도와주겠다고 나섰다.' },
-          fail: { effects: { happy: -2, rel: { mother: -1 } }, log: '말하다 보니 수학 시험 점수까지 나와 버렸다. 마테가 식는 동안 잔소리가 이어졌다.' } }
+      { text: '공부 이야기를 한다', check: { stat: 'smarts', diff: 40 },
+          success: { effects: { smarts: 2, rel: { mother: 3 } }, log: '{sis1}[이/가] 어려운 문제를 함께 풀어 주겠다고 나섰다.' },
+          fail: { effects: { happy: -2, rel: { mother: -1 } }, log: '말하다 보니 공부를 미뤘다는 이야기까지 나와 버렸다. 마테가 식는 동안 잔소리가 이어졌다.' } }
     ]
   });
   E({
@@ -970,7 +970,7 @@
   E({
     id: 'ar_price_tags', age: [20, 70], countries: ['ar'], cooldown: 6,
     cond: { career: 'any' },
-    text: '월급날 장 보러 갔더니 동네 가게 사장님이 가격표를 또 새로 쓰고 있다. "미안해요, 오늘 아침에 바뀌었어."',
+    text: '장 보러 갔더니 동네 가게 사장님이 가격표를 또 새로 쓰고 있다. "미안해요, 오늘 아침에 바뀌었어."',
     choices: [
       { text: '꼭 필요한 것만 미리 사 둔다', effects: { money: 150, smarts: 1 },
         log: '찬장이 파스타로 가득 찼다.' },
@@ -983,7 +983,7 @@
     cond: { rel: { friend: 'yes' } },
     text: '7월 20일 친구의 날. 휴대폰이 아침부터 축하 메시지로 쉴 새 없이 울린다. {friend}[이/가] 저녁에 마테 한잔하자고 한다.',
     effects: { happy: 4, rel: { friend: 5 } },
-    log: '둘은 어릴 적 포트레로 이야기로 밤을 새웠다.'
+    log: '둘은 각자 살아온 이야기로 밤을 새웠다.'
   });
   E({
     id: 'ar_wedding', age: [24, 45], countries: ['ar'], once: true,
@@ -999,9 +999,9 @@
   E({
     id: 'ar_father_bag', age: [22, 85], countries: ['ar'], once: true, // the old bag is found once
     cond: { flags: ['father_dead'] },
-    text: '창고에서 {father}의 낡은 장비 가방을 찾았다. 안에는 꼬마 {name}의 첫 축구화가 고이 싸여 있었다.',
+    text: '창고에서 {father}의 낡은 가방을 찾았다. 안에는 어린 {name}의 사진이 고이 싸여 있었다.',
     effects: { happy: -1, rel: { family: 4 } },
-    log: '형제들과 그 축구화를 {localClub} 클럽하우스에 걸기로 했다.'
+    log: '사진을 액자에 넣어 간직하기로 했다.'
   });
   E({
     id: 'ar_plaza_old', age: [65, 90], countries: ['ar'], cooldown: 5,
