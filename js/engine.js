@@ -169,7 +169,7 @@
   }
 
   // ---------------------------------------------------------------- template vars
-  function vars(s) {
+  function vars(s, ev) {
     var c = country(s), v = {};
     v.name = s.hero.given; v.nick = s.hero.nick;
     v.father = displayName(s, person(s, 'father')) || '아버지'; v.mother = displayName(s, person(s, 'mother')) || '어머니';
@@ -177,7 +177,12 @@
     v.friend = displayName(s, person(s, 'friend')) || '친구';
     v.partner = displayName(s, person(s, 'partner')) || '연인';
     v.spouse = displayName(s, person(s, 'spouse')) || '배우자';
-    v.child = displayName(s, person(s, 'child')) || '아이';
+    ev = ev || (s.queue && E.eventIndex()[s.queue[0]]);
+    var childAge = ev && ev.cond && ev.cond.childAge;
+    var child = childAge ? peopleByRel(s, 'children').filter(function (p) {
+      return p.age >= childAge[0] && p.age <= childAge[1];
+    })[0] : person(s, 'child');
+    v.child = displayName(s, child) || '아이';
     v.coach = displayName(s, person(s, 'coach')) || '코치님';
     v.city = s.flags.moved_alone && s.age < 40 ? c.places.bigcity : (s.flags.abroad ? s.abroadCity || '외국 도시' : c.places.city);
     v.hometown = c.places.hometown; v.region = c.places.region; v.bigcity = c.places.bigcity; v.capital = c.places.capital;
@@ -624,10 +629,12 @@
     var choices = eventChoices(s, ev);
     var ch = choices[idx];
     if (!ch || !E.choiceAvailable(s, ch)) return null;
+    var eventVars = vars(s, ev);
+    function renderEvent(text) { return T.fixJosa(T.render(text, eventVars)); }
     s.queue.shift();
     var mem = E.eventRefs(ev).isMemorial ? { mem: 1, ev: ev.id } : { ev: ev.id };
     mem.j = s.jail > 0 ? 1 : 0; // the outcome of an event that starts a prison term was written outside
-    if (!ev.manual || ev.id.indexOf('canon_') === 0 || ev.memorial) addLog(s, E.render(s, E.eventText(s, ev)), 'q', mem);
+    if (!ev.manual || ev.id.indexOf('canon_') === 0 || ev.memorial) addLog(s, renderEvent(E.eventText(s, ev)), 'q', mem);
     var res = { changes: [], outcome: null, log: '', anim: ch.anim || null };
     var branch = ch;
     if (choices.length >= 2) { s.dec = s.dec || {}; s.dec[s.age] = (s.dec[s.age] || 0) + 1; }
@@ -669,7 +676,7 @@
     if (branch.run) log = branch.run(s, res) || log;
     var sch = branch.schedule || ch.schedule;
     if (sch) s.pending.push({ age: s.age + (sch.years || 1), id: sch.id });
-    res.log = E.render(s, log || '') + betNote;
+    res.log = renderEvent(log || '') + betNote;
     mem.chg = compactChanges(res.changes);
     var catDef = E.CATEGORIES[catKey];
     res.category = { key: catKey, label: catDef.label, icon: catDef.icon, color: catDef.color, pic: catDef.pic };
@@ -694,10 +701,12 @@
     if (ev.choices || ev.choicesFn) { s.queue.push(ev.id); return; }
     // choiceless: apply now, log it
     var wasJailed = s.jail > 0 ? 1 : 0;
+    var eventVars = vars(s, ev);
+    function renderEvent(text) { return T.fixJosa(T.render(text, eventVars)); }
     var changes = applyEffects(s, ev.effects, []);
     var text = E.eventText(s, ev), evLog = E.eventLog(s, ev);
     var log = ev.run ? ev.run(s) : null;
-    addLog(s, E.render(s, text) + (evLog ? ' ' + E.render(s, evLog) : '') + (log ? ' ' + log : ''), ev.kind || 'event', { mem: E.eventRefs(ev).isMemorial ? 1 : null, ev: ev.id, j: wasJailed, chg: compactChanges(changes) });
+    addLog(s, renderEvent(text) + (evLog ? ' ' + renderEvent(evLog) : '') + (log ? ' ' + log : ''), ev.kind || 'event', { mem: E.eventRefs(ev).isMemorial ? 1 : null, ev: ev.id, j: wasJailed, chg: compactChanges(changes) });
     changes.forEach(function (c) { if (c.k === 'msg') addLog(s, c.t, 'info'); });
   }
   E.fireEvent = fireEvent;
