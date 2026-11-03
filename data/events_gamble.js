@@ -17,15 +17,15 @@
         { text: '돈 말고 음료수 내기로 하자고 한다', effects: { social: 2, happy: 1 }, log: '진 친구가 투덜대며 음료수를 샀다.' }
       ] },
     { id: 'gam_teen_cards', age: [14, 19], cooldown: 3, decision: true,
-      text: '방과 후 교실 뒤에서 카드 게임 판이 벌어졌다. 선생님은 아직 모른다.',
+      text: '동네 골목에서 카드 게임 판이 벌어졌다. 어른들은 아직 모른다.',
       choices: [
         { text: '판에 낀다', risky: true, bet: { odds: 0.4, mult: 2, stake: 'small', addict: 3 },
           success: { effects: { happy: 3, mischief: 2 }, log: '포커페이스가 통했다. 다들 혀를 내둘렀다.' },
-          fail: { effects: { happy: -2, mischief: 2, rep: -2 }, log: '돈도 잃고, 결국 선생님께 걸려 반성문을 썼다.' } },
+          fail: { effects: { happy: -2, mischief: 2, rep: -2 }, log: '돈도 잃고, 지나가던 어른에게 들켜 크게 혼났다.' } },
         { text: '집에 간다', effects: { grit: 1 }, log: '창문 너머 웃음소리가 조금 부러웠다.' }
       ] },
     { id: 'gam_teen_toto', age: [16, 19], cooldown: 3, decision: true,
-      text: '선배가 몰래 스포츠 토토 사이트 주소를 알려 준다. "축구 잘 아는 너라면 무조건 따."',
+      text: '선배가 몰래 스포츠 토토 사이트 주소를 알려 준다. "누구나 쉽게 딸 수 있어."',
       choices: [
         { text: '몰래 걸어 본다', risky: true, bet: { odds: 0.36, mult: 2.5, stake: 'small', addict: 5 },
           success: { effects: { happy: 5, mischief: 3 }, log: '용돈이 하룻밤 새 두 배 넘게 불었다. 가슴이 쿵쾅거린다.' },
@@ -59,7 +59,7 @@
         { text: '룰렛에 크게 건다', risky: true, bet: { odds: 0.18, mult: 5, stake: 'big', addict: 6 },
           success: { effects: { happy: 9, fame: 1 }, log: '빨강 23! 테이블 전체가 환호했다.' },
           fail: { effects: { happy: -6 }, log: '공은 검정 칸에 멈췄다. 방으로 돌아가는 엘리베이터가 길었다.' } },
-        { text: '방에 올라가 잔다', effects: { health: 2 }, log: '다음 날 회의에서 가장 맑은 정신이었다.' }
+        { text: '방에 올라가 잔다', effects: { health: 2 }, log: '다음 날 아침, 머리가 맑았다.' }
       ] },
     { id: 'gam_online_betting', age: [19, 70], cooldown: 2, decision: true,
       text: '휴대폰에 온라인 베팅 앱 광고가 뜬다. "첫 충전 보너스 100%!"',
@@ -74,8 +74,8 @@
       text: '돈 냄새를 맡은 지인이 하이롤러 테이블에 초대했다. 판돈 단위가 다르다.',
       choices: [
         { text: '앉는다', risky: true, bet: { odds: 0.36, mult: 2.5, stake: 'big', addict: 6 },
-          success: { effects: { happy: 7, fame: 2 }, log: '하룻밤에 차 한 대 값을 땄다.' },
-          fail: { effects: { happy: -7 }, log: '하룻밤에 차 한 대 값을 잃었다.' } },
+          success: { effects: { happy: 7, fame: 2 }, log: '칩을 챙기며 웃었다. 손끝이 아직 떨렸다.' },
+          fail: { effects: { happy: -7 }, log: '걸었던 칩이 사라졌다. 자리에서 일어나기 어려웠다.' } },
         { text: '정중히 거절한다', effects: { rep: 2 }, log: '"다음에 봅시다." 그 다음은 오지 않게 하기로 했다.' }
       ] },
     { id: 'gam_athlete_betting', age: [17, 40], once: true,
@@ -96,7 +96,7 @@
         { text: '딱 한 판만', risky: true, bet: { odds: 0.45, mult: 2, stake: 'small', addict: 4 },
           success: { effects: { happy: 2, health: -1 }, log: '땄다. 그래서 한 판 더 했다.' },
           fail: { effects: { happy: -3, health: -1 }, log: '잃었다. 본전 생각에 잠이 오지 않았다.' } },
-        { text: '휴대폰을 거실에 두고 잔다', effects: { gamble: -3, health: 2 }, log: '처음으로 푹 잤다.' }
+        { text: '휴대폰을 거실에 두고 잔다', effects: { gamble: -3, health: 2 }, log: '그날 밤은 푹 잤다.' }
       ] },
     { id: 'gam_habit_borrow', age: [18, 80], cooldown: 4, decision: true,
       cond: { traits: { gamble: [20, 100] } },
@@ -111,30 +111,30 @@
     // ---------------------------------------------------------------- addiction: stage 2 (45+)
     { id: 'gam_debt_call', age: [19, 85], cooldown: 3, priority: false, weight: 30, decision: true,
       cond: { traits: { gamble: [45, 100] } },
-      text: '모르는 번호로 전화가 계속 온다. 카드값과 대출 이자가 밀렸다.',
+      text: '도박에 쓴 돈을 돌아보니 마음이 무겁다. 모르는 번호로 걸려 온 전화에도 괜히 긴장한다.',
       choices: [
-        { text: '한 방에 갚으려고 크게 건다', risky: true, bet: { odds: 0.3, mult: 3, stake: 'big', addict: 6 },
-          success: { effects: { happy: 6 }, log: '기적처럼 빚을 다 갚았다. 그리고 또 걸고 싶어졌다.' },
-          fail: { effects: { happy: -8 }, log: '빚이 두 배가 됐다. 전화벨이 무섭다.' } },
-        { text: '가족에게 털어놓고 갚을 계획을 세운다', effects: { gamble: -6, happy: -2, rel: { family: 4 }, money: -1000 }, log: '부끄러웠지만, 처음으로 길이 보였다.' }
+        { text: '한 방을 바라며 크게 건다', risky: true, bet: { odds: 0.3, mult: 3, stake: 'big', addict: 6 },
+          success: { effects: { happy: 6 }, log: '이번에는 땄다. 그리고 또 걸고 싶어졌다.' },
+          fail: { effects: { happy: -8 }, log: '걸었던 돈마저 잃었다. 전화벨이 무섭다.' } },
+        { text: '상담을 받고 돈 관리 계획을 세운다', effects: { gamble: -6, happy: -2, rel: { family: 4 }, money: -1000 }, log: '부끄러웠지만, 돈을 들여 도움을 받으니 길이 보였다.' }
       ] },
     { id: 'gam_loan_shark', age: [19, 85], cooldown: 4, weight: 20, decision: true,
       cond: { traits: { gamble: [45, 100] }, money: [-1e12, 2000] },
       text: '"급전 바로 됩니다." 사채업자 명함이 문틈에 끼워져 있다.',
       choices: [
-        { text: '돈을 빌려 다시 건다', risky: true, bet: { odds: 0.3, mult: 3, stake: 'all', addict: 6 },
-          success: { effects: { happy: 6, mischief: 2 }, log: '빌린 돈으로 크게 땄다. 이자를 치르고도 남았다.' },
-          fail: { effects: { happy: -10, health: -4, fx: ['bankrupt'] }, log: '사채업자들이 집 앞에 진을 쳤다. 모든 걸 잃었다.' } },
+        { text: '대출 생각까지 하며 남은 돈을 건다', risky: true, bet: { odds: 0.3, mult: 3, stake: 'all', addict: 6 },
+          success: { effects: { happy: 6, mischief: 2 }, log: '이번에는 땄다. 명함은 버리지 못했다.' },
+          fail: { effects: { happy: -10, health: -4, fx: ['bankrupt'] }, log: '남은 돈마저 잃고 무너졌다. 손에 쥔 명함이 구겨졌다.' } },
         { text: '명함을 찢어 버린다', effects: { gamble: -4, grit: 3 }, log: '쓰레기통에 명함을 넣고 뚜껑을 꾹 눌렀다.' }
       ] },
     { id: 'gam_job_loss', age: [20, 65], cooldown: 6, weight: 15,
       cond: { traits: { gamble: [45, 100] }, career: 'any' },
-      text: '근무 시간에도 몰래 베팅 화면을 보다가 상사에게 들켰다.',
+      text: '일하는 시간에도 베팅 화면을 보고 있었다. 주변에서 이러다 일을 잃겠다고 경고한다.',
       choices: [
         { text: '변명한다', risky: true, check: { odds: 0.4 },
-          success: { effects: { rep: -2, gamble: 2 }, log: '이번만 봐준다고 했다. 다음은 없다.' },
-          fail: { effects: { rep: -6, fx: ['fired'] }, log: '짐을 싸라는 말을 들었다.' } },
-        { text: '사실대로 말하고 치료를 약속한다', effects: { gamble: -5, rep: 2, fx: ['rehab'] }, log: '회사가 상담 프로그램을 연결해 줬다.' }
+          success: { effects: { rep: -2, gamble: 2 }, log: '일은 계속했지만 시선이 차가워졌다.' },
+          fail: { effects: { rep: -6, fx: ['fired'] }, log: '결국 일을 계속할 수 없게 됐다.' } },
+        { text: '사실대로 말하고 치료를 약속한다', effects: { gamble: -5, rep: 2, fx: ['rehab'] }, log: '상담 프로그램을 소개받았다.' }
       ] },
     { id: 'gam_intervention', age: [19, 90], cooldown: 5, weight: 25, decision: true,
       cond: { traits: { gamble: [45, 100] }, rel: { mother: 'alive' } },
@@ -161,7 +161,7 @@
       ] },
     { id: 'gam_relapse', age: [19, 90], cooldown: 5,
       cond: { flags: ['rehab'], traits: { gamble: [0, 44] } },
-      text: '치료를 시작한 지 한참 됐다. 옛 친구가 카지노 무료 숙박권을 내민다.',
+      text: '치료를 받은 뒤, 옛 친구가 카지노 무료 숙박권을 내민다.',
       choices: [
         { text: '딱 한 번만', risky: true, bet: { odds: 0.45, mult: 2, stake: 'medium', addict: 8 },
           success: { effects: { happy: 3 }, log: '땄다. 그런데 이긴 기분이 아니었다.' },
@@ -177,7 +177,7 @@
         { text: '집을 걸고 마지막 한 판', risky: true, bet: { odds: 0.3, mult: 3, stake: 'all', addict: 6 },
           success: { effects: { happy: 10, fame: 2 }, log: '인생을 건 한 판에서 이겼다. 손이 한참 떨렸다.' },
           fail: { effects: { happy: -12, fx: ['bankrupt'] }, log: '집이 넘어갔다. 짐 몇 개만 들고 나왔다.' } },
-        { text: '문서를 가족에게 맡긴다', effects: { gamble: -8, rel: { family: 6 } }, log: '"이건 네가 갖고 있어." 그 말이 시작이었다.' }
+        { text: '문서를 넣어 두고 상담을 받는다', effects: { gamble: -8, rel: { family: 6 } }, log: '"집까지 걸려고 했어요." 그 말이 시작이었다.' }
       ] },
     { id: 'gam_last_hand', age: [20, 90], cooldown: 5, weight: 25, decision: true,
       cond: { traits: { gamble: [75, 100] } },
@@ -199,10 +199,10 @@
       ] },
     { id: 'gam_vip_invite_job', age: [21, 60], cooldown: 6, weight: 15, decision: true,
       cond: { traits: { gamble: [45, 100] }, career: 'any' },
-      text: '단골 카지노에서 하우스 플레이어 자리를 제안한다. 지금 직장보다 판돈이 크다.',
+      text: '단골 카지노에서 하우스 플레이어 자리를 제안한다. 큰 판돈을 다루는 일이다.',
       choices: [
-        { text: '직장을 그만두고 간다', risky: true, career: 'pro_gambler', effects: { gamble: 5, happy: 4, fx: ['quitJob'] }, log: '사표를 내던 날, 카지노 조명이 유난히 밝았다.' },
-        { text: '지금 일을 지킨다', effects: { gamble: -3, grit: 2 }, log: '월급날의 소박한 안도감을 택했다.' }
+        { text: '지금 일을 그만두고 간다', risky: true, career: 'pro_gambler', effects: { gamble: 5, happy: 4, fx: ['quitJob'] }, log: '하던 일을 정리하고 카지노로 향했다. 조명이 유난히 밝았다.' },
+        { text: '지금 일을 지킨다', effects: { gamble: -3, grit: 2 }, log: '익숙한 일을 계속하기로 했다.' }
       ] },
     { id: 'gam_pro_tournament', age: [21, 75], cooldown: 3,
       cond: { career: ['pro_gambler'] },
@@ -211,7 +211,7 @@
         { text: '참가한다', risky: true, bet: { odds: 0.24, mult: 4, stake: 'big', addict: 4 },
           success: { effects: { fame: 6, happy: 8, fx: ['promote'] }, log: '파이널 테이블에서 우승했다! 카메라 플래시가 쏟아졌다.' },
           fail: { effects: { happy: -5, fame: 1 }, log: '버블에서 탈락했다. 그래도 이름은 알렸다.' } },
-        { text: '이번엔 쉰다', effects: { health: 2, gamble: -2 }, log: '집에서 오랜만에 가족과 저녁을 먹었다.' }
+        { text: '이번엔 쉰다', effects: { health: 2, gamble: -2 }, log: '집에서 느긋하게 저녁을 먹었다.' }
       ] },
     { id: 'gam_pro_cheat', age: [21, 75], cooldown: 5,
       cond: { career: ['pro_gambler'] },
@@ -224,12 +224,12 @@
       ] },
     { id: 'gam_pro_owner', age: [35, 80], once: true,
       cond: { career: ['pro_gambler'], level: [3, 9] },
-      text: '오래 일한 카지노가 매물로 나왔다. 투자자들이 당신을 찾는다.',
+      text: '카지노 한 곳이 매물로 나왔다. 투자자들이 당신을 찾는다.',
       choices: [
         { text: '인수에 뛰어든다 (50%: 성공)', risky: true, check: { odds: 0.5 },
           success: { effects: { fame: 5, happy: 8, fx: ['promote'] }, log: '카지노 사장이 됐다. 이제 판을 여는 쪽이다.' },
           fail: { effects: { happy: -6, fx: ['bankrupt'] }, log: '투자자들이 손을 뺐다. 빚만 남았다.' } },
-        { text: '은퇴할 때라고 느낀다', effects: { gamble: -10, happy: 3, fx: ['quitJob'] }, log: '칩을 반납하고 바닷가로 이사했다.' }
+        { text: '은퇴할 때라고 느낀다', effects: { gamble: -10, happy: 3, fx: ['quitJob'] }, log: '칩을 내려놓고 일을 그만뒀다.' }
       ] }
   );
 })(typeof globalThis !== 'undefined' ? globalThis : this);
