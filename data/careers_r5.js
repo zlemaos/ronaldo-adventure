@@ -20,7 +20,7 @@
   K('pro_gambler', '프로 겜블러', 'business', 'suit',
     { minAge: 19, maxAge: 70, degree: 'none', traits: { gamble: 45 }, unlockHint: '도박 중독 2단계 이상' },
     [15000, 3000000], ['카지노 딜러', '하우스 플레이어', '프로 겜블러', '하이롤러', '카지노 사장'],
-    'smarts', [2, 3, 5, 3, 2], '올해 연봉은 카드가 정한다. 작년엔 0원, 재작년엔 집 한 채.', 'gamble');
+    'smarts', [2, 3, 5, 3, 2], '카드 한 장에 수입이 출렁인다. 안정적인 벌이와는 거리가 멀다.', 'gamble');
 
   /* ---------------- crime ---------------- */
   K('yabawi', '야바위꾼', 'crime', 'casual',
@@ -30,7 +30,7 @@
   K('smuggler', '밀수꾼', 'crime', 'casual',
     { minAge: 19, maxAge: 70, degree: 'none', traits: { mischief: 40 }, unlockHint: '악동 기질 40 이상' },
     [8000, 2500000], ['운반책', '보따리상', '밀수 브로커', '항구의 큰손'],
-    'grit', [2, 3, 4, 1, 4], '세관 앞에서 웃는 연습만 3년. 가방 바닥이 이중이다.', 'crime');
+    'grit', [2, 3, 4, 1, 4], '세관 앞에서 웃는 연습을 한다. 가방보다 표정이 먼저 들킬까 봐.', 'crime');
 
   /* ---------------- religion / fortune ---------------- */
   K('cult_leader', '사이비 교주', 'religion', 'robe',
@@ -62,7 +62,7 @@
   K('streamer', '스트리머', 'entertainment', 'hoodie',
     { minAge: 15, maxAge: 70, degree: 'none' },
     [0, 2500000], ['시청자 3명', '소통 방송인', '파트너 스트리머', '대형 스트리머', '플랫폼 간판'],
-    'social', [1, 2, 4, 4, 0], '밤새 혼잣말을 하는데 그걸 수천 명이 본다.');
+    'social', [1, 2, 4, 4, 0], '화면 앞에서 밤새 말을 건넨다. 채팅 한 줄에도 힘이 난다.');
   K('mukbang_creator', '먹방 크리에이터', 'entertainment', 'hoodie',
     { minAge: 16, maxAge: 60, degree: 'none', stats: { health: 45 } },
     [0, 1500000], ['구독자 50명', '먹방 꿈나무', '먹방 크리에이터', '먹방 대왕'],
