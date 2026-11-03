@@ -228,7 +228,7 @@
           fail: { effects: { rep: -12, mischief: 6, fx: ['jail'] }, log: '업자가 다른 사건으로 잡히며 장부를 털어놨다.' } },
         { text: '감사실에 보고한다', effects: { rep: 4, happy: 1 }, log: '"청렴 공무원" 표창을 받았다. 업자는 다른 동네로 떠났다.' }
       ] },
-    { id: 'mis_company_card', age: [22, 60], cooldown: 5, cond: { career: 'any' },
+    { id: 'mis_company_card', age: [22, 60], cooldown: 5, cond: { career: ['sales_rep'] },
       text: '법인카드가 손에 있다. 오늘 개인적인 식사를 "거래처 미팅"으로 처리할 수 있을 것 같다.',
       choices: [
         { text: '긁는다', risky: true, check: { odds: 0.6 },

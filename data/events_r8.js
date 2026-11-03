@@ -108,7 +108,7 @@
         success: { effects: { rep: 6, fame: 1, grit: 3 }, log: '할머니를 업고 나왔다. 동네 신문에 사진이 실렸다.' },
         fail: { effects: { health: -12, flags: ['trauma'] }, log: '급류에 휩쓸려 전봇대를 붙잡았다. 구조대가 왔을 땐 손이 하얗게 질려 있었다. 그 뒤로 물이 무섭다.' } }
     ] });
-  H({ id: 'cri_mother_job', age: [6, 12], once: true, weight: 10, origin: ['poor', 'slum', 'middle'], cond: { rel: { mother: 'alive' } },
+  H({ id: 'cri_mother_job', age: [6, 12], once: true, weight: 10, origin: ['poor', 'slum', 'middle'], cond: { rel: { mother: 'alive' }, edu: ['elem', 'middle', 'high'] },
     text: '{mother}[이/가] 일하던 곳이 문을 닫았다. 저녁마다 {mother}[이/가] 구인 광고 신문을 펼친다.',
     choices: [
       { text: '방과 후 집안일을 맡아 {mother}[이/가] 일을 구하게 돕는다', check: { stat: 'grit', diff: 40 },
@@ -173,7 +173,7 @@
     ] });
 
   // ================================================================ hobbies: changes and moments
-  H({ id: 'hob_jam', age: [9, 19], hobby: 'band', cooldown: 6, weight: 10, cond: { edu: ['elem', 'middle', 'high', 'univ'] },
+  H({ id: 'hob_jam', age: [9, 60], hobby: 'band', cooldown: 6, weight: 10, cond: { edu: ['elem', 'middle', 'high', 'univ'] },
     text: '친구가 합주실을 한 시간 빌렸다며 부른다. 시험 기간인데.',
     choices: [
       { text: '간다', check: { odds: 0.55 },

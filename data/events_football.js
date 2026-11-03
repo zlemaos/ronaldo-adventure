@@ -50,7 +50,7 @@
           run: function (s) { if (s.route && s.route.id === 'football') return '그 뒤로 골을 넣을 때마다 하늘을 가리켰다.'; } },
         { text: '한동안 아무것도 하지 못한다', effects: { happy: -5, health: -2, rel: { family: 6 } }, log: '슬픔을 견디는 데 시간이 필요했다. 서두르지 않기로 했다.' },
         { text: '술은 평생 입에 대지 않기로 맹세한다', check: { stat: 'grit', diff: 40 },
-          success: { effects: { health: 3, flags: ['teetotal'], unflags: ['drinker'] }, log: '아버지를 앗아 간 병을 이해하게 됐다. 그리고 미워하지 않기로 했다.' },
+          success: { effects: { health: 3, flags: ['teetotal'], unflags: ['drinker'] }, log: '아버지를 떠올리며 내 몸을 소중히 돌보기로 했다. 술 없이 슬픔을 견뎌 보기로 했다.' },
           fail: { effects: { happy: -2, rel: { family: 2 } }, log: '평생의 맹세를 하기에는 마음이 너무 어지러웠다. 오늘의 슬픔부터 견디기로 했다.' } }
       ] },
     { id: 'canon_father_sober_year', age: [10, 70], once: true, weight: 40, cond: { flags: ['father_sober'], rel: { father: 'alive' } },

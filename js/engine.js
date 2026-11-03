@@ -635,7 +635,11 @@
     var ch = choices[idx];
     if (!ch || !E.choiceAvailable(s, ch)) return null;
     var eventVars = vars(s, ev);
-    function renderEvent(text) { return T.fixJosa(T.render(text, eventVars)); }
+    function renderEvent(text) {
+      var currentVars = vars(s, ev);
+      currentVars.child = eventVars.child;
+      return T.fixJosa(T.render(text, currentVars));
+    }
     s.queue.shift();
     var mem = E.eventRefs(ev).isMemorial ? { mem: 1, ev: ev.id } : { ev: ev.id };
     mem.j = s.jail > 0 ? 1 : 0; // the outcome of an event that starts a prison term was written outside
