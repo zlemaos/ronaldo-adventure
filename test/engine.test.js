@@ -115,7 +115,7 @@ test('family generation is localized for all 8 countries', () => {
     assert.strictEqual(sibs[0].gender, 'm');
     const v = E.vars(s);
     for (const k of ['hometown', 'localClub', 'academy', 'bigcity', 'food', 'holiday', 'exam', 'currency', 'leader']) assert.ok(v[k] && v[k] !== k, c + ' token ' + k);
-    assert.ok(s.log[0].t.indexOf(cd.places.hometown) >= 0, 'birth log uses hometown');
+    assert.ok(s.log[0].t.indexOf(v.hometown) >= 0, 'birth log uses hometown');
   }
 });
 

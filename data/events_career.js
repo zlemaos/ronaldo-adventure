@@ -993,7 +993,7 @@
       { text: '최전선 방화선 작업에 자원한다', check: { stat: 'health', diff: 55 },
         success: { effects: { fame: 2, grit: 3, happy: 4, fx: ['promote'] }, log: '마을 하나를 지켜 냈다. 할머니들이 부대로 {food}[을/를] 보내 왔다.' },
         fail: { effects: { health: -5, fx: ['injury'] }, log: '연기를 너무 많이 마셨다. 사흘간 의무대 신세.' } },
-      { text: '보급과 이재민 지원을 맡는다', effects: { happy: 3, rel: { family: 1 } }, log: '대피소에서 아이들에게 축구를 가르쳤다.' }
+      { text: '보급과 이재민 지원을 맡는다', effects: { happy: 3, rel: { family: 1 } }, log: '대피소에서 아이들과 놀아 주었다.' }
     ]
   });
   E({
@@ -1039,7 +1039,7 @@
     text: '오토바이 날치기범이 골목으로 꺾었다. 순찰차로는 못 들어가는 길이다.',
     choices: [
       { text: '뛰어서 쫓는다', check: { stat: 'health', diff: 55 },
-        success: { effects: { fame: 2, grit: 2, fx: ['promote'] }, log: '세 블록 만에 잡았다. 축구 하던 다리가 아직 살아 있다.' },
+        success: { effects: { fame: 2, grit: 2, fx: ['promote'] }, log: '세 블록 만에 잡았다. 다리가 아직 살아 있다.' },
         fail: { effects: { health: -3, happy: -2 }, log: '놓쳤다. 숨이 차서 무전으로 차량 번호도 제대로 못 불렀다.' } },
       { text: '골목 출구를 머리로 계산한다', check: { stat: 'smarts', diff: 50 },
         success: { effects: { smarts: 2, fx: ['promote'] }, log: '반대편 출구에서 기다렸다. 범인이 제 발로 들어왔다.' },
@@ -1445,7 +1445,8 @@
     text: '오지 마을에 작은 진료소를 세우자는 이야기가 나왔다. 모금액은 목표의 절반.',
     choices: [
       { text: '내 저축을 보탠다', effects: { money: -5000, happy: 7, fame: 1 }, log: '진료소 문 앞에 아이들이 줄을 섰다. 간판엔 이름을 넣지 않았다.' },
-      { text: '{city}에서 자선 축구 경기를 연다', check: { stat: 'football', diff: 40 },
+      { text: '{city}에서 자선 축구 경기를 연다', alt: { text: '{city}에서 자선 바자회를 연다', check: { stat: 'social', diff: 40 },
+        success: { log: '바자회가 북적였고, 모금액이 다 찼다.' }, fail: { log: '손님이 생각보다 적었다. 그래도 모금은 꽤 됐다.' } }, check: { stat: 'football', diff: 40 },
         success: { effects: { fame: 3, happy: 5 }, log: '{name}의 헤딩골에 관중이 열광했고, 모금액이 다 찼다.' },
         fail: { effects: { happy: 2 }, log: '자책골을 넣었다. 그래도 모금은 꽤 됐다.' } }
     ]
@@ -1491,13 +1492,13 @@
     ]
   });
   E({
-    id: 'car_crime_old_crew', age: [18, 85], weight: 1,
+    id: 'car_crime_old_crew', age: [18, 85], weight: 1, once: true,
     cond: { flags: ['went_straight'] },
     text: '정직하게 산 지 2년. 옛 동료가 일터 앞에 나타났다. "딱 한 건만. 너 없인 안 돼."',
     choices: [
       { text: '단호하게 돌려보낸다', check: { stat: 'grit', diff: 50 },
-        success: { effects: { happy: 5, grit: 3, unflags: ['went_straight'] }, log: '그의 뒷모습을 보며 진짜로 끝났다는 걸 알았다.' },
-        fail: { effects: { happy: -3, health: -3, unflags: ['went_straight'] }, log: '거절은 했지만 그들은 경고를 남기고 갔다. 한동안 불을 켜고 잤다.' } },
+        success: { effects: { happy: 5, grit: 3 }, log: '그의 뒷모습을 보며 진짜로 끝났다는 걸 알았다.' },
+        fail: { effects: { happy: -3, health: -3 }, log: '거절은 했지만 그들은 경고를 남기고 갔다. 한동안 불을 켜고 잤다.' } },
       { text: '"딱 한 번만"', check: { stat: 'smarts', diff: 60 },
         success: { effects: { money: 30000, happy: -4, unflags: ['went_straight'] }, log: '성공했다. 그리고 다시 그 세계에 한 발이 걸쳐졌다.' },
         fail: { effects: { unflags: ['went_straight'], fx: ['jail'] }, log: '함정이었다. 동료는 이미 경찰과 손잡고 있었다.' } }

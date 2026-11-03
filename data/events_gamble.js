@@ -6,30 +6,6 @@
   RA.data.events = RA.data.events || [];
   RA.data.events.push(
     // ---------------------------------------------------------------- childhood (7-12): pocket money
-    { id: 'gam_arcade_claw', age: [7, 12], cooldown: 2, decision: true,
-      text: '오락실 앞 인형뽑기 기계. 집게가 반짝이며 손짓한다.',
-      choices: [
-        { text: '한다', risky: true, bet: { odds: 0.35, mult: 2, stake: 'tiny', addict: 2 },
-          success: { effects: { happy: 4 }, log: '집게가 인형을 꽉 물었다! 친구들이 환호했다.' },
-          fail: { effects: { happy: -2 }, log: '인형이 집게에서 미끄러졌다. 용돈이 사라졌다.' } },
-        { text: '안 한다', effects: { smarts: 1 }, log: '용돈으로 {food}[을/를] 사 먹었다. 확실한 행복이다.' }
-      ] },
-    { id: 'gam_arcade_gacha', age: [7, 12], cooldown: 3, decision: true,
-      text: '문방구 앞 뽑기 기계에 한정판 축구 카드가 들어 있다고 한다.',
-      choices: [
-        { text: '한 판 돌린다', risky: true, bet: { odds: 0.3, mult: 3, stake: 'tiny', addict: 2 },
-          success: { effects: { happy: 5, social: 1 }, log: '반짝이는 한정판! 반 아이들이 모두 구경하러 왔다.' },
-          fail: { effects: { happy: -2 }, log: '또 똑같은 카드. 벌써 다섯 장째다.' } },
-        { text: '용돈을 저금통에 넣는다', effects: { grit: 1 }, log: '저금통이 조금 무거워졌다.' }
-      ] },
-    { id: 'gam_ddakji', age: [6, 11], cooldown: 3, decision: true,
-      text: '골목에서 딱지치기 내기가 벌어졌다. 지면 딱지를 다 내줘야 한다.',
-      choices: [
-        { text: '전부 걸고 한다', risky: true, bet: { odds: 0.45, mult: 2, stake: 'tiny', addict: 1 },
-          success: { effects: { happy: 4, mischief: 1 }, log: '형들 딱지까지 다 땄다. 주머니가 불룩하다.' },
-          fail: { effects: { happy: -3 }, log: '마지막 한 장까지 넘어갔다.' } },
-        { text: '구경만 한다', effects: { smarts: 1 }, log: '누가 어떻게 이기는지 잘 봐 뒀다.' }
-      ] },
 
     // ---------------------------------------------------------------- teens (13-19): bets with friends
     { id: 'gam_teen_football_bet', age: [13, 19], cooldown: 2, decision: true,

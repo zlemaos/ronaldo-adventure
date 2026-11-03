@@ -178,11 +178,13 @@ test('birth lines read naturally in every country and "사남매의 막내" is t
     pickFirst(s);
     const lines = s.log.filter(e => e.age === 0).map(e => e.t);
     const birth = lines[0];
-    assert.ok(birth.includes(RA.data.countries[c].places.hometown), c + ': ' + birth);
+    assert.ok(birth.includes(E.vars(s).hometown), c + ': ' + birth); // round 8: a za family with money lives in the city, not the township
     // a descriptive phrase ending in a verb or a bare "식구" must never be followed by "에서"
     assert.ok(!/(다|는다|식구)(에서| 에서)/.test(birth), c + ': ' + birth);
     assert.ok(!/에서 사남매/.test(lines.join(' ')), c + ': ' + birth);
-    assert.match(birth, /에서 태어났다\. 집은 .+집이다\.$/, c);
+    // round 8: the home follows the birth origin (slum shack, ordinary flat, rich house…)
+    assert.match(birth, /에서 태어났다\. 집은 \S.+다\.$/, c);
+    assert.ok(!/다이다|\[|\{/.test(birth), c + ': ' + birth);
     assert.strictEqual(lines.join('\n').split('사남매의 막내로 태어났다').length - 1, 1, c + ': told once');
   }
 });

@@ -9,185 +9,16 @@
 
   // ───────────────────────── Baby / toddler (1–4) ─────────────────────────
   add([
-    {
-      id: 'life_first_word', age: [1, 2], once: true, weight: 30,
-      text: '드디어 첫 단어를 말할 시간이다. 온 가족이 숨죽이고 {name}의 입만 바라본다.',
-      choices: [
-        { text: '"엄마!"', effects: { happy: 3, rel: { mother: 8 } }, log: '{mother}[이/가] 눈물을 글썽이며 동네방네 자랑했다.' },
-        { text: '"아빠!"', effects: { happy: 3, rel: { father: 8 } }, log: '{father}[은/는] 그날 하루 종일 콧노래를 불렀다.' },
-        { text: '"공!"', effects: { football: 2, happy: 2 }, log: '첫 단어가 "공"이었다. 형 {bro}[이/가] 배를 잡고 웃었다.' },
-        { text: '"{food}!"', effects: { happy: 4, health: 1 }, log: '첫 단어부터 먹을 것. 가족 모두 납득했다.' }
-      ]
-    },
-    {
-      id: 'life_first_steps', age: [1, 2], once: true, weight: 25,
-      text: '소파를 붙잡고 일어선 {name}. 거실 건너편에서 누나들이 손뼉을 친다.',
-      choices: [
-        { text: '아장아장 걸어간다', check: { stat: 'grit', diff: 20 },
-          success: { effects: { health: 2, grit: 2, rel: { siblings: 4 } }, log: '다섯 걸음! 집 안이 환호로 떠나갈 듯했다.' },
-          fail: { effects: { happy: -1, health: -1 }, log: '두 걸음 만에 엉덩방아. 울었지만 금방 다시 일어났다.' } },
-        { text: '그냥 기어서 간다', effects: { happy: 2 }, log: '기는 게 더 빠르다는 걸 이미 알고 있었다.' }
-      ]
-    },
-    {
-      id: 'life_toddler_tantrum', age: [2, 4], cooldown: 2,
-      text: '시장에서 {name}[이/가] 장난감 앞에 드러누웠다. 사람들이 쳐다본다.',
-      choices: [
-        { text: '더 크게 운다', check: { stat: 'looks', diff: 45 },
-          success: { effects: { happy: 4, rel: { mother: -2 } }, log: '귀여움에 진 가게 주인이 장난감을 그냥 줬다.' },
-          fail: { effects: { happy: -3, rel: { mother: -4 } }, log: '{mother}[은/는] 단호하게 {name}[을/를] 들쳐 업고 집에 갔다.' } },
-        { text: '훌쩍이며 일어난다', effects: { grit: 2, rel: { mother: 3 } }, log: '{mother}[이/가] 집에 가는 길에 사탕 하나를 몰래 쥐여 줬다.' }
-      ]
-    },
-    {
-      id: 'life_toddler_ball', age: [2, 4], cooldown: 3,
-      text: '{father}[이/가] 낡은 공을 굴려 주자 {name}[이/가] 온몸으로 뒤뚱뒤뚱 쫓아간다.',
-      cond: { rel: { father: 'alive' } },
-      effects: { football: 2, happy: 2, rel: { father: 3 } },
-      log: '공을 찼다기보다 공 위에 넘어졌지만, {father}[은/는] "골!"이라고 외쳤다.'
-    },
-    {
-      id: 'life_toddler_crowded_bed', age: [1, 4], cooldown: 3,
-      cond: { money: [-999999, 3000] },
-      text: '{house}. 밤마다 형제들과 한 이불을 나눠 덮는다.',
-      effects: { happy: 1, rel: { siblings: 3 } },
-      log: '누군가 발로 차서 깼지만, 따뜻해서 금방 다시 잠들었다.'
-    },
-    {
-      id: 'life_toddler_fever', age: [1, 4], cooldown: 4,
-      cond: { stats: { health: [0, 55] } },
-      text: '밤새 열이 펄펄 끓는다. {mother}[이/가] 젖은 수건을 갈아 주며 한숨도 못 잔다.',
-      choices: [
-        { text: '병원에 간다', effects: { health: 5, money: -80, rel: { mother: 3 } }, log: '주사 한 방에 울음바다였지만 다음 날 열이 내렸다.' },
-        { text: '집에서 버틴다', check: { stat: 'health', diff: 30 },
-          success: { effects: { health: 2, rel: { mother: 4 } }, log: '새벽녘에 열이 내렸다. {mother}[은/는] 그제야 눈을 붙였다.' },
-          fail: { effects: { health: -5, money: -150 }, log: '결국 새벽에 응급실로 달려갔다.' } }
-      ]
-    },
-    {
-      id: 'life_toddler_hide', age: [3, 4], cooldown: 3,
-      text: '숨바꼭질에서 {name}[이/가] 빨래 바구니 속에 숨었다. 아무도 못 찾는다.',
-      effects: { happy: 3, smarts: 1 },
-      log: '한 시간 뒤 바구니 속에서 곤히 잠든 채 발견됐다. 전설적인 승리였다.'
-    },
-    {
-      id: 'life_toddler_crayon_wall', age: [2, 4], once: true,
-      text: '{name}[이/가] 크레용으로 벽 한가득 거대한 그림을 그렸다.',
-      choices: [
-        { text: '"엄마 그린 거야"라고 한다', effects: { happy: 2, rel: { mother: 5 } }, log: '{mother}[은/는] 화를 내려다 웃음이 터져 버렸다.' },
-        { text: '{sis2}[이/가] 했다고 한다', check: { stat: 'smarts', diff: 40 },
-          success: { effects: { happy: 2, rel: { sis2: -3 } }, log: '믿어 줬다. {sis2}[은/는] 억울해서 이틀간 말을 안 했다.' },
-          fail: { effects: { rel: { mother: -3, sis2: -2 } }, log: '크레용이 아직 손에 들려 있었다.' } }
-      ]
-    },
-    {
-      id: 'life_toddler_dog_meet', age: [2, 4], once: true,
-      text: '골목의 커다란 개가 꼬리를 흔들며 다가온다.',
-      choices: [
-        { text: '쓰다듬는다', effects: { happy: 4, grit: 1 }, log: '개가 {name}의 얼굴을 핥았다. 둘은 친구가 됐다.' },
-        { text: '{bro} 뒤에 숨는다', effects: { rel: { bro: 3 } }, log: '{bro}[이/가] "괜찮아, 형 있잖아" 하고 손을 잡아 줬다.' }
-      ]
-    },
-    {
-      id: 'life_toddler_vegetable', age: [2, 4], cooldown: 3,
-      text: '저녁상에 채소가 올라왔다. {name}의 숟가락이 공중에서 멈췄다.',
-      choices: [
-        { text: '꾹 참고 먹는다', effects: { health: 2, grit: 1 }, log: '얼굴이 일그러졌지만 다 먹었다. 박수가 쏟아졌다.' },
-        { text: '몰래 바닥에 떨어뜨린다', effects: { happy: 1, health: -1 }, log: '고양이도 안 먹고 지나갔다.' }
-      ]
-    },
-    {
-      id: 'life_toddler_song', age: [3, 4], cooldown: 4,
-      text: '{holiday} 가족 모임에서 {name}[이/가] 갑자기 노래를 부르기 시작했다.',
-      effects: { happy: 3, looks: 1, rel: { family: 3 } },
-      log: '가사는 반쯤 지어냈지만, 친척들이 용돈을 쥐여 줬다.'
-    },
-    {
-      id: 'life_toddler_lost_market', age: [3, 4], once: true,
-      text: '{city} 시장 한복판에서 {name}[이/가] 엄마 손을 놓쳤다.',
-      choices: [
-        { text: '그 자리에서 기다린다', effects: { smarts: 2, rel: { mother: 3 } }, log: '{mother}[이/가] 사색이 되어 달려와 꼭 안아 줬다.' },
-        { text: '울면서 찾아다닌다', check: { stat: 'grit', diff: 30 },
-          success: { effects: { grit: 2 }, log: '생선 가게 아주머니가 손을 잡고 엄마를 찾아 줬다.' },
-          fail: { effects: { happy: -4 }, log: '두 시간 만에 파출소에서 가족과 재회했다.' } }
-      ]
-    },
-    {
-      id: 'life_toddler_father_tired', age: [2, 4], cooldown: 4,
-      cond: { rel: { father: 'alive' }, flags: ['father_drinking'] },
-      text: '{father}[이/가] 늦은 밤 지친 얼굴로 들어온다. 오늘은 집 안이 유난히 조용하다.',
-      choices: [
-        { text: '아빠 무릎에 기어오른다', effects: { happy: 1, rel: { father: 5 } }, log: '{father}[은/는] 한참 {name}[을/를] 안고 아무 말도 하지 않았다.' },
-        { text: '{mother} 곁에 붙어 있는다', effects: { rel: { mother: 4 }, happy: -1 }, log: '{mother}[이/가] 등을 토닥이며 자장가를 불러 줬다.' }
-      ]
-    },
-    {
-      id: 'life_toddler_handmedown', age: [1, 4], cooldown: 4,
-      cond: { money: [-999999, 4000] },
-      text: '{bro}[이/가] 입던 옷을 물려받았다. 소매가 손끝을 한참 덮는다.',
-      effects: { happy: 1, rel: { bro: 2 } },
-      log: '"크면 맞아" — 이 말을 앞으로 수백 번 듣게 될 것이다.'
-    },
-    {
-      id: 'life_toddler_stairs', age: [1, 3], cooldown: 3,
-      cond: { stats: { grit: [40, 100] } },
-      text: '{name}[이/가] 혼자서 계단 꼭대기까지 기어올랐다.',
-      effects: { grit: 2, health: -1 },
-      log: '내려오는 법은 몰랐다. {sis1}[이/가] 구조대 역할을 했다.'
-    },
-    {
-      id: 'life_toddler_bath', age: [1, 3], cooldown: 3,
-      text: '목욕 시간. {name}[은/는] 고무 오리와 함께 욕실을 수영장으로 만들었다.',
-      effects: { happy: 3 },
-      log: '바닥이 물바다가 됐지만 아무도 화내지 않았다. 너무 행복해 보였으니까.'
-    }
   ]);
 
   // ───────────────────────── Childhood (5–12) ─────────────────────────
   add([
     {
-      id: 'life_child_playground_king', age: [5, 9], cooldown: 3,
-      text: '놀이터 미끄럼틀 꼭대기를 두고 아이들 사이에 영역 다툼이 벌어졌다.',
-      choices: [
-        { text: '정정당당하게 가위바위보', check: { stat: 'smarts', diff: 30 },
-          success: { effects: { happy: 3, fx: ['newFriend'] }, log: '이긴 뒤 상대와 같이 미끄럼을 탔다. 친구가 생겼다.' },
-          fail: { effects: { happy: -1 }, log: '세 판 내리 졌다. 그네로 영역을 옮겼다.' } },
-        { text: '그냥 같이 놀자고 한다', effects: { happy: 2, smarts: 1 }, log: '다툼은 술래잡기로 바뀌었다.' }
-      ]
-    },
-    {
-      id: 'life_child_handmedown_shoes', age: [6, 12], cooldown: 4,
-      cond: { money: [-999999, 5000] },
-      text: '새 운동화 대신 {bro}의 낡은 운동화를 물려받았다. 앞코가 벌어져 있다.',
-      choices: [
-        { text: '테이프로 감고 신는다', effects: { grit: 3, happy: -1 }, log: '테이프 운동화로 골목을 누볐다. 오히려 공이 더 잘 붙는 것 같았다.' },
-        { text: '{mother}에게 새 신발을 조른다', effects: { happy: 1, rel: { mother: -2 }, money: -40 }, log: '{mother}[은/는] 한참 고민하더니 시장에서 싼 신발을 사 왔다. 그 표정이 오래 마음에 남았다.' }
-      ]
-    },
-    {
-      id: 'life_child_power_cut', age: [5, 12], cooldown: 5,
+      id: 'life_child_power_cut', origin: ['poor', 'slum'], age: [5, 12], cooldown: 5,
       cond: { money: [-999999, 2000] },
       text: '전기 요금이 밀려 집에 불이 끊겼다. 촛불 하나에 온 가족이 모였다.',
       effects: { happy: -1, rel: { family: 4 }, grit: 2 },
       log: '{sis1}[이/가] 그림자 놀이를 시작했고, 그날 밤은 이상하게 따뜻했다.'
-    },
-    {
-      id: 'life_child_dinner_share', age: [5, 12], cooldown: 4,
-      cond: { money: [-999999, 2500], family: 'all' },
-      text: '오늘 저녁 {food}[이/가] 여섯 식구에게는 조금 모자라다.',
-      choices: [
-        { text: '내 몫을 {mother}에게 덜어 준다', effects: { health: -1, happy: 2, rel: { mother: 6 } }, log: '{mother}[은/는] 다시 돌려주며 "엄마는 아까 먹었어"라고 했다. 거짓말인 걸 알았다.' },
-        { text: '배부르게 먹는다', effects: { health: 1, rel: { siblings: -1 } }, log: '{sis2}[이/가] 빈 그릇을 아쉽게 쳐다봤다.' }
-      ]
-    },
-    {
-      id: 'life_child_pet_stray', age: [6, 12], once: true,
-      cond: { flags: ['!has_pet'] },
-      text: '비 오는 날, 골목에서 떨고 있는 새끼 고양이를 발견했다.',
-      choices: [
-        { text: '집에 데려간다', effects: { happy: 6, money: -50, fx: ['adoptPet'] }, log: '{mother}[은/는] 한숨을 쉬었지만 결국 우유 접시를 내줬다.' },
-        { text: '박스와 담요만 놓아 준다', effects: { happy: 1, smarts: 1 }, log: '다음 날 박스는 비어 있었다. 좋은 사람이 데려갔길 바랐다.' }
-      ]
     },
     {
       id: 'life_pet_mischief', age: [5, 80], cooldown: 4,
@@ -206,49 +37,15 @@
       ]
     },
     {
-      id: 'life_child_bully', age: [7, 13], cooldown: 4,
-      cond: { flags: ['!bullied'] },
-      text: '덩치 큰 아이가 {name}의 낡은 가방을 보고 비웃으며 운동장에 던졌다.',
-      choices: [
-        { text: '맞선다', check: { stat: 'grit', diff: 45 },
-          success: { effects: { grit: 3, happy: 2, fame: 1 }, log: '눈을 피하지 않자 녀석이 먼저 물러섰다. 반 아이들이 수군거렸다.' },
-          fail: { effects: { health: -3, happy: -4, flags: ['bullied'] }, log: '코피가 났다. 그 뒤로 녀석은 {name}[을/를] 표적으로 삼았다.' } },
-        { text: '선생님께 말한다', effects: { smarts: 1, happy: -1 }, log: '선생님이 중재했지만, 복도에서 "고자질쟁이"라는 소리를 들었다.' },
-        { text: '가방을 주워 조용히 간다', effects: { happy: -3, flags: ['bullied'] }, log: '집에 가는 길이 유난히 길었다.' }
-      ]
-    },
-    {
       id: 'life_child_bully_ends', age: [8, 16], once: true,
       cond: { flags: ['bullied'] },
       text: '괴롭힘이 계속되던 어느 날, {name}[은/는] 결심을 해야 했다.',
       choices: [
         { text: '가족에게 털어놓는다', effects: { happy: 4, rel: { family: 5 }, unflags: ['bullied'] }, log: '{bro}[이/가] 다음 날 학교 앞에 나타났다. 그 뒤로 아무도 건드리지 않았다.' },
-        { text: '운동으로 단단해진다', effects: { grit: 5, health: 3, unflags: ['bullied'] }, log: '매일 밤 달리기를 했다. 1년 뒤, 녀석은 더 이상 {name}[을/를] 내려다보지 못했다.' },
+        { text: '운동으로 단단해진다', check: { stat: 'health', diff: 40 },
+          success: { effects: { grit: 5, health: 3, unflags: ['bullied'] }, log: '매일 밤 달리기를 했다. 1년 뒤, 녀석은 더 이상 {name}[을/를] 내려다보지 못했다.' },
+          fail: { effects: { health: -4, happy: -3 }, log: '밤 달리기 첫 주에 발목을 접질렸다. 절뚝거리는 걸 본 녀석들이 더 크게 웃었다.' } },
         { text: '혼자 참는다', effects: { happy: -5, smarts: 2 }, log: '도서관이 피난처가 됐다. 책 속 주인공들은 늘 결국 이겼다.' }
-      ]
-    },
-    {
-      id: 'life_child_talent_show', age: [7, 12], once: true,
-      cond: { edu: ['elem', 'middle'] },
-      text: '{school} 장기자랑이 열린다. 무대에 나갈까?',
-      choices: [
-        { text: '춤을 춘다', check: { stat: 'looks', diff: 40 },
-          success: { effects: { happy: 5, fame: 2, looks: 1 }, log: '강당이 떠나갈 듯한 환호. 한동안 "춤신"으로 불렸다.' },
-          fail: { effects: { happy: -3 }, log: '음악이 끊겼는데 혼자 계속 췄다. 그것도 나름 전설이 됐다.' } },
-        { text: '공 리프팅 묘기', check: { stat: 'football', diff: 30 },
-          success: { effects: { football: 2, fame: 2, happy: 4 }, log: '공이 한 번도 땅에 닿지 않았다. 체육 선생님이 눈여겨봤다.' },
-          fail: { effects: { happy: -2 }, log: '공이 교장 선생님 쪽으로 날아갔다.' } },
-        { text: '관객석에 앉는다', effects: { happy: 1 }, log: '친구들을 열심히 응원했다.' }
-      ]
-    },
-    {
-      id: 'life_child_broken_window', age: [6, 12], once: true,
-      text: '골목에서 찬 공이 이웃집 유리창을 깼다. 쨍그랑!',
-      choices: [
-        { text: '초인종을 누르고 사과한다', effects: { grit: 2, money: -60, rel: { father: 3 } }, log: '이웃 할머니는 화내는 대신 "다음엔 저쪽으로 차라"며 웃었다.' },
-        { text: '튄다', check: { stat: 'health', diff: 35 },
-          success: { effects: { happy: 2, flags: ['window_secret'] }, log: '무사히 도망쳤다. 하지만 공은 그 집 마당에 남았다.' },
-          fail: { effects: { happy: -3, money: -100, rel: { mother: -4 } }, log: '모퉁이에서 {mother}[과/와] 마주쳤다.' } }
       ]
     },
     {
@@ -258,41 +55,11 @@
       log: '이를 지붕 위로 던지며 튼튼한 새 이를 빌었다.'
     },
     {
-      id: 'life_child_school_first', age: [6, 8], once: true,
-      cond: { edu: ['elem'] },
-      text: '{school} 첫 등교 날. 교문 앞에서 {mother}의 손을 놓기가 싫다.',
-      choices: [
-        { text: '씩씩하게 들어간다', effects: { grit: 2, fx: ['newFriend'] }, log: '짝꿍과 지우개를 나눠 쓰다 친구가 됐다.' },
-        { text: '울며 매달린다', effects: { happy: -1, rel: { mother: 3 } }, log: '선생님이 사탕으로 설득했다. 점심시간쯤엔 다 잊었다.' }
-      ]
-    },
-    {
-      id: 'life_child_report_card', age: [8, 12], cooldown: 2,
-      cond: { edu: ['elem'] },
-      text: '성적표가 나왔다.',
-      choices: [
-        { text: '솔직하게 보여 준다', check: { stat: 'smarts', diff: 45 },
-          success: { effects: { happy: 3, rel: { mother: 4, father: 2 } }, log: '{mother}[이/가] 성적표를 냉장고에 붙였다.' },
-          fail: { effects: { happy: -2, smarts: 1 }, log: '"다음엔 잘하자." 혼나지 않아서 더 미안했다.' } },
-        { text: '성적표를 숨긴다', effects: { happy: 1, rel: { mother: -3 }, flags: ['hid_report'] }, log: '침대 매트리스 밑에 숨겼다. 완벽한 범죄 같았다.', schedule: { id: 'life_child_report_found', years: 1 } }
-      ]
-    },
-    {
       id: 'life_child_report_found', age: [8, 14], weight: 1, once: true,
       cond: { flags: ['hid_report'] },
       text: '대청소 날, {mother}[이/가] 매트리스 밑에서 무언가를 발견했다.',
       effects: { happy: -3, rel: { mother: -4 }, grit: 1, unflags: ['hid_report'] },
       log: '성적보다 숨긴 것 때문에 더 혼났다. 그날 정직의 비용을 배웠다.'
-    },
-    {
-      id: 'life_child_sibling_fight', age: [5, 12], cooldown: 3,
-      text: '하나뿐인 TV 리모컨을 두고 {sis2}[과/와] 전쟁이 벌어졌다.',
-      choices: [
-        { text: '양보한다', effects: { rel: { sis2: 5 }, happy: -1 }, log: '{sis2}[이/가] 다음 날 자기 간식을 반 나눠 줬다.' },
-        { text: '끝까지 싸운다', check: { stat: 'grit', diff: 40 },
-          success: { effects: { happy: 2, rel: { sis2: -3 } }, log: '리모컨을 쟁취했다. 하지만 혼자 보는 만화는 재미가 덜했다.' },
-          fail: { effects: { happy: -2, rel: { sis2: -2, mother: -2 } }, log: '{mother}[이/가] TV 코드를 뽑았다. 모두가 졌다.' } }
-      ]
     },
     {
       id: 'life_child_sister_help', age: [7, 12], cooldown: 4,
@@ -302,15 +69,6 @@
       log: '틀린 글자마다 별을 그려 줬다. 별이 줄어드는 게 눈에 보였다.'
     },
     {
-      id: 'life_child_mother_work', age: [6, 12], cooldown: 4,
-      cond: { rel: { mother: 'alive' } },
-      text: '{mother}[이/가] {motherJob} 일을 마치고 늦게 돌아온다. 손이 많이 거칠어졌다.',
-      choices: [
-        { text: '설거지를 대신 해 둔다', effects: { grit: 2, rel: { mother: 6 } }, log: '{mother}[은/는] 깨끗한 싱크대를 보고 한참 서 있었다.' },
-        { text: '어깨를 주물러 드린다', effects: { happy: 2, rel: { mother: 5 } }, log: '"우리 막내 손이 약손이네." 금방 코를 골며 잠들었다.' }
-      ]
-    },
-    {
       id: 'life_child_father_garden', age: [5, 12], cooldown: 4,
       cond: { rel: { father: 'alive' }, flags: ['!father_dead'] },
       text: '{father}[이/가] {fatherJob} 일터에 {name}[을/를] 데려갔다. 꽃밭에 물을 주는 손이 능숙하다.',
@@ -318,67 +76,11 @@
       log: '"꽃도 사람도 매일 조금씩 돌봐야 해." 그 말이 오래 기억에 남았다.'
     },
     {
-      id: 'life_child_father_promise', age: [7, 12], once: true,
-      cond: { rel: { father: 'alive' }, flags: ['father_drinking'] },
-      text: '{father}[이/가] 또 약속한 경기 구경을 잊었다. 현관에서 술 냄새가 난다.',
-      choices: [
-        { text: '"아빠, 나 아빠가 아픈 거 싫어"라고 말한다', effects: { happy: -2, grit: 2, rel: { father: 5 }, fx: ['fatherSeekHelp'] }, log: '{father}[은/는] 오래 침묵하다 "미안하다"고 했다. 처음으로 진심이 들렸다.' },
-        { text: '방문을 닫고 혼자 운다', effects: { happy: -4, rel: { father: -3 } }, log: '{sis1}[이/가] 조용히 들어와 옆에 앉아 줬다.' },
-        { text: '{mother}에게 이야기한다', effects: { happy: -1, rel: { mother: 4 } }, log: '{mother}[은/는] "아빠는 지금 아픈 거야, 너 때문이 아니야"라고 꼭 안아 줬다.' }
-      ]
-    },
-    {
-      id: 'life_child_birthday_poor', age: [5, 12], cooldown: 5,
+      id: 'life_child_birthday_poor', origin: ['poor', 'slum'], age: [5, 12], cooldown: 5,
       cond: { money: [-999999, 2000] },
       text: '생일인데 케이크 살 돈이 없다. 식탁에는 {food}[이/가] 놓여 있다.',
       effects: { happy: 2, rel: { family: 4 } },
       log: '{food} 위에 초 하나를 꽂았다. 형제들이 목청껏 생일 노래를 불렀다.'
-    },
-    {
-      id: 'life_child_birthday_party', age: [5, 12], cooldown: 4,
-      cond: { money: [8000, 99999999] },
-      text: '생일 파티를 크게 열어 주겠다고 한다.',
-      choices: [
-        { text: '반 전체를 초대한다', effects: { happy: 5, money: -400, fx: ['newFriend'] }, log: '케이크가 세 개였다. 반에서 인기 순위가 급상승했다.' },
-        { text: '가족끼리 조촐하게', effects: { happy: 3, rel: { family: 4 } }, log: '{bro}[이/가] 직접 만든 선물을 줬다. 조금 이상하게 생겼지만 최고였다.' }
-      ]
-    },
-    {
-      id: 'life_child_shoplift_candy', age: [8, 13], once: true,
-      text: '동네 가게에서 친구가 사탕을 주머니에 넣으며 눈짓한다. "너도 해 봐."',
-      choices: [
-        { text: '따라 한다', check: { stat: 'smarts', diff: 50 },
-          success: { effects: { happy: 2, flags: ['petty_thief'] }, log: '들키지 않았다. 사탕은 이상하게 맛이 없었다.' },
-          fail: { effects: { happy: -5, rel: { mother: -6 }, flags: ['petty_thief'] }, log: '주인 아저씨에게 붙잡혀 {mother}[이/가] 불려 왔다. 고개를 들 수가 없었다.' } },
-        { text: '거절하고 돈 내고 산다', effects: { grit: 2, money: -2 }, log: '친구는 "쫄보"라고 놀렸지만, 마음은 편했다.' }
-      ]
-    },
-    {
-      id: 'life_child_science_fair', age: [9, 13], once: true,
-      cond: { edu: ['elem', 'middle'], stats: { smarts: [50, 100] } },
-      text: '{school} 과학 발명대회가 열린다.',
-      choices: [
-        { text: '페트병 정수기를 만든다', check: { stat: 'smarts', diff: 55 },
-          success: { effects: { smarts: 4, fame: 1, happy: 4, achieve: 'young_inventor' }, log: '금상! 지역 신문에 작은 사진이 실렸다.' },
-          fail: { effects: { smarts: 2 }, log: '물이 더 더러워져서 나왔다. 그래도 원리는 이해했다.' } },
-        { text: '화산 모형을 만든다', effects: { happy: 3, smarts: 1 }, log: '심사위원 셔츠에 거품이 튀었다. 장려상.' }
-      ]
-    },
-    {
-      id: 'life_child_rain_football', age: [6, 12], cooldown: 3,
-      text: '폭우가 쏟아지는데 골목 아이들이 공을 들고 모였다.',
-      choices: [
-        { text: '진흙탕 축구!', effects: { football: 2, happy: 4, health: -1, rel: { mother: -1 } }, log: '온몸이 진흙투성이. {mother}[은/는] 빨래통을 보며 할 말을 잃었다.' },
-        { text: '창문으로 구경한다', effects: { smarts: 1 }, log: '빗소리를 들으며 만화책을 읽었다.' }
-      ]
-    },
-    {
-      id: 'life_child_found_coin', age: [5, 12], cooldown: 5,
-      text: '하굣길 하수구 옆에서 반짝이는 동전을 주웠다.',
-      choices: [
-        { text: '군것질을 한다', effects: { happy: 2 }, log: '{food2} 하나에 세상을 다 가진 기분이었다.' },
-        { text: '저금통에 넣는다', effects: { money: 5, smarts: 1 }, log: '저금통이 조금 더 무거워졌다.' }
-      ]
     },
     {
       id: 'life_child_sleepover', age: [8, 12], cooldown: 4,
@@ -406,7 +108,9 @@
       text: '{bigcity}의 밤. 공중전화 앞에서 {mother}의 목소리가 듣고 싶어진다.',
       choices: [
         { text: '동전을 털어 전화한다', effects: { happy: 3, money: -10, rel: { mother: 5 } }, log: '"밥은 먹었니?" 그 한마디에 눈물이 터졌다.' },
-        { text: '참고 일기를 쓴다', effects: { grit: 3, happy: -2, smarts: 1 }, log: '일기장 마지막 줄: "언젠가 엄마를 호강시켜 드릴 거다."' }
+        { text: '참고 일기를 쓴다', check: { stat: 'grit', diff: 40 },
+          success: { effects: { grit: 3, happy: -2, smarts: 1 }, log: '일기장 마지막 줄: "언젠가 엄마를 호강시켜 드릴 거다."' },
+          fail: { effects: { happy: -4, social: -1 }, log: '룸메이트가 일기장을 몰래 읽고 "엄마 보고 싶어"를 소리 내 흉내 냈다. 다음 날 숙소 전체가 알았다.' } }
       ]
     },
     {
@@ -635,7 +339,7 @@
       text: '동네 복지관에서 주말 봉사자를 구한다.',
       choices: [
         { text: '어르신 급식 봉사', effects: { happy: 3, grit: 1, smarts: 1 }, log: '할머니 한 분이 매주 {name}[을/를] 손자라고 불렀다.' },
-        { text: '아이들 공차기 지도', effects: { football: 1, happy: 3, fame: 1 }, log: '꼬마들이 {name}[을/를] "코치님"이라고 불렀다.' }
+        { text: '아이들 공차기 지도', alt: { text: '아이들 {hobbyAct} 지도', log: '꼬마들이 {name}[을/를] "선생님"이라고 불렀다.' }, effects: { football: 1, happy: 3, fame: 1 }, log: '꼬마들이 {name}[을/를] "코치님"이라고 불렀다.' }
       ]
     },
     {
@@ -667,7 +371,7 @@
       text: '새 학교 아이들이 {region} 사투리를 흉내 내며 키득거린다.',
       choices: [
         { text: '같이 웃어 넘긴다', effects: { happy: 1, grit: 2, fx: ['newFriend'] }, log: '사투리를 가르쳐 주다 보니 오히려 인기인이 됐다.' },
-        { text: '실력으로 보여 준다', effects: { grit: 4, football: 2, happy: -1 }, log: '말 대신 땀으로 답했다. 몇 달 뒤 아무도 웃지 않았다.' }
+        { text: '실력으로 보여 준다', alt: { text: '{hobbyAct} 실력으로 보여 준다', log: '말 대신 실력으로 답했다. 몇 달 뒤 아무도 웃지 않았다.' }, effects: { grit: 4, football: 2, happy: -1 }, log: '말 대신 땀으로 답했다. 몇 달 뒤 아무도 웃지 않았다.' }
       ]
     },
     {
@@ -894,6 +598,8 @@
     {
       id: 'life_ya_side_hustle', age: [20, 45], cooldown: 5,
       cond: { stats: { smarts: [45, 100] } },
+      // only for someone the trade suits and who is not walking a career of their own (js/life.js)
+      when: function (s) { return !RA.Engine.Life || RA.Engine.Life.sideStallOk(s); },
       text: '주말에 {food2} 노점을 해 보자는 친구의 제안이 들어왔다.',
       choices: [
         { text: '해 본다', check: { stat: 'grit', diff: 50 },
@@ -1166,7 +872,9 @@
       cond: { recent: { mother_dead: 2 } },
       text: '{mother}[이/가] 떠난 뒤 첫 {holiday}. 식탁에 빈자리가 크다.',
       choices: [
-        { text: '엄마의 {food}[을/를] 만들어 본다', effects: { happy: 2, grit: 2, rel: { siblings: 6 } }, log: '맛은 달랐지만, 형제들이 한 숟가락씩 뜨며 울고 웃었다.' },
+        { text: '엄마의 {food}[을/를] 만들어 본다', check: { stat: 'smarts', diff: 35 },
+          success: { effects: { happy: 2, grit: 2, rel: { siblings: 6 } }, log: '맛은 달랐지만, 형제들이 한 숟가락씩 뜨며 울고 웃었다.' },
+          fail: { effects: { happy: -3, health: -1 }, log: '불 조절을 몰라 냄비 바닥이 새까맣게 탔다. 연기 속에서 {mother}의 앞치마를 쥐고 한참 서 있었다.' } },
         { text: '사진첩을 꺼낸다', effects: { happy: -2, smarts: 1, rel: { family: 4 } }, log: '사진 속 {mother}[은/는] 늘 웃고 있었다. 늘.' }
       ]
     },
@@ -1312,7 +1020,8 @@
       text: '손주들이 놀러 와서 {name}의 옛날이야기를 졸라 댄다.',
       choices: [
         { text: '{hometown} 시절 이야기를 한다', effects: { happy: 5, rel: { children: 4 } }, log: '{house} 이야기에 손주들이 "진짜요?"를 연발했다.' },
-        { text: '공차기를 가르친다', check: { stat: 'health', diff: 40 },
+        { text: '공차기를 가르친다', alt: { text: '{hobbyAct}[을/를] 가르쳐 준다', log: '손은 굳었어도 감각은 남아 있었다. 손주가 "최고!"를 외쳤다.',
+          fail: { log: '오래 앉아 가르치다 허리에서 "뚝" 소리가 났다. 그래도 웃었다.' } }, check: { stat: 'health', diff: 40 },
           success: { effects: { happy: 6, health: 1 }, log: '왼발 감각은 아직 살아 있었다. 손주가 "최고!"를 외쳤다.' },
           fail: { effects: { health: -3, happy: 2 }, log: '무릎에서 "뚝" 소리가 났다. 그래도 웃었다.' } }
       ]
@@ -1589,7 +1298,9 @@
       cond: { flags: ['!has_pet'] },
       text: '산책길에 떠돌이 개 한 마리가 집까지 졸졸 따라왔다.',
       choices: [
-        { text: '키운다', effects: { happy: 6, money: -300, fx: ['adoptPet'] }, log: '이름은 "{food}". 부르면 꼬리가 날개처럼 돌았다.' },
+        { text: '키운다', check: { stat: 'grit', diff: 35 },
+          success: { effects: { happy: 6, money: -300, fx: ['adoptPet'] }, log: '이름은 "{food}". 부르면 꼬리가 날개처럼 돌았다.' },
+          fail: { effects: { happy: -3, money: -300 }, log: '사흘 만에 개가 담을 넘어 도망쳤다. 동물병원 접종비 영수증만 남았다.' } },
         { text: '보호소에 연락한다', effects: { happy: 1, smarts: 1 }, log: '일주일 뒤 좋은 가족에게 입양됐다는 사진이 왔다.' }
       ]
     },
@@ -1624,7 +1335,9 @@
       id: 'life_any_leader_handshake', age: [10, 100], once: true,
       text: '{leader}[이/가] {city} 시장을 방문했다. 우연히 바로 앞에 서게 됐다.',
       choices: [
-        { text: '악수를 청한다', effects: { fame: 2, happy: 3 }, log: '사진이 지역 신문 1면에 실렸다. 정작 {name}[은/는] 눈을 감고 있었다.' },
+        { text: '악수를 청한다', check: { odds: 0.6 },
+          success: { effects: { fame: 2, happy: 3 }, log: '사진이 지역 신문 1면에 실렸다. 정작 {name}[은/는] 눈을 감고 있었다.' },
+          fail: { effects: { happy: -3 }, log: '경호원이 팔을 붙잡아 뒤로 밀어냈다. 사진 구석에 놀란 얼굴만 찍혔다.' } },
         { text: '{food2} 한번 드셔 보시라고 권한다', effects: { fame: 3, happy: 4 }, log: '{leader}[이/가] 진짜로 먹었다. 그 가게는 다음 날부터 줄이 섰다.' }
       ]
     },
@@ -1669,7 +1382,9 @@
       cond: { stats: { health: [0, 30] } },
       text: '몸살이 심하게 왔다. 온몸이 쑤시고 열이 난다.',
       choices: [
-        { text: '푹 쉰다', effects: { health: 5, money: -100 }, log: '사흘을 내리 잤다. 깨어나니 세상이 조금 밝아 보였다.' },
+        { text: '푹 쉰다', check: { odds: 0.7 },
+          success: { effects: { health: 5, money: -100 }, log: '사흘을 내리 잤다. 깨어나니 세상이 조금 밝아 보였다.' },
+          fail: { effects: { health: -2, money: -250 }, log: '사흘을 누워 있어도 열이 내리지 않았다. 결국 응급실에서 링거를 맞았다.' } },
         { text: '참고 할 일을 한다', effects: { health: -4, grit: 2 }, log: '결국 일주일을 더 앓았다.' }
       ]
     },
@@ -1750,14 +1465,6 @@
       ]
     },
     {
-      id: 'life_any_time_capsule', age: [10, 14], once: true,
-      text: '반 친구들과 학교 뒷산에 타임캡슐을 묻었다. 20년 뒤에 열기로 했다.',
-      choices: [
-        { text: '미래의 나에게 편지를 쓴다', effects: { happy: 3, smarts: 1, flags: ['time_capsule'] }, log: '"미래의 나, 꿈은 이뤘니?"', schedule: { id: 'life_any_time_capsule_open', years: 20 } },
-        { text: '아끼는 구슬을 넣는다', effects: { happy: 2, flags: ['time_capsule'] }, log: '가장 반짝이는 구슬을 골랐다.', schedule: { id: 'life_any_time_capsule_open', years: 20 } }
-      ]
-    },
-    {
       id: 'life_any_time_capsule_open', age: [28, 40], weight: 1, once: true,
       cond: { flags: ['time_capsule'] },
       text: '20년 만에 뒷산에 모였다. 녹슨 통 안에 어린 날의 {name}[이/가] 들어 있다.',
@@ -1802,15 +1509,6 @@
         { text: '몰래 만나 본다', check: { stat: 'smarts', diff: 75 },
           success: { effects: { happy: -2, grit: -1 }, log: '아무 일도 없었다. 하지만 마음 한구석이 무거웠다.' },
           fail: { effects: { happy: -8, fx: ['divorce'], money: -6000 }, log: '들켰다. 신뢰는 한순간에 무너졌다.' } }
-      ]
-    },
-    {
-      id: 'life_any_ice_cream_truck', age: [5, 10], cooldown: 3,
-      cond: { money: [-999999, 1500] },
-      text: '아이스크림 트럭 음악이 골목에 울린다. 주머니엔 동전 하나.',
-      choices: [
-        { text: '{sis2}[과/와] 반씩 나눈다', effects: { happy: 3, rel: { sis2: 5 } }, log: '반으로 나눈 아이스크림이 한 통보다 맛있었다.' },
-        { text: '혼자 다 먹는다', effects: { happy: 2, rel: { sis2: -2 } }, log: '{sis2}의 원망 어린 눈빛이 아이스크림보다 차가웠다.' }
       ]
     },
     {

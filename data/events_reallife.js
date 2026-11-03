@@ -9,139 +9,6 @@
   RA.data.events.push(
 
     // ================================================================ childhood (5-12)
-    { id: 'rl_kid_allowance', age: [6, 12], decision: true, cooldown: 4,
-      text: '이번 달 용돈을 받았다. 문구점 앞 진열대가 반짝인다.',
-      choices: [
-        { text: '반은 저금통에 넣는다', effects: { smarts: 1, money: 10, happy: -1 }, log: '저금통이 조금 무거워졌다. 괜히 뿌듯했다.' },
-        { text: '한 번에 다 쓴다', risky: true, effects: { happy: 4, money: -5, mischief: 1 }, log: '사흘 만에 용돈이 바닥났다. 그래도 재밌었다.' },
-        { text: '용돈 기입장을 쓴다', effects: { smarts: 2, grit: 1 }, log: '삐뚤빼뚤한 글씨로 지출을 적었다. 군것질이 제일 많았다.' }
-      ] },
-    { id: 'rl_kid_toy_save', age: [5, 11], decision: true, cooldown: 5,
-      text: '갖고 싶던 장난감이 나왔다. 모은 돈으로는 조금 모자란다.',
-      choices: [
-        { text: '두 달 더 모은다', effects: { grit: 2, happy: 1, money: 5 }, log: '두 달 뒤, 직접 모은 돈으로 샀다. 더 소중했다.' },
-        { text: '부모님께 조른다', check: { stat: 'social', diff: 35 },
-          success: { effects: { happy: 4 }, log: '"이번만이야." 장난감이 손에 들어왔다.' },
-          fail: { effects: { happy: -2 }, log: '"생일까지 기다려." 단호한 대답이 돌아왔다.' } },
-        { text: '친구 것과 바꿔 논다', effects: { social: 2, happy: 2 }, log: '바꿔 노니 장난감이 두 배가 됐다.' }
-      ] },
-    { id: 'rl_kid_errand_change', age: [5, 9], decision: true, cooldown: 4,
-      text: '심부름으로 {food} 재료를 사 왔다. 거스름돈이 손에 남았다.',
-      choices: [
-        { text: '거스름돈을 그대로 돌려드린다', effects: { rep: 2, social: 1 }, log: '"정직하네." 머리를 쓰다듬어 줬다.' },
-        { text: '몰래 사탕을 사 먹는다', risky: true, check: { odds: 0.5 },
-          success: { effects: { happy: 3, mischief: 2 }, log: '입안 가득 단맛. 아무도 모르는 비밀이 됐다.' },
-          fail: { effects: { happy: -2, mischief: 2, rep: -1 }, log: '영수증과 계산이 안 맞았다. 바로 들켰다.' } }
-      ] },
-    { id: 'rl_kid_playground_turn', age: [5, 9], decision: true, cooldown: 3,
-      text: '놀이터 그네 앞에 줄이 길다. 드디어 내 차례다.',
-      choices: [
-        { text: '어린 동네 아이에게 양보한다', effects: { social: 2, rep: 2, happy: -1 }, log: '그 아이가 그네를 밀어 줬다. 둘이 친해졌다.' },
-        { text: '해 질 때까지 안 내린다', risky: true, effects: { happy: 3, mischief: 2, social: -1 }, log: '하늘 높이 날았다. 뒤에서 원성이 들렸다.' },
-        { text: '미끄럼틀로 간다', effects: { happy: 2, health: 1 }, log: '미끄럼틀을 스무 번 탔다.' }
-      ] },
-    { id: 'rl_kid_stranger_candy', age: [5, 10], decision: true, cooldown: 5,
-      text: '처음 보는 어른이 사탕을 주며 강아지를 같이 찾자고 한다.',
-      choices: [
-        { text: '"안 돼요!" 하고 가게로 뛰어간다', effects: { smarts: 2, grit: 1 }, log: '가게 주인이 경찰에 신고해 줬다. 배운 대로 잘했다.' },
-        { text: '따라가 본다', risky: true, check: { odds: 0.5 },
-          success: { effects: { happy: 1, mischief: 1 }, log: '골목 끝에서 이웃 어른과 마주쳐 바로 집으로 돌아왔다.' },
-          fail: { effects: { happy: -6, health: -2 }, log: '무서운 일을 겪을 뻔했다. 지나가던 어른이 구해 줬다.' } }
-      ] },
-    { id: 'rl_kid_gacha', age: [6, 12], decision: true, cooldown: 4,
-      text: '학교 앞 뽑기 기계에 한정판 캡슐이 들어 있다고 한다.',
-      choices: [
-        { text: '동전을 넣어 본다', risky: true, bet: { odds: 0.3, mult: 2, stake: 'tiny', addict: 1 },
-          success: { effects: { happy: 4 }, log: '한정판이 나왔다! 반 친구들이 몰려들었다.' },
-          fail: { effects: { happy: -2 }, log: '똑같은 캡슐만 세 개째. 동전만 사라졌다.' } },
-        { text: '그 돈으로 {food}[을/를] 사 먹는다', effects: { happy: 2, health: 1 }, log: '배가 든든하니 뽑기 생각이 사라졌다.' }
-      ] },
-    { id: 'rl_kid_picky', age: [5, 10], decision: true, cooldown: 4,
-      text: '저녁 반찬에 제일 싫어하는 채소가 올라왔다.',
-      choices: [
-        { text: '눈 딱 감고 먹는다', effects: { health: 2, grit: 1, happy: -1 }, log: '생각보다 먹을 만했다. 칭찬도 받았다.' },
-        { text: '몰래 식탁 밑에 숨긴다', risky: true, check: { odds: 0.5 },
-          success: { effects: { happy: 2, mischief: 2 }, log: '완전 범죄였다. 아무도 몰랐다.' },
-          fail: { effects: { happy: -3, mischief: 2 }, log: '청소하다 들켰다. 디저트가 사라졌다.' } },
-        { text: '"한 입만 먹을게" 협상한다', effects: { social: 2 }, log: '딱 한 입. 협상은 성공이었다.' }
-      ] },
-    { id: 'rl_kid_game_time', age: [7, 12], decision: true, cooldown: 3,
-      text: '게임 한 판만 더 하면 레벨이 오른다. 숙제는 아직이다.',
-      choices: [
-        { text: '숙제부터 한다', effects: { smarts: 2, happy: -1 }, log: '숙제를 끝내고 하니 마음이 편했다.' },
-        { text: '딱 한 판만 더', risky: true, check: { odds: 0.4 },
-          success: { effects: { happy: 4 }, log: '레벨 업! 숙제도 밤에 겨우 끝냈다.' },
-          fail: { effects: { happy: -2, smarts: -1, mischief: 1 }, log: '한 판이 열 판이 됐다. 다음 날 숙제 검사에 걸렸다.' } },
-        { text: '밖에 나가 공을 찬다', effects: { football: 2, health: 1 }, log: '해 질 때까지 골목에서 공을 찼다.' }
-      ] },
-    { id: 'rl_kid_bedtime', age: [5, 11], decision: true, cooldown: 4,
-      text: '자야 할 시간인데 이불 속에서 만화책을 펼쳤다.',
-      choices: [
-        { text: '책을 덮고 잔다', effects: { health: 2, grit: 1 }, log: '푹 자고 개운하게 일어났다.' },
-        { text: '손전등 켜고 끝까지 본다', risky: true, effects: { happy: 3, smarts: 1, health: -2, mischief: 1 }, log: '마지막 장까지 다 봤다. 아침엔 눈이 퉁퉁 부었다.' }
-      ] },
-    { id: 'rl_kid_found_wallet', age: [7, 14], decision: true, cooldown: 6,
-      text: '{city} 길가에서 지갑을 주웠다. 안에 돈이 꽤 들어 있다.',
-      choices: [
-        { text: '경찰서에 가져다준다', effects: { rep: 4, social: 1, happy: 2 }, log: '주인이 찾아와 고맙다며 {food}[을/를] 사 줬다.' },
-        { text: '돈만 슬쩍 챙긴다', risky: true, check: { odds: 0.6 },
-          success: { effects: { money: 30, happy: 2, mischief: 4 }, log: '아무도 몰랐다. 그런데 며칠 동안 마음이 무거웠다.' },
-          fail: { effects: { mischief: 4, rep: -6, happy: -4 }, log: 'CCTV에 찍혔다. 학교에 연락이 왔다.' } }
-      ] },
-    { id: 'rl_kid_sports_day', age: [6, 12], decision: true, cooldown: 3, cond: { edu: SCHOOL },
-      text: '운동회 계주 대표를 뽑는다. 마지막 주자 자리가 비었다.',
-      choices: [
-        { text: '손을 번쩍 든다', check: { stat: 'grit', diff: 30 },
-          success: { effects: { fame: 1, happy: 4, grit: 1 }, log: '역전 골인! 반 전체가 이름을 외쳤다.' },
-          fail: { effects: { happy: -3, grit: 1 }, log: '코너에서 넘어졌다. 무릎보다 마음이 더 아팠다.' } },
-        { text: '응원단을 맡는다', effects: { social: 2, happy: 2 }, log: '목이 쉬도록 응원했다.' }
-      ] },
-    { id: 'rl_kid_pet_beg', age: [6, 12], decision: true, cooldown: 6, cond: { flags: ['!has_pet'] },
-      text: '친구네 강아지가 새끼를 낳았다. 한 마리 데려가도 된다고 한다.',
-      choices: [
-        { text: '매일 산책시키겠다고 약속한다', check: { stat: 'social', diff: 30 },
-          success: { effects: { happy: 6, grit: 1, fx: ['adoptPet'] }, log: '허락이 떨어졌다! 새 가족이 생겼다.' },
-          fail: { effects: { happy: -2 }, log: '"집이 좁아서 안 돼." 강아지는 사진으로만 봤다.' } },
-        { text: '가끔 놀러 가서 본다', effects: { happy: 2, social: 1 }, log: '친구네 갈 때마다 강아지가 꼬리를 흔들었다.' }
-      ] },
-    { id: 'rl_kid_quit_lesson', age: [7, 12], decision: true, cooldown: 5,
-      text: '다니던 피아노 학원이 지겨워졌다. 그만두고 싶다.',
-      choices: [
-        { text: '1년만 더 버틴다', effects: { grit: 3, smarts: 1, happy: -2 }, log: '1년 뒤 발표회에서 한 곡을 끝까지 쳤다.' },
-        { text: '그만두고 축구 교실에 간다', effects: { football: 3, happy: 3, money: -10 }, log: '첫날부터 땀범벅이 됐다. 훨씬 즐거웠다.' },
-        { text: '몰래 빼먹는다', risky: true, check: { odds: 0.4 },
-          success: { effects: { happy: 3, mischief: 3 }, log: '한 달 동안 놀이터에서 놀았다. 아무도 몰랐다.' },
-          fail: { effects: { happy: -4, mischief: 3, rep: -2 }, log: '학원 선생님의 전화 한 통에 모든 게 들통났다.' } }
-      ] },
-    { id: 'rl_kid_broken_window', age: [6, 13], decision: true, cooldown: 6,
-      text: '공을 차다 옆집 유리창을 깼다. 아무도 못 본 것 같다.',
-      choices: [
-        { text: '초인종을 누르고 사과한다', effects: { rep: 4, grit: 1, money: -20 }, log: '옆집 할아버지가 "솔직해서 봐준다"며 웃었다.' },
-        { text: '뒤도 안 보고 도망친다', risky: true, check: { odds: 0.5 },
-          success: { effects: { mischief: 4, happy: 1 }, log: '무사히 도망쳤다. 그 뒤로 그 골목은 피해 다녔다.' },
-          fail: { effects: { mischief: 4, rep: -5, money: -30 }, log: '공에 이름이 적혀 있었다. 변상에 사과까지 했다.' } }
-      ] },
-    { id: 'rl_kid_snack_shop', age: [6, 12], decision: true, cooldown: 3,
-      text: '학교 앞 가게에서 색깔이 요란한 과자를 판다.',
-      choices: [
-        { text: '친구들과 나눠 사 먹는다', effects: { happy: 3, social: 1, health: -1 }, log: '혀가 파랗게 물들었다. 다 같이 깔깔 웃었다.' },
-        { text: '집에 가서 과일을 먹는다', effects: { health: 2 }, log: '집에 오니 깎아 둔 과일이 있었다.' }
-      ] },
-    { id: 'rl_kid_secret_base', age: [7, 12], decision: true, cooldown: 5,
-      text: '친구들이 공사장 옆 빈터에 비밀 기지를 만들자고 한다.',
-      choices: [
-        { text: '같이 만든다', risky: true, check: { odds: 0.6 },
-          success: { effects: { happy: 5, social: 2, mischief: 2 }, log: '골판지 기지가 완성됐다. 여름 내내 아지트였다.' },
-          fail: { effects: { health: -4, mischief: 2, happy: -1 }, log: '철근에 걸려 팔을 긁혔다. 기지는 그날로 철거됐다.' } },
-        { text: '놀이터에 만들자고 한다', effects: { social: 2, happy: 2 }, log: '미끄럼틀 아래 기지도 나쁘지 않았다.' }
-      ] },
-    { id: 'rl_kid_friend_group', age: [8, 14], decision: true, cooldown: 4,
-      text: '새 학년, 쉬는 시간마다 무리가 나뉜다. 어디에 낄까?',
-      choices: [
-        { text: '축구하는 친구들', effects: { football: 2, grit: 1, social: 1 }, log: '쉬는 시간 10분도 공을 찼다.' },
-        { text: '공부 잘하는 친구들', effects: { smarts: 3, social: 1 }, log: '같이 문제를 풀다 보니 성적이 올랐다.' },
-        { text: '노는 친구들', risky: true, effects: { happy: 4, social: 2, mischief: 4, smarts: -1 }, log: '매일이 소풍 같았다. 선생님 눈총도 늘었다.' }
-      ] },
     { id: 'rl_kid_class_president', age: [9, 17], decision: true, cooldown: 3, cond: { edu: SCHOOL },
       text: '반장 선거가 다가온다. 친구가 나가 보라고 부추긴다.',
       choices: [
@@ -153,7 +20,7 @@
           fail: { effects: { rep: -5, mischief: 3, money: -10 }, log: '선생님께 들켜 후보 자격을 잃었다.' } },
         { text: '친구를 밀어 준다', effects: { social: 2, rel: { friend: 5 } }, log: '선거 운동원이 되어 목이 쉬었다.' }
       ] },
-    { id: 'rl_kid_copy_homework', age: [8, 17], decision: true, cooldown: 3, cond: { edu: SCHOOL },
+    { id: 'rl_kid_copy_homework', age: [13, 17], decision: true, cooldown: 3, cond: { edu: SCHOOL },
       text: '숙제를 깜빡했다. 짝꿍이 공책을 슬쩍 내민다.',
       choices: [
         { text: '베낀다', risky: true, check: { odds: 0.55 },
@@ -162,7 +29,7 @@
         { text: '솔직히 안 했다고 말한다', effects: { rep: 2, happy: -2, grit: 1 }, log: '혼났지만 다음 날 두 배로 해 왔다.' },
         { text: '쉬는 시간에 급히 푼다', effects: { smarts: 1, grit: 1 }, log: '반만 했지만 내 힘으로 했다.' }
       ] },
-    { id: 'rl_kid_study_or_play', age: [9, 18], decision: true, cooldown: 3, cond: { edu: SCHOOL },
+    { id: 'rl_kid_study_or_play', age: [13, 18], decision: true, cooldown: 3, cond: { edu: SCHOOL },
       text: '내일이 시험이다. 친구들이 공원에서 축구 한 판 하자고 한다.',
       choices: [
         { text: '도서관에 남는다', effects: { smarts: 3, happy: -2 }, log: '시험지를 받는 순간 아는 문제가 보였다.' },
@@ -175,7 +42,9 @@
       text: '동아리 신청서를 내야 한다. 칸은 하나뿐이다.',
       choices: [
         { text: '{sportsClub}', effects: { football: 3, grit: 1 }, log: '방과 후마다 운동장이 내 차지였다.' },
-        { text: '과학 탐구반', effects: { smarts: 3 }, log: '로켓을 만들어 쏘아 올렸다. 3층까지 날았다.' },
+        { text: '과학 탐구반', check: { stat: 'smarts', diff: 45 },
+          success: { effects: { smarts: 3 }, log: '로켓을 만들어 쏘아 올렸다. 3층까지 날았다.' },
+          fail: { effects: { smarts: 1, money: -50, rel: { mother: -2 } }, log: '물로켓이 방향을 틀어 과학실 창문을 깼다. 유리값 고지서가 집으로 날아왔다.' } },
         { text: '밴드부', effects: { happy: 3, looks: 1, social: 1 }, log: '축제 무대에서 베이스를 쳤다. 손이 떨렸다.' },
         { text: '봉사 동아리', effects: { social: 3, rep: 3 }, log: '주말마다 동네 어르신들 장을 같이 봤다.' }
       ] },
@@ -302,7 +171,9 @@
         { text: '"그만해" 하고 막는다', check: { stat: 'grit', diff: 35 },
           success: { effects: { rep: 5, social: 2, grit: 1 }, log: '무리는 머쓱해하며 흩어졌다. 그 친구가 고맙다고 했다.' },
           fail: { effects: { health: -2, rep: 3, happy: -2 }, log: '밀쳐져 넘어졌다. 그래도 선생님이 사정을 알게 됐다.' } },
-        { text: '같이 웃으며 낀다', risky: true, effects: { social: 1, mischief: 4, rep: -4 }, log: '무리에 끼었다. 집에 오는 길이 찜찜했다.' },
+        { text: '같이 웃으며 낀다', risky: true, check: { odds: 0.7 },
+          success: { effects: { social: 1, mischief: 4, rep: -4 }, log: '무리에 끼었다. 집에 오는 길이 찜찜했다.' },
+          fail: { effects: { social: -2, mischief: 4, rep: -8 }, log: '누군가 찍은 영상에 내 웃는 얼굴이 나왔다. 반 전체가 나를 가해자 무리로 기억했다.' } },
         { text: '선생님께 조용히 알린다', effects: { rep: 2, social: 1 }, log: '다음 날 상담이 열렸다. 장난은 멈췄다.' }
       ] },
     { id: 'rl_teen_diet', age: [14, 40], decision: true, cooldown: 4,
@@ -641,7 +512,7 @@
     { id: 'rl_move_bigcity', age: [19, 45], decision: true, cooldown: 6,
       text: '{bigcity}에 가면 기회가 많다고들 한다. 짐을 쌀까?',
       choices: [
-        { text: '{bigcity}[으로/로] 올라간다', risky: true, check: { odds: 0.55 },
+        { text: '{bigcity}[으로/로] 올라간다', alt: { text: '{bigcity}[으로/로] 올라간다', log: '부모님이 구해 준 오피스텔에서 시작했다. 일은 잘 풀렸다.' }, risky: true, check: { odds: 0.55 },
           success: { effects: { money: 2000, smarts: 2, happy: 2, flags: ['moved_bigcity'] }, log: '좁은 원룸에서 시작했지만 일이 잘 풀렸다.' },
           fail: { effects: { money: -1500, happy: -4, flags: ['moved_bigcity'] }, log: '월세와 외로움에 지쳤다.' } },
         { text: '{city}에 남는다', effects: { happy: 2, social: 1 }, log: '익숙한 골목, 익숙한 얼굴들. 그것도 행복이다.' }

@@ -219,7 +219,7 @@
     disband: '팀이 해체돼', quit: '스스로 그만두고', fired: '해고돼', choice: '갈림길에서 스스로', crime: '수감되며', deport: '추방돼', calling: '마음의 부름을 따라', release_jail: '출소하며', entry: '', enroll: '', graduate: '' };
   // short names of causes for the 진로 panel and the life summary
   var CAUSE_LABEL = { fail: '실패', release: '방출', injury: '부상', retire: '은퇴', burnout: '번아웃', scandal: '스캔들', disband: '해체', quit: '그만둠', fired: '해고',
-    choice: '내 선택', crime: '수감', deport: '추방', calling: '출가', release_jail: '출소', entry: '입문', enroll: '진학', graduate: '졸업', start: '시작' };
+    choice: '내 선택', crime: '수감', deport: '추방', calling: '출가', release_jail: '출소', flee: '도주', entry: '입문', enroll: '진학', graduate: '졸업', start: '시작' };
   var WHY_CAUSE = { '해고': 'fired', '퇴사': 'quit', '은퇴': 'retire', '부상': 'injury', '수감': 'crime', '추방': 'deport', '축구 포기': 'quit', '출가': 'calling', '환속': 'quit', '이직': 'quit' };
   RT.causeText = function (c) { return CAUSE_TEXT[c] != null ? CAUSE_TEXT[c] : ''; };
   RT.causeLabel = function (c) { return CAUSE_LABEL[c] || c; };
@@ -422,7 +422,8 @@
       if (ok.length) out.push({ a: a, career: ok[s.age % ok.length], fit: RT.fit(s, RT.byId(a.to)) });
     });
     // what the current part-time job leads to comes first (store → 정직원, delivery → 운송), then the best fit
-    var lead = s.job && { delivery_rider: 'transport', convenience_clerk: 'service', cafe_parttime: 'service', fastfood_crew: 'service' }[s.job.id];
+    var lead = (s.job && { delivery_rider: 'transport', convenience_clerk: 'service', cafe_parttime: 'service', fastfood_crew: 'service' }[s.job.id]) ||
+      (s.flags.prison_training ? 'trades' : null); // the welding course taken inside
     out.sort(function (x, y) { return (y.a.to === lead) - (x.a.to === lead) || y.fit - x.fit; });
     return out.slice(0, 3);
   };
@@ -555,7 +556,8 @@
         list.push({ text: '🛋️ 한동안 쉬면서 생각한다', run: function (s) { s.routeNext = null; return '서두르지 않기로 했다. 쉬는 동안 할 일을 천천히 찾아본다.'; } });
         return list;
       } },
-    { id: 'sys_route_branch', manual: true, pick: true,
+    // the route may end between queueing and showing (an event in between can leave it)
+    { id: 'sys_route_branch', manual: true, pick: true, live: function (s) { var r = RT.cur(s); return !!(r && r.branchPick && RT.branches(s, r).length); },
       textFn: function (s) { var r = RT.cur(s); return r.icon + ' ' + r.name + '에서 어떤 길을 걸을까?'; },
       choicesFn: function (s) {
         var r = RT.cur(s);
@@ -775,9 +777,15 @@
     art: ['석고 데생을 세 장 그렸다.', '새 재료로 실험해 봤다.', '미술관에서 대가의 그림을 오래 봤다.', '크로키 백 장을 그렸다.', '작업 노트를 정리했다.', '색 조합 연습을 했다.', '야외 스케치를 나갔다.', '작품 사진을 찍어 포트폴리오를 정리했다.'],
     cook: ['칼질 연습으로 양파 한 자루를 썰었다.', '육수를 처음부터 다시 냈다.', '새 레시피를 세 번 만들어 봤다.', '시장에서 제철 재료를 공부했다.', '소스 농도를 맞추는 연습을 했다.', '플레이팅을 연습했다.', '유명 식당의 맛을 분석했다.', '위생 관리 공부를 했다.'],
     law: ['판례집을 한 권 정리했다.', '모의 변론을 연습했다.', '법조문을 소리 내어 외웠다.', '서면 쓰기 연습을 했다.', '스터디 모임에서 사례를 토론했다.', '새 판례 기사를 읽고 메모했다.', '논리 구조를 도식으로 그려 봤다.', '선배의 변론 기록을 공부했다.'],
-    medical: ['해부학 노트를 다시 정리했다.', '봉합 연습을 했다.', '최신 논문을 읽었다.', '응급 처치 시뮬레이션을 했다.', '케이스 컨퍼런스를 준비했다.', '진단 순서를 외웠다.', '선배의 수술 영상을 돌려 봤다.', '약물 상호작용표를 공부했다.']
+    medical: ['해부학 노트를 다시 정리했다.', '봉합 연습을 했다.', '최신 논문을 읽었다.', '응급 처치 시뮬레이션을 했다.', '케이스 컨퍼런스를 준비했다.', '진단 순서를 외웠다.', '선배의 수술 영상을 돌려 봤다.', '약물 상호작용표를 공부했다.'],
+    rapper: ['비트 위에 16마디를 새로 썼다.', '프리스타일로 십 분을 쉬지 않고 뱉었다.', '라임 노트에 단어를 서른 개 모았다.', '녹음 부스에서 같은 벌스를 열 번 녹음했다.', '사이퍼에 나가 다른 래퍼들과 돌아가며 뱉었다.', '좋아하는 래퍼의 플로우를 받아 적었다.', '호흡을 끊지 않고 빠른 벌스를 연습했다.', '새 비트를 받아 훅을 짰다.'],
+    gang: ['형님들 심부름으로 골목을 한 바퀴 돌았다.', '구역 가게들을 돌며 얼굴을 익혔다.', '체육관에서 몸을 만들었다.', '누가 누구 편인지 장부를 머릿속에 정리했다.', '조직 선배에게 입 다무는 법부터 배웠다.', '경찰 순찰 시간을 눈여겨봤다.'],
+    con: ['말투 하나로 사람 마음이 열리는 걸 연습했다.', '남의 서명을 백 번 따라 써 봤다.', '사람들 표정 읽는 연습을 했다.', '새 명함과 새 이름을 만들었다.', '선배 꾼이 판 짜는 걸 옆에서 봤다.', '들킬 때 도망칠 말부터 미리 준비했다.'],
+    thief: ['손가락 놀림을 동전으로 연습했다.', '골목과 지붕 길을 외웠다.', '장물 넘길 곳을 알아 뒀다.', '눈에 안 띄는 옷차림을 연구했다.', '선배에게 빠지는 길부터 배웠다.', '밤마다 동네를 걸으며 눈을 익혔다.']
   };
-  RT.trainLines = function (r) { return TRAIN_LINES[r.id] || [r.name + ' 연습을 했다.']; };
+  RT.trainLines = function (r) {
+    return TRAIN_LINES[r.id] || [r.name + ' 연습을 했다.', r.name + ' 일을 잘하는 선배에게 요령을 물었다.', r.name + ' 관련 책을 한 권 읽었다.', '퇴근 뒤 ' + r.name + ' 실력을 따로 갈고닦았다.', '실수했던 일을 다시 해 봤다.', '부족한 부분을 노트에 적고 하나씩 고쳤다.'];
+  };
 
   // majors that belong to the other school track (문과 vs 이과); arts/sport tracks have their own majors
   var HUM_MAJORS = ['law', 'business', 'economics', 'education', 'humanities', 'media', 'theology'];

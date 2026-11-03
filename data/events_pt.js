@@ -8,34 +8,6 @@
 
   // ---------------------------------------------------------------- childhood on Madeira
   E({
-    id: 'pt_flower_festival', age: [5, 11], cooldown: 4,
-    cond: { rel: { father: 'alive' } },
-    text: '{holiday2} 아침, 공원 정원사인 {father}[이/가] 꽃 수레를 끌고 나간다. "막내야, 같이 가자."',
-    choices: [
-      { text: '꽃 수레를 같이 민다', effects: { grit: 2, rel: { father: 6 } }, log: '{father}[이/가] 심은 꽃길을 따라 퍼레이드가 지나갔다. 괜히 어깨가 으쓱했다.' },
-      { text: '광장에서 공을 찬다', effects: { football: 2, happy: 2 }, log: '꽃잎이 흩날리는 광장에서 관광객들이 박수를 쳤다.' }
-    ]
-  });
-  E({
-    id: 'pt_stair_football', age: [5, 11], cooldown: 3,
-    text: '가파른 계단 골목에서 공을 놓치면 바다까지 굴러간다. 오늘도 공이 계단을 타고 내려간다.',
-    choices: [
-      { text: '끝까지 쫓아간다', check: { stat: 'health', diff: 40 },
-        success: { effects: { health: 2, grit: 2 }, log: '바다에 빠지기 직전에 공을 잡았다. 다리가 터질 것 같지만 뿌듯하다.' },
-        fail: { effects: { health: -2, happy: -1 }, log: '공은 결국 파도에 실려 갔다. 형들이 새 공을 구해 오기로 했다.' } },
-      { text: '발바닥으로 멈추는 연습을 한다', effects: { football: 2 }, log: '계단에서 공을 세우는 기술이 늘었다. 볼 컨트롤이 남다르다는 말을 들었다.' }
-    ]
-  });
-  E({
-    id: 'pt_banana_terrace', age: [7, 13], once: true,
-    cond: { money: [-999999, 3000] },
-    text: '방학 동안 이웃집 바나나 계단밭에서 일손을 구한다. 하루 품삯은 몇 유로.',
-    choices: [
-      { text: '일하고 번 돈을 {mother}에게 드린다', effects: { money: 30, grit: 3, rel: { mother: 6 } }, log: '{mother}[이/가] 돈을 받아 들고 한참 말이 없었다. 저녁 반찬이 하나 늘었다.' },
-      { text: '그 돈으로 새 축구공을 산다', effects: { money: 10, football: 2, happy: 3 }, log: '가게 진열장에서 몇 주 동안 쳐다만 보던 공을 드디어 샀다.' }
-    ]
-  });
-  E({
     id: 'pt_new_year_fireworks', age: [5, 70], cooldown: 7,
     text: '12월 31일 밤, 푼샬 항구를 둘러싼 산비탈에서 일제히 불꽃이 터진다.',
     textVariants: [
@@ -54,7 +26,9 @@
     cond: FATHER_STRUGGLING,
     text: '일을 마친 {father}[이/가] 오늘도 동네 선술집에 들렀다. 늦은 밤, 문 앞에서 한참을 망설이다 들어온다.',
     choices: [
-      { text: '성당 회복 모임을 같이 알아본다', effects: { rel: { father: 4 }, flags: ['pt_parish_help'], fx: ['fatherSeekHelp'] }, log: '{father}[이/가] 전단지를 오래 들여다보더니 "한번 가 보마"라고 했다.', schedule: { id: 'pt_father_meeting', years: 1 } },
+      { text: '성당 회복 모임을 같이 알아본다', schedule: { id: 'pt_father_meeting', years: 1 }, check: { stat: 'social', diff: 40 },
+          success: { effects: { rel: { father: 4 }, flags: ['pt_parish_help'], fx: ['fatherSeekHelp'] }, log: '{father}[이/가] 전단지를 오래 들여다보더니 "한번 가 보마"라고 했다.' },
+          fail: { effects: { rel: { father: -3 }, happy: -2 }, log: '전단지는 구겨져 선술집 휴지통에 들어갔다. "신부님한테 내 얘길 했냐?"' } },
       { text: '{father}의 장비 가방을 대신 챙겨 둔다', effects: { rel: { father: 6 }, happy: -1 }, log: '다음 날 아침, {father}[이/가] 가지런한 가방을 보고 머리를 쓰다듬었다.' }
     ]
   });
@@ -63,7 +37,9 @@
     cond: { flags: ['pt_parish_help', '!father_sober'], rel: { father: 'alive' } },
     text: '{father}[이/가] 회복 모임에 다닌 지 일 년. 오늘은 처음으로 사람들 앞에서 이야기를 한다고 한다.',
     choices: [
-      { text: '맨 뒷줄에 앉아 지켜본다', effects: { rel: { father: 8 }, unflags: ['pt_parish_help'], fx: ['fatherSeekHelp'] }, log: '"막내가 와 있습니다." 그 말에 모두가 박수를 쳤다.' },
+      { text: '맨 뒷줄에 앉아 지켜본다', check: { stat: 'grit', diff: 35 },
+          success: { effects: { rel: { father: 8 }, unflags: ['pt_parish_help'], fx: ['fatherSeekHelp'] }, log: '"막내가 와 있습니다." 그 말에 모두가 박수를 쳤다.' },
+          fail: { effects: { happy: -3, rel: { father: 2 } }, log: '{father}[은/는] 단상 앞에서 말을 잇지 못하고 내려왔다. 돌아오는 길에 둘 다 바다만 봤다.' } },
       { text: '끝나고 함께 바닷가를 걷는다', effects: { rel: { father: 6 }, happy: 2, unflags: ['pt_parish_help'], fx: ['fatherSeekHelp'] }, log: '파도 소리 사이로 {father}[이/가] "고맙다"고 했다.' }
     ]
   });
@@ -83,15 +59,6 @@
 
   // ---------------------------------------------------------------- the academy in Lisbon
   E({
-    id: 'pt_ferry_lisbon', age: [12, 15], once: true,
-    cond: { flags: ['moved_alone'] },
-    text: '{bigcity}행 비행기. 창밖으로 마데이라가 손바닥만 해진다. 주머니에는 {mother}[이/가] 싸 준 {food}[이/가] 있다.',
-    choices: [
-      { text: '창에 이마를 대고 끝까지 본다', effects: { happy: -3, grit: 3, flags: ['homesick'] }, log: '섬이 구름 아래로 사라질 때까지 눈을 떼지 않았다.' },
-      { text: '옆자리 사람에게 축구 이야기를 한다', effects: { social: 2, happy: 2 }, log: '내릴 때쯤 그 아저씨는 "네 경기 꼭 보러 가마"라고 했다.' }
-    ]
-  });
-  E({
     id: 'pt_accent_lisbon', age: [12, 16], once: true, weight: 20,
     cond: { flags: ['moved_alone'], fb: ['academy'] },
     text: '{academy} 숙소. 아이들이 섬 억양을 따라 하며 킥킥댄다.',
@@ -109,7 +76,9 @@
     cond: { flags: ['moved_alone'], fb: ['academy', 'youth'], rel: { mother: 'alive' } },
     text: '일주일에 한 번, 전화 카드로 {mother}에게 전화를 건다. 남은 시간이 숫자로 줄어든다.',
     choices: [
-      { text: '괜찮다고만 말한다', effects: { grit: 2, happy: -1, rel: { mother: 3 } }, log: '"밥은 잘 먹지?" 대답하기도 전에 시간이 끝났다.' },
+      { text: '괜찮다고만 말한다', check: { stat: 'grit', diff: 40 },
+          success: { effects: { grit: 2, happy: -1, rel: { mother: 3 } }, log: '"밥은 잘 먹지?" 대답하기도 전에 시간이 끝났다.' },
+          fail: { effects: { happy: -3, rel: { mother: -1 } }, log: '목소리가 떨리는 걸 {mother}[이/가] 알아챘다. "거짓말할 거면 전화하지 마라." 카드 잔액이 0이 됐다.' } },
       { text: '보고 싶다고 솔직히 말한다', effects: { happy: 2, rel: { mother: 6 } }, log: '{mother}[이/가] 다음 달 섬에서 {food}[을/를] 부쳐 주기로 했다.' }
     ]
   });

@@ -7,42 +7,8 @@
 
   EV.push(
     // ---------------------------------------------------------------- canon: early childhood
-    { id: 'canon_kitroom', age: [5, 6], once: true, weight: 30, cond: { flags: ['!heir'], rel: { father: 'alive' } },
-      text: '{fatherJob2}인 {father}[을/를] 따라 {localClub}의 장비실에 갔다. 땀 냄새 나는 유니폼이 산더미다.',
-      choices: [
-        { text: '유니폼 개는 걸 돕는다', effects: { grit: 2, rel: { father: 6 } }, log: '{father}[이/가] 머리를 쓰다듬으며 "넌 일을 야무지게 하는구나" 했다.' },
-        { text: '몰래 운동장에 나가 공을 찬다', check: { stat: 'football', diff: 6 },
-          success: { effects: { football: 3 }, log: '1군 형들이 꼬마의 드리블을 보고 휘파람을 불었다.' },
-          fail: { effects: { health: -2, happy: -1 }, log: '공에 걸려 넘어져 무릎이 까졌다.' } }
-      ] },
-    { id: 'canon_join_local', age: [6, 8], once: true, priority: true, cond: { flags: ['!heir', '!fb_quit'], fb: ['none'] },
-      text: '{localClub}의 {coach}[이/가] 골목에서 공을 차는 {name}[을/를] 보더니 물었다. "너, 우리 팀에서 뛰어 볼래?"',
-      choices: [
-        { text: '"네!" 하고 바로 대답한다', effects: { happy: 6, fx: ['joinLocalClub'] }, log: '그날 밤 축구화를 신은 채로 잠들었다.' },
-        { text: '엄마에게 먼저 물어본다', effects: { rel: { mother: 5 }, fx: ['joinLocalClub'] }, log: '{mother}[은/는] 잠시 고민하더니 "다치지만 마라"며 허락했다.' },
-        { text: '축구보다 다른 게 좋다', effects: { smarts: 2, flags: ['declined_club'] }, log: '공보다 책이 좋았다. 아직은.' }
-      ] },
-    { id: 'canon_crowded_house', age: [5, 11], once: true, weight: 25, cond: { flags: ['!heir'] },
-      text: '{house}에서는 {siblings}[과/와] 방 하나를 나눠 쓴다. 비 오는 날엔 양동이를 받쳐 둔다.',
-      choices: [
-        { text: '형, 누나들과 베개 싸움을 한다', effects: { happy: 5, rel: { siblings: 5 } }, log: '양동이가 엎어졌지만 다 같이 깔깔 웃었다.' },
-        { text: '"나중에 큰 집 사 줄게"라고 약속한다', effects: { grit: 3, rel: { mother: 4 }, flags: ['promised_house'] }, log: '{mother}[은/는] 웃었지만 눈가가 촉촉했다.' }
-      ] },
-    { id: 'canon_mother_shift', age: [6, 12], once: true, weight: 20, cond: { flags: ['!heir'], rel: { mother: 'alive' } },
-      text: '{motherJob}[으로/로] 일하는 {mother}[은/는] 새벽에 나가 밤늦게 들어온다. 오늘은 손이 퉁퉁 부어 있다.',
-      choices: [
-        { text: '엄마 손을 주물러 드린다', effects: { rel: { mother: 8 }, happy: 2 }, log: '"우리 막내 손이 약손이네." 엄마가 그대로 잠들었다.' },
-        { text: '설거지를 대신 해 둔다', effects: { rel: { mother: 6 }, grit: 2 }, log: '그릇 하나를 깼지만 엄마는 꼭 안아 주었다.' }
-      ] },
 
     // ---------------------------------------------------------------- canon: the father's illness arc
-    { id: 'canon_father_drinking', age: [7, 9], once: true, priority: true, cond: { flags: ['!heir', '!father_drinking'], rel: { father: 'alive' } },
-      text: '요즘 {father}[은/는] 일을 마치면 곧장 집에 오지 않는다. 늦은 밤, 술 냄새와 함께 조용히 문을 열고 들어와 오래 앉아 있다.',
-      choices: [
-        { text: '아빠를 꼭 안아 준다', effects: { rel: { father: 6 }, happy: -3, flags: ['father_drinking'] }, log: '{father}[은/는] 아무 말 없이 등을 토닥였다. 그 손이 떨리고 있었다.' },
-        { text: '{mother}에게 걱정을 털어놓는다', effects: { rel: { mother: 5 }, happy: -2, flags: ['father_drinking'] }, log: '{mother}[은/는] "아빠가 많이 힘드신 거야. 아빠 잘못이 아니라 병이란다"라고 말했다.' },
-        { text: '{bro}에게 물어본다', effects: { rel: { bro: 5 }, smarts: 1, flags: ['father_drinking'] }, log: '{bro}[은/는] "우리가 같이 지켜 드리자"며 새끼손가락을 걸었다.' }
-      ] },
     { id: 'canon_father_talk', age: [10, 45], cooldown: 3, weight: 16, cond: { flags: ['!heir', 'father_drinking', '!father_sober'], rel: { father: 'alive' } },
       text: '{father}[은/는] 오늘도 {localClub} 장비실 구석에서 혼자 술잔을 들고 있었다. 지쳐 보이는 얼굴이다.',
       choices: [
@@ -62,7 +28,9 @@
       when: function (s) { var d = dad(s); return d && d.recovery >= 25; },
       text: '몇 달을 잘 버티던 {father}[이/가] 다시 술을 마셨다. 다음 날 아침, 고개를 들지 못한다.',
       choices: [
-        { text: '"괜찮아요, 다시 하면 돼요"라고 말한다', effects: { rel: { father: 6 }, fx: ['fatherSeekHelp'] }, log: '회복은 직선이 아니다. {father}[은/는] 다시 모임에 나가기로 했다.' },
+        { text: '"괜찮아요, 다시 하면 돼요"라고 말한다', check: { stat: 'social', diff: 40 },
+          success: { effects: { rel: { father: 6 }, fx: ['fatherSeekHelp'] }, log: '회복은 직선이 아니다. {father}[은/는] 다시 모임에 나가기로 했다.' },
+          fail: { effects: { rel: { father: -2 }, happy: -2, fx: ['fatherRelapse'] }, log: '"위로하지 마라. 더 비참하다." 그 주 내내 {father}[은/는] 모임에 나가지 않았다.' } },
         { text: '실망을 감추지 못한다', effects: { rel: { father: -4 }, happy: -3, fx: ['fatherRelapse'] }, log: '문이 닫히는 소리가 유난히 크게 들렸다.' }
       ] },
     { id: 'canon_father_hospital', manual: true, age: [1, 120], cond: { rel: { father: 'alive' } },
@@ -81,7 +49,9 @@
         { text: '아버지의 이름을 가슴에 새긴다', effects: { grit: 5, happy: 2 }, log: '그 뒤로 힘든 날마다 하늘을 올려다봤다.',
           run: function (s) { if (s.route && s.route.id === 'football') return '그 뒤로 골을 넣을 때마다 하늘을 가리켰다.'; } },
         { text: '한동안 아무것도 하지 못한다', effects: { happy: -5, health: -2, rel: { family: 6 } }, log: '가족들이 번갈아 곁을 지켰다. 아무도 서두르라고 말하지 않았다.' },
-        { text: '술은 평생 입에 대지 않기로 맹세한다', effects: { health: 3, flags: ['teetotal'], unflags: ['drinker'] }, log: '아버지를 앗아 간 병을 이해하게 됐다. 그리고 미워하지 않기로 했다.' }
+        { text: '술은 평생 입에 대지 않기로 맹세한다', check: { stat: 'grit', diff: 40 },
+          success: { effects: { health: 3, flags: ['teetotal'], unflags: ['drinker'] }, log: '아버지를 앗아 간 병을 이해하게 됐다. 그리고 미워하지 않기로 했다.' },
+          fail: { effects: { happy: -2, rel: { family: 2 } }, log: '맹세를 공책 맨 앞장에 적었지만, 장례식 날 밤 어른들이 건넨 잔을 거절하지 못했다. 그 공책은 서랍 깊숙이 들어갔다.' } }
       ] },
     { id: 'canon_father_sober_year', age: [10, 70], once: true, weight: 40, cond: { flags: ['father_sober'], rel: { father: 'alive' } },
       text: '{father}[이/가] 술을 끊은 지 1년이 됐다. 온 가족이 {food}[을/를] 차려 놓고 작은 잔치를 열었다.',
@@ -91,47 +61,11 @@
       effects: { happy: 5, rel: { father: 5 } }, log: '장비실 벽에는 어린 시절 내 사진이 붙어 있었다.' },
 
     // ---------------------------------------------------------------- canon: clubs and the academy
-    { id: 'canon_regional_offer', age: [9, 11], once: true, priority: true, cond: { flags: ['!heir'], fb: ['local'], stats: { football: [20, 100] } },
-      text: '{regionalClub}의 스카우트가 {localClub} 경기를 보러 왔다. "이 아이, 우리 유소년팀으로 데려가고 싶습니다."',
-      choices: [
-        { text: '더 큰 무대로 간다', effects: { happy: 4, fx: ['joinRegionalClub'] }, log: '{father}[은/는] 장비실 동료들에게 밤새 자랑을 했다고 한다.' },
-        { text: '친구들이 있는 {localClub}에 남는다', effects: { happy: 2, rel: { friend: 5 }, flags: ['stayed_local'] }, log: '조금 더 동네 골목의 왕으로 남기로 했다.' }
-      ] },
-    { id: 'canon_regional_late', age: [12, 14], once: true, weight: 30, cond: { fb: ['local'], stats: { football: [30, 100] } },
-      text: '{regionalClub}에서 다시 연락이 왔다. "아직 늦지 않았다."',
-      choices: [
-        { text: '이번엔 간다', effects: { fx: ['joinRegionalClub'] }, log: '새 유니폼은 몸에 꼭 맞았다.' },
-        { text: '그냥 즐기면서 찬다', effects: { happy: 3 }, log: '축구는 취미로도 충분히 즐겁다.' }
-      ] },
-    { id: 'canon_academy_offer', age: [12, 12], once: true, priority: true, cond: { flags: ['!heir'], fb: ['regional', 'local'], stats: { football: [42, 100] } },
-      text: '{bigcity}의 {academy}에서 입단 테스트 합격 통지가 왔다. 단, 열두 살에 혼자 {bigcity}[으로/로] 올라가 기숙사에서 지내야 한다.',
-      choices: [
-        { text: '혼자 떠난다', effects: { grit: 4, happy: -3, rel: { mother: -2 }, fx: ['joinAcademy'] }, log: '{hometown}[을/를] 떠나는 날, {mother}[은/는] 손을 흔들다 끝내 돌아서서 울었다.' },
-        { text: '가족 곁에 남는다', effects: { happy: 3, rel: { family: 6 }, flags: ['stayed_home'] }, log: '아직은 엄마 밥이 더 좋다. 기회는 또 올지도 모른다.' }
-      ] },
     { id: 'canon_academy_second', age: [13, 15], once: true, weight: 40, cond: { fb: ['regional', 'local'], flags: ['!moved_alone'], stats: { football: [54, 100] } },
       text: '{academy} 스카우트가 다시 찾아왔다. "재능은 기다려 주지 않는다. 이번이 마지막 제안이다."',
       choices: [
         { text: '이번엔 간다', effects: { grit: 3, fx: ['joinAcademy'] }, log: '조금 늦었지만, 가방을 쌌다.' },
         { text: '축구 말고 다른 미래를 생각한다', effects: { smarts: 2, fx: ['quitFootball'] }, log: '공 대신 다른 꿈을 품기로 했다.' }
-      ] },
-    { id: 'canon_first_night', age: [12, 15], once: true, priority: true, cond: { flags: ['moved_alone'], fb: ['academy'] },
-      text: '{academy} 기숙사의 첫날 밤. 낯선 천장, 낯선 이불. {hometown}의 바다 냄새가 그립다.',
-      choices: [
-        { text: '공중전화로 엄마 목소리를 듣는다', effects: { money: -5, happy: 3, rel: { mother: 6 } }, log: '전화 카드가 다 닳을 때까지 "괜찮아"만 반복했다.' },
-        { text: '이불 속에서 몰래 운다', effects: { happy: -3, grit: 3, flags: ['homesick'] }, log: '아침이 되자 퉁퉁 부은 눈으로 가장 먼저 운동장에 나갔다.' },
-        { text: '불 꺼진 체육관에서 혼자 훈련한다', effects: { football: 2, health: -1, grit: 2 }, log: '경비 아저씨가 손전등을 비추며 "또 너냐"라고 했다.' }
-      ] },
-    { id: 'canon_accent', age: [12, 15], once: true, weight: 40, cond: { flags: ['moved_alone'], fb: ['academy'] },
-      text: '수업 시간에 책을 읽자 반 아이들이 {region} 사투리를 흉내 내며 웃었다.',
-      choices: [
-        { text: '같이 웃어넘긴다', effects: { happy: -1, grit: 1 }, log: '몇 주 뒤, 그 아이들이 내 사투리를 따라 하며 친해졌다.' },
-        { text: '참지 못하고 의자를 걷어찬다', check: { stat: 'grit', diff: 55 },
-          success: { effects: { happy: 1 }, log: '{coach}[은/는] 혼을 냈지만 "그 승부욕을 운동장에서 써라"라고 덧붙였다.' },
-          fail: { effects: { happy: -4, flags: ['academy_warning'] }, log: '퇴소 경고를 받았다. 한 번만 더 그러면 {hometown}[으로/로] 돌아가야 한다.' } },
-        { text: '운동장에서 실력으로 보여 준다', check: { stat: 'football', diff: 42 },
-          success: { effects: { football: 1, fame: 2, happy: 4 }, log: '연습 경기에서 세 골. 아무도 사투리를 놀리지 않게 됐다.' },
-          fail: { effects: { happy: -2 }, log: '오늘은 공이 발에 붙지 않았다. 내일은 다를 것이다.' } }
       ] },
     { id: 'canon_warning', age: [12, 17], once: true, weight: 30, cond: { flags: ['academy_warning'], fb: ['academy'] },
       text: '{coach}[이/가] 사무실로 불렀다. "재능은 충분하다. 문제는 네 성질이다."',
@@ -145,14 +79,16 @@
       text: '향수병이 심해졌다. 밤마다 {mother}[이/가] 해 주던 {food} 생각이 난다.',
       choices: [
         { text: '짐을 싸서 집으로 돌아간다', effects: { happy: 8, rel: { mother: 10 }, fx: ['quitFootball'], flags: ['went_home'] }, log: '{hometown} 항구에 내리자 가족이 모두 마중 나와 있었다.' },
-        { text: '이를 악물고 버틴다', effects: { grit: 4, happy: -2 }, log: '달력에 다음 방학까지 남은 날을 하나씩 지웠다.' },
+        { text: '이를 악물고 버틴다', check: { stat: 'grit', diff: 45 },
+          success: { effects: { grit: 4, happy: -2 }, log: '달력에 다음 방학까지 남은 날을 하나씩 지웠다.' },
+          fail: { effects: { health: -4, happy: -3 }, log: '버티다 몸살이 났다. 사흘 동안 훈련에 빠져 명단 맨 아래로 밀렸다.' } },
         { text: '엄마가 다녀가시게 한다', req: { money: 200 }, effects: { money: -200, happy: 7, rel: { mother: 8 } }, log: '{mother}[이/가] 가방 가득 {food}[을/를] 싸 들고 왔다. 기숙사 친구들까지 배불리 먹었다.' }
       ] },
     { id: 'canon_heart', age: [15, 15], once: true, priority: true, cond: { flags: ['!heir'] },
       text: '정기 검진에서 의사가 고개를 갸웃했다. "쉬고 있는데도 심장이 너무 빨리 뛰네요. 검사가 필요합니다."',
       choices: [
         { text: '솔직하게 말하고 시술을 받는다', effects: { fx: ['heartProcedure'], happy: -2, rel: { mother: 5 } }, log: '레이저 시술은 금방 끝났다. 며칠 뒤 다시 훈련장을 뛰었다. {mother}[은/는] 그제야 잠을 잤다.' },
-        { text: '축구를 못 하게 될까 봐 숨긴다', effects: { fx: ['heartIgnore'] }, log: '"괜찮아요, 긴장해서 그래요." 거짓말이 입에서 쉽게 나왔다.' }
+        { text: '축구를 못 하게 될까 봐 숨긴다', alt: { text: '좋아하는 걸 못 하게 될까 봐 숨긴다' }, effects: { fx: ['heartIgnore'] }, log: '"괜찮아요, 긴장해서 그래요." 거짓말이 입에서 쉽게 나왔다.' }
       ] },
     { id: 'canon_heart_back', age: [15, 16], once: true, priority: true, cond: { flags: ['heart_fixed'] },
       text: '시술 후 첫 훈련. 가슴에 손을 얹어 보니 심장이 차분하게 뛰고 있다.',
@@ -201,14 +137,6 @@
       ] },
 
     // ---------------------------------------------------------------- football route: youth
-    { id: 'fb_street', age: [5, 11], cooldown: 3, weight: 12, cond: { fb: ['none', 'local'] },
-      text: '골목에서 동네 형들이 슬리퍼를 골대 삼아 축구를 하고 있다.',
-      choices: [
-        { text: '끼워 달라고 한다', check: { stat: 'football', diff: 12 },
-          success: { effects: { football: 2, happy: 3 }, log: '형들 다리 사이로 공을 빼서 골을 넣었다. 다음 날부터 먼저 불러 줬다.' },
-          fail: { effects: { happy: -2, health: -1 }, log: '공 한 번 못 만져 보고 넘어지기만 했다.' } },
-        { text: '구경만 한다', effects: { smarts: 1 }, log: '형들의 헛다리 기술을 머릿속에 저장했다.' }
-      ] },
     { id: 'fb_school_team', age: [8, 16], once: true, weight: 14, cond: { fb: ['none'], edu: ['elem', 'middle', 'high'], flags: ['!fb_quit'] },
       text: '{school} {sportsClub} 신입 부원 모집 공고가 붙었다.',
       choices: [
@@ -216,12 +144,6 @@
           success: { effects: { fx: ['joinLocalClub'], happy: 4 }, log: '합격! 학교 팀과 {localClub}에서 동시에 뛰게 됐다.' },
           fail: { effects: { happy: -3 }, log: '이번엔 떨어졌다. 공 차는 연습부터 다시 해야겠다.' } },
         { text: '관심 없다', effects: { smarts: 1 }, log: '방과 후엔 다른 걸 하기로 했다.' }
-      ] },
-    { id: 'fb_coach_mentor', age: [6, 14], cooldown: 3, weight: 12, cond: { fb: ['local', 'regional'] },
-      text: '{coach}[이/가] 훈련이 끝난 뒤 따로 불렀다. "넌 왼발이 약해. 그게 네 숙제다."',
-      choices: [
-        { text: '왼발만 쓰는 특훈을 한다', effects: { football: 2, grit: 2 }, log: '한 달 뒤, 왼발로도 감아 차는 슈팅이 들어갔다.' },
-        { text: '"오른발이면 충분해요!"', effects: { happy: 2, rel: { coach: -3 } }, log: '{coach}[은/는] 웃기만 했다. 언젠가 그 말을 이해하게 될 것이다.' }
       ] },
     { id: 'fb_youth_tournament', age: [10, 16], cooldown: 2, weight: 14, cond: { fb: ['regional', 'academy'] },
       text: '전국 유소년 대회 결승전. 관중석에 {father}의 낡은 모자가 보인다.',

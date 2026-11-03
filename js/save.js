@@ -65,6 +65,14 @@
     5: function (s) {
       s.saveVersion = 6;
       return RA.Engine && RA.Engine.Routes ? RA.Engine.Routes.migrate(s) : s;
+    },
+    // v6 → v7 (round 8): birth origin (older lives were the canon poor family), hobbies from what the
+    // hero already did (football for anyone who played; the rest from the talents), and the old
+    // 뒷골목 route split into 조직 / 사기·꾼 / 털이·밀수 by the job held.
+    6: function (s) {
+      if (RA.Engine && RA.Engine.Life) return RA.Engine.Life.migrate(s);
+      s.saveVersion = 7;
+      return s;
     }
   };
 

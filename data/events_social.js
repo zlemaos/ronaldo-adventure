@@ -3,19 +3,13 @@
   var RA = G.RA = G.RA || {}; RA.data = RA.data || {};
   var EV = RA.data.events = RA.data.events || [];
   EV.push(
-    { id: 'soc_new_kid', age: [6, 13], once: true, cond: { stats: { social: [55, 100] } },
-      text: '전학 온 아이가 쉬는 시간마다 혼자 앉아 있다.',
-      choices: [
-        { text: '먼저 말을 건다', effects: { social: 2, happy: 3, fx: ['newFriend'] }, log: '공 하나로 금세 친해졌다.' },
-        { text: '모른 척한다', effects: { social: -1 }, log: '그 아이는 한 달 내내 혼자였다.' }
-      ] },
     { id: 'soc_lonely_lunch', age: [7, 16], cooldown: 4, cond: { stats: { social: [0, 30] } },
       text: '점심시간, 끼어들 자리가 보이지 않는다.',
       choices: [
         { text: '옆자리에 "같이 먹어도 돼?"', check: { stat: 'social', diff: 25 },
           success: { effects: { social: 3, happy: 3 }, log: '"당연하지!" 생각보다 쉬웠다.' },
           fail: { effects: { happy: -3 }, log: '대답이 없었다. 다음엔 다른 자리로.' } },
-        { text: '운동장에서 혼자 공을 찬다', effects: { football: 1, happy: -1 }, log: '공은 말이 없어서 편했다.' }
+        { text: '운동장에서 혼자 공을 찬다', alt: { text: '혼자 {hobbyAct}[을/를] 한다', log: '혼자인 게 오히려 편했다.' }, effects: { football: 1, happy: -1 }, log: '공은 말이 없어서 편했다.' }
       ] },
     { id: 'soc_team_heart', age: [14, 38], cooldown: 5, cond: { fb: ['academy', 'youth', 'pro'], stats: { social: [60, 100] } },
       text: '연패 뒤 라커룸이 조용하다. 다들 고개를 숙였다.',

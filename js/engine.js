@@ -199,6 +199,7 @@
     v.job = s.job ? E.jobTitle(s) : '백수';
     v.fatherJob = c.family.father.job; v.fatherJob2 = c.family.father.job2; v.motherJob = c.family.mother.job;
     v.currency = c.currency.unit; v.leader = c.leader; v.country = c.name; v.sportsClub = c.school.sportsClub;
+    if (E.varsHook) E.varsHook(s, v); // js/life.js: {hobby}, and the home by birth origin
     return v;
   }
   function displayName(s, p) {
@@ -513,6 +514,15 @@
     ev._cat = k;
     return E.CATEGORIES[k];
   };
+  // the card's category for this hero: a football card that still reaches a child who never chose
+  // football (a visit to dad's club kit room) is filed under its people, not under 축구
+  E.eventCategoryKey = function (ev, s) {
+    E.eventCategory(ev);
+    var k = (ev && ev._cat) || 'life';
+    if (k !== 'football' || !s || E.footballHome(s)) return k;
+    var r = E.eventRefs(ev).refs;
+    return r.father || r.mother || r.bro || r.sis1 || r.sis2 || r.siblings || /^canon_/.test(ev.id) ? 'family' : 'life';
+  };
 
   // ---------------------------------------------------------------- event presentation
   E.choiceAvailable = function (s, ch) {
@@ -534,10 +544,10 @@
     if (!ev || !E.careerStoryOk(s, ev) || (s.jail > 0 && !E.jailOk(ev)) || (ev.live && !ev.live(s)) ||
         (!ev.manual && (!E.personsOk(s, ev) || !E.condMatches(s, ev.cond) || (ev.when && !ev.when(s))))) { s.queue.shift(); return E.currentEvent(s); }
     var text = E.eventText(s, ev);
-    var cat = E.eventCategory(ev);
+    var catKey = E.eventCategoryKey(ev, s), cat = E.CATEGORIES[catKey];
     return {
       id: ev.id, text: E.render(s, text), scene: ev.scene || E.sceneFor(s, ev), pick: !!ev.pick, pic: ev.pic || null,
-      category: { key: ev._cat, label: cat.label, icon: cat.icon, color: cat.color, pic: cat.pic },
+      category: { key: catKey, label: cat.label, icon: cat.icon, color: cat.color, pic: cat.pic },
       choices: eventChoices(s, ev).map(function (ch, i) {
         var chance = ch.bet ? E.betWinChance(ch.bet) : ch.check ? E.checkChance(s, ch.check) : null;
         return { i: i, text: E.render(s, ch.text), enabled: E.choiceAvailable(s, ch), chance: chance,
@@ -601,7 +611,10 @@
   E.betWinChance = function (bet) { return bet.stake === 'tiny' ? bet.odds : bet.odds / (1 + JACKPOT_P * (JACKPOT_X - 1)); };
   E.checkChance = function (s, chk) {
     if (typeof chk.odds === 'number') return chk.odds; // fixed odds (dice, cards, being caught)
-    return clamp(0.5 + ((s.stats[chk.stat] || 0) - chk.diff) / 40, chk.min != null ? chk.min : 0.05, chk.max != null ? chk.max : 0.95);
+    // talent checks (0-100 like stats); 'hobby' = the talent of the hero's main hobby (js/life.js)
+    var tk = chk.talent === 'hobby' ? (E.hobbyTalent ? E.hobbyTalent(s) : null) : chk.talent;
+    var v = chk.talent ? (tk && s.talent ? s.talent[tk] || 0 : 0) : (s.stats[chk.stat] || 0);
+    return clamp(0.5 + (v - chk.diff) / 40, chk.min != null ? chk.min : 0.05, chk.max != null ? chk.max : 0.95);
   };
 
   // Resolve a choice of the current event. Returns {log, changes, outcome}
@@ -649,16 +662,19 @@
         res.changes.push({ k: 'msg', t: kc.name + '(으)로 새 길을 시작했다. 첫 직함은 "' + E.ladderTitle(s, kc, 0) + '".' });
       }
     }
-    if (res.outcome !== 'fail' && branch.effects && (branch.effects.fame || 0) >= 3 && E.eventCategory(ev).key === 'football') E.triumph(s, 'goal');
+    // the hero's own label: a relabelled football card (non-football child) earns no goal cheer
+    var catKey = E.eventCategoryKey(ev, s);
+    if (res.outcome !== 'fail' && branch.effects && (branch.effects.fame || 0) >= 3 && catKey === 'football') E.triumph(s, 'goal');
     var log = variant(s, ev, branch.logVariants, branch.log);
     if (branch.run) log = branch.run(s, res) || log;
     var sch = branch.schedule || ch.schedule;
     if (sch) s.pending.push({ age: s.age + (sch.years || 1), id: sch.id });
     res.log = E.render(s, log || '') + betNote;
     mem.chg = compactChanges(res.changes);
-    res.category = E.eventCategory(ev);
+    var catDef = E.CATEGORIES[catKey];
+    res.category = { key: catKey, label: catDef.label, icon: catDef.icon, color: catDef.color, pic: catDef.pic };
     // how the result card sounds and moves (js/ui.js): grief is quiet, big wins and stage peaks cheer
-    var scn = ev.scene || E.sceneFor(s, ev), cat = res.category.key;
+    var scn = ev.scene || E.sceneFor(s, ev), cat = catKey;
     var gain = res.changes.reduce(function (a, c) { return a + (c.k === 'happy' || c.k === 'fame' ? c.d : 0); }, 0);
     res.scene = scn;
     res.sound = cat === 'memorial' || scn === 'rain' ? 'sorrow' : res.outcome === 'fail' ? 'bad' : (scn === 'party' || gain >= 8 || (res.outcome === 'success' && /stage|hoops|ballpark|ring|runway|stadium/.test(scn))) ? 'cheer' : 'good';
@@ -991,7 +1007,7 @@
     if (!dead && !onlyHealth) dead = rnd(s) < E.mortality(s) || s.age >= 122;
     if (dead) {
       s.alive = false;
-      s.cause = s.stats.health <= 0 ? (s.sick ? s.sick.name : ((s.traits || {}).alcohol >= 60 ? '술로 망가진 건강' : '건강 악화')) : deathCause(s);
+      s.cause = s.causeOverride ? s.causeOverride : s.stats.health <= 0 ? (s.sick ? s.sick.name : ((s.traits || {}).alcohol >= 60 ? '술로 망가진 건강' : '건강 악화')) : deathCause(s);
       s.queue = [];
       if (E.ending) { var en = E.ending(s); s.ending = en ? en.id : null; }
       if (s.job) endJob(s, '사망');
@@ -1258,12 +1274,14 @@
       if (s.fired[m.id]) return;
       if (m.countries && m.countries.indexOf(s.country) < 0) return;
       if (m.cond && !E.condMatches(s, m.cond)) return;
+      if (m.when && !m.when(s)) return;
       if (!E.personsOk(s, m)) return;
       if (m.chance != null && rnd(s) >= m.chance) return;
       s.fired[m.id] = 1;
       // byTalent: the picture follows the child's strongest talent (돌잡이, first word…)
-      var top = m.byTalent ? E.topTalent(s) : null, v = top ? m.byTalent[top] : m;
-      var chg = applyEffects(s, v.effects, []);
+      // byOrigin: the version told for the home the child was born into
+      var top = m.byTalent ? E.topTalent(s) : null, v = top ? m.byTalent[top] : (m.byOrigin && m.byOrigin[s.origin]) || m;
+      var chg = applyEffects(s, E.footballGate(s, v.effects), []);
       if (v.talent && E.Routes) { E.Routes.addTalent(s, v.talent, 3); chg.push({ k: 'talent_' + v.talent, d: 3 }); }
       // props 'doljabi:art' = the 돌잡이 picture with the item of the art talent in the child's hands
       E.addCard(s, { id: m.id, pic: m.pic, props: top ? (m.props || '') + ':' + top : m.props, text: E.render(s, v.text), chg: chg });
@@ -1279,6 +1297,15 @@
     (RA.data.talents || []).forEach(function (t) { var x = s.talent ? s.talent[t.k] || 0 : 0; if (x > v) { v = x; best = t.k; } });
     return best;
   };
+  // Football is only handed out to a child who plays it (a football hobby — the original Portuguese hero
+  // gets one at birth — or a club spell); any other sporty child grows general fitness instead
+  E.footballHome = function (s) { return E.Life ? E.Life.knows(s, 'football') : s.country === 'pt'; };
+  E.footballGate = function (s, eff) {
+    if (!eff || eff.football == null || E.footballHome(s)) return eff;
+    var o = {}; Object.keys(eff).forEach(function (k) { if (k !== 'football') o[k] = eff[k]; });
+    o.health = (o.health || 0) + Math.max(1, Math.round(eff.football / 2));
+    return o;
+  };
 
   // Birth happens right after the prenatal pick; E.birthExtras (the body card) comes right after the birth card
   E.birth = function (s) {
@@ -1291,10 +1318,16 @@
     var f = s.eduFocus && E.EDU_FOCUS[s.eduFocus];
     if (!f || s.age < 1 || s.age > E.EDU_FOCUS_UNTIL || s.y.focusApplied) return;
     s.y.focusApplied = true;
-    var chg = applyEffects(s, f.effects, []);
+    var chg = applyEffects(s, E.footballGate(s, f.effects), []);
     // early education keeps feeding the matching base talent
     if (f.talent && E.Routes) { E.Routes.addTalent(s, f.talent, 4); chg.push({ k: 'talent_' + f.talent, d: 4 }); }
     var line = f.lines[(s.age - 1) % f.lines.length];
+    // each focus can go wrong once in its own way (own seeded stream, so the life's main dice stay put)
+    if (f.risk && !s.flags.focus_trouble && R.next(R.create(s.seed + '|focus|' + s.age)) < f.risk.p) {
+      s.flags.focus_trouble = s.eduFocus;
+      applyEffects(s, f.risk.effects, chg);
+      line = f.risk.text;
+    }
     var text = f.icon + ' 조기 교육(' + f.label + '): ' + line;
     if (E.isMontage(s)) E.addCard(s, { id: 'focus_' + s.eduFocus, pic: f.pic || 'focus_' + s.eduFocus, text: text, chg: chg });
     else addLog(s, text, 'focus', { chg: compactChanges(chg) });

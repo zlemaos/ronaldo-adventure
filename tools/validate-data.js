@@ -153,7 +153,8 @@ function validate(RA) {
           else { checkText(cw + ' success', ch.success.log); checkText(cw + ' fail', ch.fail.log); checkEffects(cw, ch.success.effects); checkEffects(cw, ch.fail.effects); }
         } else if (ch.check) {
           const fixed = typeof ch.check.odds === 'number';
-          if (fixed ? !(ch.check.odds > 0 && ch.check.odds < 1) : (!C.STATS.includes(ch.check.stat) || typeof ch.check.diff !== 'number')) err(cw + ': bad check');
+          const talentOk = ch.check.talent === 'hobby' || (RA.data.talents || []).some(t => t.k === ch.check.talent);
+          if (fixed ? !(ch.check.odds > 0 && ch.check.odds < 1) : ((ch.check.talent ? !talentOk : !C.STATS.includes(ch.check.stat)) || typeof ch.check.diff !== 'number')) err(cw + ': bad check');
           if (!ch.success || !ch.fail) err(cw + ': check needs success+fail');
           else { checkText(cw + ' success', ch.success.log); checkText(cw + ' fail', ch.fail.log); checkEffects(cw, ch.success.effects); checkEffects(cw, ch.fail.effects); }
         } else {
@@ -193,14 +194,69 @@ function validate(RA) {
   for (const c of COUNTRIES) if (!ms.some(m => (m.countries || []).includes(c))) err('milestones: no country-specific milestone for ' + c);
 
   if (D.routes && RA.Engine && RA.Engine.Routes) validateRoutes(RA, err);
+  if (D.hobbies && RA.Engine && RA.Engine.Life) validateLife(RA, err);
 
   const byPrefix = {};
   events.forEach(e => { const p = e.id.split('_')[0]; byPrefix[p] = (byPrefix[p] || 0) + 1; });
   return { errors, warns, counts: { milestones: ms.length, events: events.length, careers: careers.length, countries: Object.keys(cs).length, routes: (D.routes || []).length, byPrefix } };
 }
 
+// Round 8 rules (docs/DESIGN.md §2g): hobbies, birth origin, flavour gating, the dark side, sponsor arcs, endings.
+function validateLife(RA, err) {
+  const D = RA.data, L = RA.Engine.Life, RT = RA.Engine.Routes;
+  const routeIds = new Set(D.routes.map(r => r.id)), talents = new Set(D.talents.map(t => t.k));
+  const hobbyIds = new Set(D.hobbies.map(h => h.id));
+  for (const h of D.hobbies) {
+    const w = 'hobby ' + h.id;
+    if (!h.name || !h.icon || !h.noun || !h.desc) err(w + ': name/icon/noun/desc');
+    if (!talents.has(h.talent)) err(w + ': unknown talent ' + h.talent);
+    (h.routes || []).forEach(r => { if (!routeIds.has(r)) err(w + ': unknown route ' + r); });
+    if (h.id !== 'football' && (h.lines || []).length < 6) err(w + ': needs 6+ practice lines');
+    // a hobby's own practice lines must not speak of another hobby's game (they would be filtered away)
+    (h.lines || []).concat(h.desc).forEach(t => { Object.keys(D.flavours).forEach(f => { if (f !== h.flavour && D.flavours[f].re.test(t)) err(w + ': line "' + t + '" reads as ' + f); }); });
+  }
+  if (D.hobbies.length < 10) err('hobbies: offer 10+ so childhood picks differ');
+  Object.keys(D.flavours).forEach(f => { if (!hobbyIds.has(f)) err('flavour ' + f + ': no hobby lets a hero take it up'); });
+  const origins = Object.keys(D.origins);
+  for (const c of Object.keys(D.countries)) ['rich', 'slum'].forEach(o => { const p = (D.originPlaces[c] || {})[o]; if (!p || p.length !== 2) err('originPlaces ' + c + '.' + o + ': [neighbourhood, home]'); });
+  const ADULT_ONLY = /^(spn_)/;
+  for (const ev of D.events) {
+    const w = 'event ' + ev.id;
+    if (ev.hobby && !hobbyIds.has(ev.hobby)) err(w + ': unknown hobby ' + ev.hobby);
+    (ev.origin || []).forEach(o => { if (!origins.includes(o)) err(w + ': unknown origin ' + o); });
+    // sponsor / bribe offers go to adults on a route that has something to sell
+    if (ADULT_ONLY.test(ev.id) && !ev.manual && (!ev.age || ev.age[0] < 19 || !(ev.routes || []).length)) err(w + ': sponsor arcs need age 19+ and ev.routes');
+    // a football choice inside a route-neutral event must leave at least one choice for everyone else
+    // (events for football players only — cond.fb without 'none', or ev.flavour — are skipped: nobody else meets them)
+    const fbOnly = ev.flavour || (ev.cond && ev.cond.fb && !ev.cond.fb.includes('none'));
+    if (ev.flavour && !D.flavours[ev.flavour]) err(w + ': unknown flavour ' + ev.flavour);
+    if (ev.choices && !ev.routes && !ev.hobby && !fbOnly && !/^fb_|^pt_/.test(ev.id) && L.eventFlavours(ev).length === 0) {
+      const plain = ev.choices.filter(ch => !L.choiceFlavours(ch).length || ch.alt);
+      ev.choices.forEach(ch => { if (ch.alt) { const a = L.altChoice(ch); const fl = L.choiceFlavours(Object.assign({}, a, { _fl: null })); if (fl.length) err(w + ': alt of "' + ch.text + '" still reads as ' + fl.join('/'));
+        if ((a.req && a.req.stats && a.req.stats.football != null) || (a.check && a.check.stat === 'football')) err(w + ': alt of "' + ch.text + '" still requires or tests football'); } });
+      if (ev.choices.some(ch => L.choiceFlavours(ch).length) && plain.length < 2) err(w + ': hobby-flavoured choices leave fewer than 2 choices for other heroes');
+    }
+  }
+  // dark routes are real ladders with ways out
+  L.DARK.forEach(id => {
+    const r = RT.byId(id);
+    if (!r || !RT.isLadder(r)) { err('dark route ' + id + ': missing or not a ladder'); return; }
+    const outs = new Set((r.exits || []).concat(D.GLOBAL_EXITS).filter(x => x && x.to).map(x => x.to));
+    ['prison'].forEach(t => { if (!outs.has(t)) err('dark route ' + id + ': no exit to ' + t); });
+    if (!(r.exits || []).some(x => x.on && x.on.includes('flee'))) err('dark route ' + id + ': no escape abroad (flee)');
+    if (!(r.exits || []).some(x => x.on && x.on.includes('quit') && !L.DARK.includes(x.to))) err('dark route ' + id + ': no way to go straight');
+  });
+  // round 8 endings: each has a hint and a test, and sits before the general endings
+  const ids = D.endings.map(e => e.id);
+  L.ENDINGS.forEach(e => {
+    if (!e.hint || !e.test || !e.icon || !e.name) err('ending ' + e.id + ': icon/name/hint/test');
+    if (ids.indexOf(e.id) < 0) err('ending ' + e.id + ': not installed');
+  });
+  if (L.ENDINGS.length < 15) err('round 8 endings: aim for 15+');
+}
+
 // Route rules (docs/DESIGN.md §2f). Needs the engine (js/routes.js) for event classification.
-const CAUSES = ['quit', 'fail', 'fired', 'release', 'burnout', 'scandal', 'disband', 'injury', 'deport', 'crime', 'retire', 'choice', 'calling', 'release_jail', 'entry', 'enroll'];
+const CAUSES = ['quit', 'fail', 'fired', 'release', 'burnout', 'scandal', 'disband', 'injury', 'deport', 'crime', 'retire', 'choice', 'calling', 'release_jail', 'entry', 'enroll', 'flee'];
 // scenes js/pixel.js can draw (parsed from its source, so a typo in a route's scene is caught here)
 function drawnScenes() {
   const src = require('fs').readFileSync(require('path').join(__dirname, '..', 'js', 'pixel.js'), 'utf8');

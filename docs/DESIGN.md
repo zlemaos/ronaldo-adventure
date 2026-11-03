@@ -482,6 +482,93 @@ career-changing events are legal exits of their routes; 90 simulated lives never
 never see another route's event; old heroes get no academy/pro content; body specs vary and are seeded;
 v5 saves load; every event resolves to a drawn scene; same seed + same choices = same life.
 
+## 2g. Round 8: hobbies, origin, the rapper route, the dark side, childhood crises
+
+Anchor (user, after playing round 7): "나 밴드 골랐는데 왜 축구가 나와 아직도?", "취미를 고르게 해 어릴때부터",
+"직업루트 래퍼 없음?", "어둠 루트도 좀 깔아봐", "술 먹는 루트", "스폰이나 로비받는 그런 루트", "엔딩 루트 여러개",
+"직업 루트 골랐는데 노점은 도대체 왜 열어", "어릴 때 선택지들도 좀 다 갈아엎어봐 … 어릴땐 사실상 위기가 아예 없네".
+Code: `js/life.js` (`E.Life` = `L`, loaded after `js/routes.js`), data: `data/hobbies.js`, `data/events_r8.js`.
+
+### Football is a hobby, not an assumption
+- **Hobbies** (`data/hobbies.js`, 13): 축구, 농구, 야구, 태권도·격투기, 노래, 악기·밴드, 춤, 랩, 그림, 게임, 요리, 독서, 연극·개그.
+  At 5 the `sys_hobby` card asks for 2–3 (one per tap, then "이 정도면 충분하다"); 🎯 lets the talents decide, and
+  auto-play uses `L.autoPick` (two strongest talents, a third when it is ≥ 30). Hobbies add to their talent each
+  year, raise the fit of matching routes, open a "취미: …" practice activity (with the hobby's icon) and hobby events (`hob_*`), and can be
+  dropped (`hob_drop`, "시험과 숙제가 늘었다") or picked up (`hob_new`) later. `s.hobbyEver[id]` remembers the age taken.
+  Portugal's canon hero starts with football (the father's ball from the club storeroom).
+- **Flavours** (`RA.data.flavours`): words that make a text belong to one game (축구/농구/야구). `L.knows(s, f)` is true
+  only from that hobby (now or before), its route, its school track or a club spell. Text the hero does not know is
+  never shown: events tagged `flavour: 'football'` are skipped, and a neutral choice that speaks football carries an
+  `alt` (e.g. "공부보다 {hobby}에 걸어 본다") which `L.altChoice` swaps in; its football stat effect becomes `hobbyBoost`.
+  New tokens `{hobby}`, `{hobbyAct}`, `{hood}`. Activities (⚽ 조기축구, 축구 연습), exit options and route chips are
+  filtered the same way.
+- **Validator** (`tools/validate-data.js`): a neutral event whose football choices leave fewer than 2 plain choices
+  fails; every `alt` must itself read flavour-free; `flavour` must name a known flavour.
+
+### Birth origin
+`s.origin` ∈ 빈민가 `slum` / 가난한 동네 `poor` / 평범한 동네 `middle` / 부유한 동네 `rich`, rolled from the seed
+(`L.rollOrigin`; Portugal canon = poor; a child of the hero inherits from the parent's money). `RA.data.originPlaces`
+names the local neighbourhood per country (달동네, 파벨라, 타운십, 바스티…, parody-safe). Slum words in text are
+shown only to slum/poor heroes; a rich or middle South African family lives in the city, not the township. Origin
+gates events (`origin: [...]` on the event), childhood pressure (slum: mischief creeps up; rich: smarts), and ways out
+(`org_study_room`, rap/sport hobbies, `drk_way_out`), plus the endings 골목에서 별까지 and 금수저의 몰락/스스로 일어선 금수저.
+
+### Rapper route (`rapper`)
+언더그라운드 크루 → 믹스테이프 래퍼 → 〈쇼미더라임〉 출신 → 정식 데뷔 래퍼 → 차트 래퍼 🏆 레이블 대표·레전드 → 올드스쿨 레전드 ⤵.
+Entry 13–35 from the music, general or trainee track (a rap hobby, a dropout, a poor neighbourhood all lead there through
+`rt_rapper_*` events and the entry board). Exits: 가수 (choice/quit), 크리에이터 (fail/quit/scandal), 교육 (quit/retire/fail),
+방송 (choice/retire), 서비스직 (fail/quit), plus the global exits.
+
+### The dark side
+- **악동 youth path**: mischief ≥ 15 → `drk_iljin_invite` (일진) → shakedowns and brawls → `drk_street_crew` (also open to a
+  slum/poor kid with mischief ≥ 12) → `drk_crew_offer` (조직 막내 / 야바위판 / 털이 패거리, or 손을 턴다). `drk_way_out`: an adult
+  who saw the hero's hobby offers another way.
+- **Dark routes** replace the old single 뒷골목: 조직 `gang` (조직 막내 → 행동대원 → 중간 보스 → 보스 → 은퇴한 큰형님), 사기·꾼 `con`
+  (바람잡이 → 꾼 → 판 설계자 → 전설의 사기꾼 → 손 씻은 늙은 꾼), 털이·밀수 `thief` (좀도둑 → 털이 조직원 → 전문 털이범 → 잡히지 않는 대도 →
+  은퇴한 대도). Not on the job board; ways in are the street path, `drk_dark_offer_adult` (an idle adult with a 악동 past,
+  a record, a street crew or a prison contact from `drk_cellmate`) and declared exits. Each year `yearlyDark` may queue a
+  police raid, a rival or a betrayal (more often higher up). Ways out: prison (crime), `flee` abroad, going straight
+  (`goStraight` → quit to an ordinary job), death in a street clash, or the boss's chair (`drk_boss_seat`).
+- **Drinking** (🍺 activity, `L.drink`): social +2–3 now, the `alcohol` trait +4–6. `L.incidentChance` grows with the trait
+  (0 below 15) and queues a drunk fight, a slip of the tongue, a blackout, lost things or drunk driving (car owners;
+  `drunkCrash` may hurt someone → prison). Open to adults and to a 악동 teenager on the street. Recovery: `drk_recovery`
+  (치료 → `rehab`, or quitting alone), then the habit fades one point a dry year.
+- **Sponsor / lobby / bribe** (`spn_*`, adults only, tied to routes): entertainment patrons (배우, 아이돌, 가수, 모델, 개그맨,
+  래퍼, 밴드), bribes for 법조계, lobbies for 정치·공무원, 경찰, 의료 kickbacks, match-fixing for athletes, business lobbies,
+  hush money for 언론. Taking (`spnTake`) pays now; each later year risks `spn_exposed` (scandal exit or prison, or
+  surviving it by cooperating), several deals over 6+ years make a `power_broker`. Refusing or whistleblowing
+  (`whistle`) costs the job or invites `spn_retaliation`, and earns 침묵하지 않은 사람.
+
+### Childhood crises (5–12)
+17 `cri_*` events with real stakes: eviction, a sibling's illness, a bully, a hit-and-run, parents fighting, a dangerous
+dare, getting lost, hunger, an errand bag (slum), the mother losing her job, a rich child's schedule or a stranger
+following, school fees (poorer countries), a hobby injury, a pet's death, a house fire. Each choice risks something
+different (checks, money, relations) and many leave a lasting mark (`trauma`, `hardship`, `bullied`, `bad_knee`,
+`lost_home`) that `yearlyChild` keeps applying; `trauma` can heal in adulthood by talking (social ≥ 55). About two
+crises per childhood (tested ≥ 1.5 on average).
+
+### No unrelated job offers (노점)
+A stall (`street_vendor`) is offered only to someone the trade suits (`L.suitsTrade`: taste ≥ 40, a cooking hobby,
+a poor/slum childhood, recent shop or service work, or an earlier merchant/cook route) and, as a side job, only off a
+chosen career (`L.sideStallOk`). After a career ends, `RT.exitOptions` drops the stall for anyone it does not suit; the
+adrift crossroads does the same. Other cross-route offers are only the declared `choice` exits of the current route.
+
+### Endings (16 new, `L.ENDINGS`)
+Fall: 골목에서 진 사람, 한 잔의 대가, 이름을 버린 도망자 (all before 너무 이른 작별), 스폰서 스캔들, 그림자 실세, 금수저의 몰락,
+자라지 못한 아이. Win: 침묵하지 않은 사람, 손을 씻은 사람, 일진에서 어른으로, 다시 맑아진 사람, 골목에서 별까지, 스스로 일어선 금수저,
+좋아하던 걸 직업으로 (before the fame/route endings), 모두의 술친구 (before 가족), 평생 취미인 (before 백세). Each has a 도감 hint.
+
+### Save v7
+`MIGRATIONS[6]` → `L.migrate`: origin (older lives were the canon poor family; a rich heir stays rich), hobbies from what
+the hero already did (football for anyone who played, the rest from the talents), and the old `crime` route split into
+`gang` / `con` / `thief` by the job held (route log and seen-years renamed). Fixture: `test/fixtures/v6-saves.json`.
+
+### Tests
+`test/life8.test.js`: no football/hobby/origin leak in 48 non-football lives (events, choices, logs, activities);
+hobbies 2–3 and changing later; the rapper route reached; four origins; the street path into a dark route and out;
+street death and flight endings; drinking risk and recovery; sponsor arcs; ending order and reachability through real
+events; no stall for an office worker or an unsuited hero; childhood crises; v6 saves play on legally.
+
 ## 3. Architecture
 
 ```

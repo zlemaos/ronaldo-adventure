@@ -23,7 +23,8 @@ for (const c of COUNTRIES) {
     let pros = 0, ballon = 0, wc = 0, nat = 0, top = 0, jail = 0, married = 0, kids = 0, sober = 0, uni = 0, dadDead = [], achieve = 0;
     for (let i = 0; i < LIVES; i++) {
       let s;
-      try { s = autoplay(RA, { country: c, seed: 'sim-' + c + '-' + i, policy: POLICIES[i % 3] }); }
+      // round 8: football is a hobby; the football-focused player picks it when hobbies are chosen
+      try { s = autoplay(RA, { country: c, seed: 'sim-' + c + '-' + i, policy: POLICIES[i % 3], prefer: i % 3 === 1 ? /⚽ 축구/ : null }); }
       catch (e) { errors.push(e.stack.split('\n').slice(0, 3).join(' | ')); continue; }
       assert.strictEqual(s.alive, false, 'life must end');
       assert.ok(Number.isFinite(s.money), 'money is finite');

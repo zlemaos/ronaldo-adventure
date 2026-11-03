@@ -326,6 +326,8 @@
   FX.deport = function (s) {
     if (!s.flags.abroad) return null;
     delete s.flags.abroad; s.flags.deported = s.age;
+    // a deported player loses the club too, so the football route ends with the job
+    if (s.job && s.job.id === 'footballer') { s.fb.stage = 'none'; s.fb.club = null; s.flags.fb_quit = s.age; }
     if (s.job) E.endJob(s, '추방');
     s.traits.rep = Math.max(0, (s.traits.rep || 50) - 15); E.addStat(s, 'happy', -10);
     return '추방 명령을 받았다. 짐 가방 하나로 고향에 돌아왔다.';
@@ -408,50 +410,89 @@
   };
 
   // ---------------------------------------------------------------- early picks
+  // Each 태교 pays something different and can go wrong in its own way (risk: rolled once at birth on
+  // its own seeded stream). How a family can do it depends on the birth origin: `poor` = poor/slum labels.
+  var POOR_O = ['poor', 'slum'];
   E.PRENATAL = [
-    { id: 'music', label: '클래식 음악', icon: '🎼', desc: '배 속에서 들은 선율로 마음이 차분하고 똑똑하게.', effects: { smarts: 2, happy: 3 } },
-    { id: 'story', label: '동화 읽어 주기', icon: '📖', desc: '매일 밤 들은 이야기로 말귀가 일찍 트인다.', effects: { smarts: 4, social: 1 } },
-    { id: 'walk', label: '산책·운동', icon: '🚶', desc: '엄마와 함께 걸은 길이 튼튼한 몸이 된다.', effects: { health: 4, grit: 2 } },
-    { id: 'talk', label: '태담(말 걸기)', icon: '💬', desc: '가족 목소리에 익숙해 사람을 좋아하는 아이로.', effects: { social: 4, happy: 2 } },
-    { id: 'rest', label: '잘 먹고 푹 쉬기', icon: '🍲', desc: '든든하게 먹고 쉬어 건강하고 뽀얀 아기로.', effects: { health: 3, looks: 3 } },
-    { id: 'art', label: '그림·색칠 태교', icon: '🖍️', desc: '색을 고르고 그리며 보낸 시간이 그림 보는 눈이 된다.', effects: { happy: 3, smarts: 1 } },
-    { id: 'cook', label: '제철 요리 태교', icon: '🥘', desc: '좋은 재료로 정성껏 만든 밥이 맛을 아는 혀가 된다.', effects: { health: 2, happy: 2 } },
-    { id: 'puzzle', label: '수학 퍼즐 태교', icon: '🧩', desc: '퍼즐과 숫자 놀이가 논리적인 머리가 된다.', effects: { smarts: 3 } }
+    { id: 'music', label: '클래식 공연장 다니기', poor: { label: '라디오 클래식 듣기' }, icon: '🎼', desc: '선율 속에 자란다.', effects: { smarts: 2, happy: 3 },
+      risk: { p: 0.12, label: '공연장 계단 낙상', text: '만삭에 공연장 계단에서 발을 헛디뎠다. 예정보다 3주 일찍 태어났다.', effects: { health: -5 } },
+      poorRisk: { p: 0.2, label: '밤샘 부업에 잠 부족', text: '라디오를 켜 두고 밤새 부업을 했다. 작고 가벼운 아기가 태어났다.', effects: { health: -4 } } },
+    { id: 'story', label: '동화 읽어 주기', icon: '📖', desc: '말귀가 일찍 트인다.', effects: { smarts: 4, social: 1 },
+      risk: { p: 0.15, label: '엄마 혼자 지침', text: '밤마다 혼자 동화책을 읽던 {mother}[이/가] 지쳐 우울해졌다. 첫 몇 달은 웃음이 적은 집이었다.', effects: { happy: -4 } } },
+    { id: 'walk', label: '수영·요가 교실', poor: { label: '언덕길 산책' }, icon: '🚶', desc: '튼튼한 몸이 된다.', effects: { health: 4, grit: 2 },
+      risk: { p: 0.1, label: '물놀이 감기', text: '수영장에서 감기가 옮아 한 달을 앓았다. 아기는 기침을 달고 태어났다.', effects: { health: -3 } },
+      poorRisk: { p: 0.18, label: '비탈길 미끄러짐', text: '비 온 뒤 비탈길에서 미끄러졌다. 아기는 무사했지만 인큐베이터에서 첫 주를 보냈다.', effects: { health: -5 } } },
+    { id: 'talk', label: '온 가족 태담(말 걸기)', icon: '💬', desc: '사람을 좋아하게 된다.', effects: { social: 4, happy: 2 },
+      risk: { p: 0.15, label: '형제 다툼 소음', text: '배에 대고 말을 걸던 형제들이 서로 먼저 하겠다고 싸웠다. 놀란 {mother}[이/가] 한동안 병원에 누워 있었다.', effects: { health: -2, happy: -2 } } },
+    { id: 'rest', label: '조리원 예약하고 푹 쉬기', poor: { label: '일을 쉬고 푹 쉬기' }, icon: '🍲', desc: '건강하고 뽀얀 아기로.', effects: { health: 3, looks: 3 },
+      risk: { p: 0.1, label: '운동 부족', text: '너무 쉬기만 해서 몸이 무거워졌다. 진통이 길어 엄마도 아기도 고생했다.', effects: { health: -3 } },
+      poorRisk: { p: 0.4, label: '월세가 밀림', text: '일을 쉬자 월세가 밀렸다. 태어나자마자 집주인의 독촉장이 먼저 왔다.', effects: { happy: -3, flags: ['hardship'] } } },
+    { id: 'art', label: '그림·색칠 태교', icon: '🖍️', desc: '색을 보는 눈이 생긴다.', effects: { happy: 3, smarts: 1 },
+      risk: { p: 0.12, label: '물감 냄새 입덧', text: '유화 물감 냄새에 입덧이 심해졌다. 석 달을 제대로 먹지 못했다.', effects: { health: -4 } } },
+    { id: 'cook', label: '요리 교실 태교', poor: { label: '시장 제철 요리 태교' }, icon: '🥘', desc: '맛을 아는 혀가 된다.', effects: { health: 2, happy: 2 },
+      risk: { p: 0.15, label: '식중독', text: '간을 보던 덜 익은 조개 때문에 크게 탈이 났다. 응급실에서 밤을 새웠다.', effects: { health: -4 } } },
+    { id: 'puzzle', label: '수학 퍼즐 태교', icon: '🧩', desc: '규칙을 찾는 머리가 된다.', effects: { smarts: 3 },
+      risk: { p: 0.12, label: '예민해짐', text: '안 풀리는 문제에 매달리다 잠을 설쳤다. 잘 놀라고 잘 우는 아기가 태어났다.', effects: { happy: -3 } } }
   ];
+  E.prenatalFor = function (s, o) {
+    var poor = POOR_O.indexOf(s.origin) >= 0;
+    return { label: poor && o.poor ? o.poor.label : o.label, risk: poor && o.poorRisk ? o.poorRisk : o.risk };
+  };
   // which base talent each 태교 raises (재능: 0-100, a head start for matching routes)
   var PRENATAL_TALENT_TEXT = { music: '음악', lang: '언어', sport: '운동 감각', stage: '끼·무대', art: '미술', taste: '미각·요리', logic: '논리·수리' };
   E.EDU_FOCUS = {
     lang: { label: '언어', icon: '🗣️', desc: '그림책과 말놀이로 어휘력과 지능이 자란다.', effects: { smarts: 3 }, talent: 'lang',
+      risk: { p: 0.07, label: '조급하면 말을 더듬음', text: '글자를 너무 몰아붙였다. 말을 더듬는 버릇이 생겨 한동안 사람들 앞에서 입을 닫았다.', effects: { social: -3, happy: -2 } },
       lines: ['그림책을 함께 읽었다.', '처음으로 두 단어를 이어 말했다.', '동요 가사를 통째로 외웠다.', '간판 글자를 손가락으로 짚으며 읽는다.', '"왜?"를 하루에 백 번 묻는다.', '자기 이름을 삐뚤빼뚤 썼다.', '그림책 속 글자를 혼자 읽어 냈다.'] },
     music: { label: '음악', icon: '🎵', desc: '노래와 리듬으로 감정을 표현하고 말 감각이 자란다.', effects: { happy: 3, smarts: 1 }, talent: 'music',
+      risk: { p: 0.08, label: '이웃 소음 항의', text: '냄비 북소리에 아랫집이 경비실에 항의했다. 집 안에서 노래하면 눈치부터 보게 됐다.', effects: { happy: -3 } },
       lines: ['냄비 뚜껑을 두드리며 박자를 맞췄다.', '자장가를 따라 흥얼거렸다.', '실로폰으로 첫 곡을 쳤다.', '노래하며 춤추다 넘어져도 웃었다.', '동네 합창 교실에 갔다.', '기쁠 땐 신나는 노래, 슬플 땐 느린 노래를 고른다.', '가족 앞에서 작은 공연을 했다.'] },
     play: { label: '소꿉놀이', icon: '🧸', desc: '역할 놀이로 친구 마음을 읽는 공감·사교성과 끼가 자란다.', effects: { social: 3 }, talent: 'stage',
+      risk: { p: 0.1, label: '어린이집 전염병', text: '놀이방에서 수두가 옮았다. 열흘을 앓고 얼굴에 작은 흉터가 남았다.', effects: { health: -4, looks: -1 } },
       lines: ['인형에게 밥을 먹여 줬다.', '가게 놀이에서 손님 역할을 맡았다.', '우는 친구에게 장난감을 건넸다.', '병원 놀이에서 의사가 됐다.', '놀이터에서 처음 보는 아이와 금세 친해졌다.', '싸운 친구와 먼저 화해했다.', '소꿉놀이 규칙을 친구들과 함께 정했다.'] },
-    sports: { label: '스포츠', icon: '⚽', desc: '뛰고 구르며 체력이 자라고 공과 친해진다.', effects: { health: 3, football: 1 }, talent: 'sport',
-      lines: ['마당을 열 바퀴 뛰었다.', '공을 따라 아장아장 달렸다.', '세발자전거를 탔다.', '줄넘기를 처음 넘었다.', '골목 축구에서 첫 골을 넣었다.', '수영 교실에서 물에 떴다.', '달리기 시합에서 1등을 했다.'] },
+    sports: { label: '스포츠', icon: '⚽', desc: '뛰고 구르며 체력과 운동 감각이 자란다.', effects: { health: 3, football: 1 }, talent: 'sport',
+      risk: { p: 0.09, label: '놀다 다침', text: '정글짐 꼭대기에서 떨어져 팔이 부러졌다. 여름 내내 깁스를 했다.', effects: { health: -6 } },
+      lines: ['마당을 열 바퀴 뛰었다.', '공을 따라 아장아장 달렸다.', '세발자전거를 탔다.', '줄넘기를 처음 넘었다.', '놀이터 정글짐 꼭대기까지 올라갔다.', '수영 교실에서 물에 떴다.', '달리기 시합에서 1등을 했다.'] },
     art: { label: '미술', icon: '🖍️', desc: '크레파스와 점토로 색과 모양을 보는 눈이 자란다.', effects: { happy: 2, smarts: 1 }, talent: 'art', pic: 'focus_play',
+      risk: { p: 0.07, label: '물감·점토 삼킴', text: '물감을 사탕인 줄 알고 삼켰다. 응급실에서 위세척을 했다.', effects: { health: -4 } },
       lines: ['크레파스로 벽에 해를 그렸다. 혼났다.', '점토로 강아지를 만들었다.', '손바닥 도장으로 나무를 찍었다.', '가족 얼굴을 그렸다. 다들 동그랗다.', '색종이로 배를 접었다.', '물감을 섞어 보라색을 만들어 냈다.', '그림 대회에서 칭찬 스티커를 받았다.'] },
     logic: { label: '수·과학 놀이', icon: '🧩', desc: '블록과 숫자 놀이로 규칙을 찾는 머리가 자란다.', effects: { smarts: 3 }, talent: 'logic', pic: 'focus_lang',
+      risk: { p: 0.08, label: '지면 못 참음', text: '퍼즐이 안 맞으면 판을 뒤엎고 울었다. 지는 걸 못 견디는 아이가 됐다.', effects: { happy: -3, social: -1 } },
       lines: ['블록을 크기 순서대로 늘어놓았다.', '계단을 오르며 숫자를 셌다.', '자석에 붙는 것과 안 붙는 것을 나눴다.', '퍼즐 스무 조각을 혼자 맞췄다.', '시계 바늘 읽는 법을 물었다.', '돋보기로 개미를 관찰했다.', '덧셈 놀이에서 손가락이 모자랐다.'] },
     cook: { label: '요리 놀이', icon: '🥄', desc: '맛보고 섞어 보며 맛을 아는 감각이 자란다.', effects: { health: 2, happy: 1 }, talent: 'taste', pic: 'focus_play',
+      risk: { p: 0.1, label: '불·칼에 다침', text: '끓는 냄비에 손을 뻗었다가 손등을 데었다. 흉터가 오래 남았다.', effects: { health: -4, looks: -1 } },
       lines: ['엄마 옆에서 콩나물을 다듬었다.', '반죽을 조물조물 만졌다.', '레몬을 맛보고 얼굴을 찡그렸다.', '처음으로 달걀을 깼다. 껍데기도 들어갔다.', '주먹밥을 동그랗게 빚었다.', '국 간을 보고 "짜요!"라고 했다.', '가족에게 샌드위치를 만들어 줬다.'] }
   };
 
   function previewOf(effects) { return effects; }
   var PRENATAL_EVENT = {
     id: 'sys_prenatal', manual: true, pick: true, scene: 'home', pic: 'prenatal',
-    text: '{mother}[이/가] {name}[을/를] 품은 지 일곱 달째. 어떤 태교를 할까요?',
-    choicesFn: function () {
+    // the first screen already tells which home the child is born into
+    textFn: function (s) {
+      return ({
+        rich: '{mother}[이/가] {name}[을/를] 품은 지 일곱 달째. 병원 VIP 태교 교실 안내문이 식탁에 쌓여 있다. 어떤 태교를 할까요?',
+        middle: '{mother}[이/가] {name}[을/를] 품은 지 일곱 달째. 퇴근하고 남는 저녁 시간에 어떤 태교를 할까요?',
+        poor: '{mother}[이/가] {name}[을/를] 품은 지 일곱 달째. 부른 배로 부업 봉투를 붙이며 짬을 낸다. 어떤 태교를 할까요?',
+        slum: '{mother}[이/가] {name}[을/를] 품은 지 일곱 달째. 배가 불러도 새벽 시장 일은 쉴 수 없다. 남는 짬에 어떤 태교를 할까요?'
+      })[s.origin] || '{mother}[이/가] {name}[을/를] 품은 지 일곱 달째. 어떤 태교를 할까요?';
+    },
+    choicesFn: function (s) {
       return E.PRENATAL.map(function (o) {
-        var tal = E.Routes ? E.Routes.PRENATAL_TALENT[o.id] : null;
+        var tal = E.Routes ? E.Routes.PRENATAL_TALENT[o.id] : null, v = E.prenatalFor(s, o);
         var tdesc = tal ? ' 재능: ' + Object.keys(tal).map(function (k) { return PRENATAL_TALENT_TEXT[k] + ' +' + tal[k]; }).join(', ') : '';
-        return { text: o.icon + ' ' + o.label, desc: o.desc + tdesc, preview: previewOf(o.effects), effects: o.effects,
+        return { text: o.icon + ' ' + v.label, desc: o.desc + tdesc + ' · 위험: ' + v.risk.label, preview: previewOf(o.effects), effects: o.effects,
           run: function (s) {
             s.prenatal = o.id;
             if (tal) Object.keys(tal).forEach(function (k) { E.Routes.addTalent(s, k, tal[k]); });
             if (o.id === 'walk' && s.body) s.body.endurance = Math.min(99, s.body.endurance + 6);
             E.birth(s);
-            return (/태교$/.test(o.label) ? o.label : o.label + ' 태교') + '를 했다. 그리고 마침내 ' + C.HERO_NAME + '(이)가 태어났다!';
+            var r = RA.RNG.create(s.seed + '|prenatal'), out = (/태교$/.test(v.label) ? v.label : v.label + ' 태교') + '를 했다. ';
+            if (RA.RNG.next(r) < v.risk.p) {
+              E.applyEffects(s, v.risk.effects, []);
+              s.flags.prenatal_trouble = o.id;
+              out += E.render(s, v.risk.text) + ' ';
+            }
+            return out + '그리고 마침내 ' + C.HERO_NAME + '(이)가 태어났다!';
           } };
       });
     }
@@ -459,13 +500,20 @@
   function focusChoices(s, exclude) {
     return Object.keys(E.EDU_FOCUS).filter(function (k) { return k !== exclude; }).map(function (k) {
       var f = E.EDU_FOCUS[k];
-      return { text: f.icon + ' ' + f.label, desc: f.desc + ' (매년, 7살까지)', preview: f.effects,
+      return { text: f.icon + ' ' + f.label, desc: f.desc + ' (매년, 7살까지) · 위험: ' + f.risk.label, preview: E.footballGate(s, f.effects),
         run: function (s) { var first = !s.eduFocus; s.eduFocus = k; if (!first) s.eduFocusChanged = true; if (first) E.applyEduFocus(s); return '조기 교육은 "' + f.label + '"에 집중하기로 했다.'; } };
     });
   }
   var EDU_FOCUS_EVENT = {
     id: 'sys_edu_focus', manual: true, pick: true, scene: 'home', pic: 'focus_all',
-    text: '첫 돌이 지났다. 7살까지 무엇에 가장 공을 들일까요?',
+    textFn: function (s) {
+      return ({
+        rich: '첫 돌잔치가 호텔 연회장에서 끝났다. 영어 유치원, 음악 영재원 상담 예약이 벌써 잡혀 있다. 7살까지 무엇에 가장 공을 들일까요?',
+        middle: '첫 돌이 지났다. 맞벌이 부모가 퇴근 뒤 한두 시간을 쪼개 줄 수 있다. 7살까지 무엇에 가장 공을 들일까요?',
+        poor: '첫 돌이 지났다. 장난감은 이웃에게 물려받은 것뿐이고, 낮에는 할머니가 봐 준다. 7살까지 무엇에 가장 공을 들일까요?',
+        slum: '첫 돌이 지났다. 부모가 일하는 동안 골목의 큰 아이들이 번갈아 업어 준다. 7살까지 무엇에 가장 공을 들일까요?'
+      })[s.origin] || '첫 돌이 지났다. 7살까지 무엇에 가장 공을 들일까요?';
+    },
     choicesFn: function (s) { return focusChoices(s); }
   };
   var EDU_CHANGE_EVENT = {

@@ -15,25 +15,14 @@
     log: '절하다 앞으로 굴렀지만 세뱃돈은 받았다.'
   });
   E({
-    id: 'kr_chuseok_songpyeon', age: [5, 13], countries: ['kr'], cooldown: 4,
-    text: '추석 전날, {mother}[이/가] 식당 일을 마치고 와서 송편 반죽을 꺼냈다. "우리 막내도 한번 빚어 볼래?"',
-    choices: [
-      { text: '옆에 앉아 따라 빚는다', effects: { happy: 3, rel: { mother: 6 } },
-        log: '{mother}[이/가] "예쁘게 빚으면 예쁜 짝 만난다"며 웃었다.' },
-      { text: '공 들고 골목으로 나간다',
-        check: { stat: 'football', diff: 30 },
-        success: { effects: { football: 2, happy: 2 }, log: '돌담 사이로 드리블하다 동네 형들 사이에서 골을 넣었다.' },
-        fail: { effects: { rel: { mother: -3 }, happy: -1 }, log: '공이 귤밭으로 굴러가 주인 할머니께 혼났다.' } }
-    ]
-  });
-  E({
     id: 'kr_gyul_winter', age: [9, 16], countries: ['kr'], cooldown: 3,
     cond: { money: [0, 3000] },
     text: '겨울방학, 이웃 귤밭에서 귤 따기 일손을 구한다. {sis2}[이/가] 같이 가자고 손짓한다.',
     choices: [
-      { text: '{sis2}[과/와] 귤을 딴다', effects: { money: 60, grit: 3, rel: { sis2: 4 } },
-        log: '손끝이 노랗게 물들었지만 받은 돈으로 {mother}에게 장갑을 사 드렸다.' },
-      { text: '빈 운동장에서 혼자 슈팅 연습', effects: { football: 3, grit: 1, happy: -1 },
+      { text: '{sis2}[과/와] 귤을 딴다', check: { stat: 'health', diff: 35 },
+          success: { effects: { money: 60, grit: 3, rel: { sis2: 4 } }, log: '손끝이 노랗게 물들었지만 받은 돈으로 {mother}에게 장갑을 사 드렸다.' },
+          fail: { effects: { health: -3, money: 20, rel: { sis2: 2 } }, log: '귤 상자를 나르다 언덕길에서 미끄러졌다. 일당은 반만 받고 손목에 파스를 붙였다.' } },
+      { text: '빈 운동장에서 혼자 슈팅 연습', alt: { text: '집에서 혼자 {hobbyAct} 연습', log: '찬 바닷바람 소리를 들으며 하루 종일 붙잡고 있었다.' }, effects: { football: 3, grit: 1, happy: -1 },
         log: '찬 바닷바람 속에서 공을 백 번 찼다.' }
     ]
   });
@@ -46,7 +35,7 @@
   });
   E({
     id: 'kr_hagwon_pressure', age: [13, 17], countries: ['kr'], cooldown: 3,
-    cond: { edu: ['middle', 'high'], fb: ['none', 'local', 'regional'] },
+    cond: { edu: ['middle', 'high'] },
     text: '반 친구들은 밤 10시까지 학원에 간다. {mother}[이/가] 식당 앞치마를 벗으며 조용히 묻는다. "너도 학원 보내 줄까?"',
     choices: [
       { text: '학원에 다닌다', effects: { money: -300, smarts: 4, happy: -2 },
@@ -54,9 +43,9 @@
       { text: '인터넷 강의로 혼자 한다',
         check: { stat: 'grit', diff: 40 },
         success: { effects: { smarts: 4, grit: 2 }, log: '도서관 구석 자리가 {name}의 학원이 되었다.' },
-        fail: { effects: { smarts: 1, happy: -1 }, log: '강의 창 옆에 축구 하이라이트 창이 늘 떠 있었다.' } },
-      { text: '공부보다 축구에 걸어 본다', effects: { football: 3, rel: { mother: -2 } },
-        log: '{mother}[은/는] 한숨을 쉬었지만 축구화 끈을 새로 사다 줬다.' }
+        fail: { effects: { smarts: 1, happy: -1 }, log: '강의 창 옆에 {hobby} 영상 창이 늘 떠 있었다.' } },
+      { text: '공부보다 {hobby}에 걸어 본다', effects: { fx: ['hobbyBoost'], rel: { mother: -2 } },
+        log: '{mother}[은/는] 한숨을 쉬었지만 {hobby}에 쓸 용돈을 조금 더 쥐여 줬다.' }
     ]
   });
   E({
@@ -88,17 +77,6 @@
     ]
   });
   E({
-    id: 'kr_seoul_homesick', age: [12, 15], countries: ['kr'], once: true,
-    cond: { flags: ['moved_alone'] },
-    text: '{bigcity} 기숙사의 밤. 창밖엔 파도 소리 대신 차 소리뿐이다. {name}[은/는] 베개에 얼굴을 묻었다.',
-    choices: [
-      { text: '공중전화로 {mother}에게 전화한다', effects: { happy: 4, money: -5, rel: { mother: 5 } },
-        log: '"밥은 먹었냐"는 한마디에 눈물이 터졌다.' },
-      { text: '불 꺼진 운동장을 혼자 뛴다', effects: { grit: 4, happy: -2, flags: ['homesick'] },
-        log: '숨이 차오르자 울음도 같이 멎었다.' }
-    ]
-  });
-  E({
     id: 'kr_jeju_accent', age: [12, 16], countries: ['kr'], once: true,
     cond: { flags: ['moved_alone'] },
     text: '"혼저 옵서예~" 선배들이 {name}의 제주 말투를 흉내 내며 낄낄거린다. 탈의실이 조용해졌다.',
@@ -107,7 +85,8 @@
         check: { stat: 'happy', diff: 45 },
         success: { effects: { happy: 3, fx: ['newFriend'] }, log: '"폭삭 속았수다"를 배운 선배가 제일 친한 사이가 되었다.' },
         fail: { effects: { happy: -3 }, log: '농담이 통하지 않았다. 그날 밤 이불을 머리끝까지 덮었다.' } },
-      { text: '말 대신 훈련장에서 보여 준다',
+      { text: '말 대신 훈련장에서 보여 준다', alt: { text: '말 대신 {hobbyAct} 실력으로 보여 준다', log: '실력을 보여 주자 아무도 말투 얘기를 하지 않았다.',
+          fail: { log: '하필 그날 실수를 연발했다. 놀림이 더 심해졌지만 다음 날도 또 나섰다.' } },
         check: { stat: 'football', diff: 50 },
         success: { effects: { football: 2, grit: 3, rel: { coach: 4 } }, log: '미니게임에서 선배 셋을 제치자 아무도 말투 얘기를 하지 않았다.' },
         fail: { effects: { grit: 2, happy: -2 }, log: '공을 뺏기고 더 놀림을 받았다. 그래도 다음 날 또 나갔다.' } }
@@ -118,8 +97,9 @@
     cond: FATHER_STRUGGLING,
     text: '{localClub} 장비실 불이 늦게까지 켜져 있다. {father}[이/가] 빈 소주병 옆에서 유니폼을 개다 잠들어 있었다.',
     choices: [
-      { text: '담요를 덮어 드리고, 다음 날 조심스레 이야기한다', effects: { happy: -2, rel: { father: 5 }, fx: ['fatherSeekHelp'] },
-        log: '{father}[은/는] 한참 말이 없다가 "아빠가 미안하다"고 했다.' },
+      { text: '담요를 덮어 드리고, 다음 날 조심스레 이야기한다', check: { stat: 'social', diff: 45 },
+          success: { effects: { happy: -2, rel: { father: 5 }, fx: ['fatherSeekHelp'] }, log: '{father}[은/는] 한참 말이 없다가 "아빠가 미안하다"고 했다.' },
+          fail: { effects: { rel: { father: -5 }, happy: -3 }, log: '"애가 뭘 안다고!" {father}[이/가] 소주병을 벽에 던졌다. 그날 밤 장비실 바닥에 유리 조각이 반짝였다.' } },
       { text: '{bro}에게 털어놓는다', effects: { rel: { bro: 5 }, flags: ['kr_bro_told'] },
         log: '{bro}[은/는] "혼자 안고 있지 마. 같이 방법 찾자"고 했다.',
         schedule: { id: 'kr_father_center', years: 1 } },
@@ -141,7 +121,9 @@
     choices: [
       { text: '현역으로 입대한다', effects: { grit: 6, health: 2, happy: -4, flags: ['mil_done'] },
         log: '18개월, 훈련소 첫날 밤엔 별이 유난히 많았다.' },
-      { text: '국군체육부대에 지원한다', req: { stats: { football: 55 } },
+      { text: '국군체육부대에 지원한다', alt: { text: '공군에 지원한다', req: null, check: { stat: 'smarts', diff: 45 },
+          success: { effects: { grit: 4, smarts: 2, happy: -3, flags: ['mil_done'] }, log: '경쟁률을 뚫고 합격했다. 복무 기간은 길었지만 정비 기술을 배웠다.' },
+          fail: { effects: { grit: 5, happy: -3, flags: ['mil_done'] }, log: '공군 시험에서 떨어져 현역으로 갔다. 그래도 18개월은 생각보다 빨리 지나갔다.' } }, req: { stats: { football: 55 } },
         check: { stat: 'football', diff: 65 },
         success: { effects: { football: 2, grit: 3, flags: ['mil_done'] }, log: '군복 대신 군 팀 유니폼. 경례도 축구도 열심히 했다.' },
         fail: { effects: { grit: 5, happy: -3, flags: ['mil_done'] }, log: '선발에서 떨어져 현역으로 갔다. 부대 축구에선 전설이 되었다.' } }
@@ -191,7 +173,8 @@
     choices: [
       { text: '정중하게 예의를 다한다', effects: { rel: { partner: 5, mother: 3 }, money: -150 },
         log: '귤 상자 덕에 분위기가 금세 풀렸다.' },
-      { text: '축구 이야기로 분위기를 띄운다',
+      { text: '축구 이야기로 분위기를 띄운다', alt: { text: '{hobby} 이야기로 분위기를 띄운다', log: '{partner}의 아버지도 같은 취미였다! 분위기가 단번에 풀렸다.',
+          fail: { log: '상대 부모님은 {hobby}에 관심이 하나도 없었다. 정적이 흘렀다.' } },
         check: { stat: 'happy', diff: 45 },
         success: { effects: { rel: { partner: 6 }, happy: 3 }, log: '{partner}의 아버지도 조기축구 30년 차였다!' },
         fail: { effects: { rel: { partner: -2 } }, log: '상대 부모님은 야구 팬이었다. 정적이 흘렀다.' } }
@@ -234,27 +217,6 @@
     text: '오쇼가쓰, 상에 차린 소박한 오세치 앞에서 {father}[이/가] 작은 봉투를 건넨다. {bro}[은/는] 벌써 봉투 무게를 재고 있다.',
     effects: { happy: 4, money: 15, rel: { family: 3 } },
     log: '세뱃돈은 전부 축구공 저금통으로 들어갔다.'
-  });
-  E({
-    id: 'jp_eisa_drum', age: [6, 14], countries: ['jp'], cooldown: 4,
-    text: '오봉이 다가오자 마을 청년들이 에이사 북 연습을 시작했다. {father}[은/는] 젊었을 때 북 치는 줄 맨 앞이었다고 자랑한다.',
-    choices: [
-      { text: '북 치는 줄에 선다', effects: { grit: 2, happy: 3, rel: { father: 4 } },
-        log: '{father}[이/가] 오랜만에 소리 내어 웃었다.' },
-      { text: '해변에서 혼자 공을 찬다', effects: { football: 2, happy: 1 },
-        log: '북소리를 박자 삼아 리프팅을 했다.' }
-    ]
-  });
-  E({
-    id: 'jp_bento', age: [7, 14], countries: ['jp'], cooldown: 5,
-    cond: { money: [0, 5000] },
-    text: '소풍 날. 친구들 도시락엔 캐릭터 모양 주먹밥이 가득한데, {name}의 도시락엔 가게에서 남은 {food}[이/가] 꾹꾹 눌러 담겨 있다.',
-    choices: [
-      { text: '당당하게 먹는다', effects: { happy: 2, grit: 2, rel: { mother: 3 } },
-        log: '"그거 맛있어 보인다." 결국 반찬 교환 시장이 열렸다.' },
-      { text: '뚜껑을 반쯤 덮고 먹는다', effects: { happy: -2 },
-        log: '집에 와서 {mother}에게 "진짜 맛있었어"라고만 말했다.' }
-    ]
   });
   E({
     id: 'jp_bukatsu', age: [13, 13], countries: ['jp'], once: true,
@@ -325,17 +287,6 @@
     ]
   });
   E({
-    id: 'jp_tokyo_parcel', age: [12, 15], countries: ['jp'], once: true,
-    cond: { flags: ['moved_alone'] },
-    text: '{bigcity}의 좁은 기숙사 방에 택배가 왔다. {mother}[이/가] 튀긴 사타안다기와 삐뚤빼뚤한 편지가 들어 있다.',
-    choices: [
-      { text: '룸메이트와 나눠 먹는다', effects: { happy: 4, fx: ['newFriend'] },
-        log: '"너희 엄마 천재다." 그날부터 둘은 단짝이 되었다.' },
-      { text: '하루에 하나씩 아껴 먹는다', effects: { happy: 2, flags: ['homesick'] },
-        log: '마지막 하나를 먹던 날, 바다 냄새가 그리웠다.' }
-    ]
-  });
-  E({
     id: 'jp_okinawa_accent', age: [12, 16], countries: ['jp'], once: true,
     cond: { flags: ['moved_alone'] },
     text: '{name}[이/가] 무심코 오키나와 억양으로 대답하자 팀 동료들이 따라 하며 웃는다.',
@@ -355,8 +306,9 @@
     cond: FATHER_STRUGGLING,
     text: '태풍이 지나간 밤, {father}[이/가] 혼자 아와모리 병을 비우고 있다. 공원 나무가 쓰러져 일이 많았다고 중얼거린다.',
     choices: [
-      { text: '옆에 앉아 오늘 하루를 들어 드린다', effects: { rel: { father: 5 }, happy: -1, fx: ['fatherSeekHelp'] },
-        log: '{father}[은/는] "내일 병원에 같이 가 줄래?" 하고 작게 물었다.' },
+      { text: '옆에 앉아 오늘 하루를 들어 드린다', check: { stat: 'social', diff: 45 },
+          success: { effects: { rel: { father: 5 }, happy: -1, fx: ['fatherSeekHelp'] }, log: '{father}[은/는] "내일 병원에 같이 가 줄래?" 하고 작게 물었다.' },
+          fail: { effects: { rel: { father: -3 }, happy: -3 }, log: '{father}[은/는] 끝내 입을 열지 않았다. 태풍이 할퀴고 간 창문 테이프를 혼자 떼며 밤을 새웠다.' } },
       { text: '단주 모임 안내지를 장비 가방에 넣어 둔다', effects: { flags: ['jp_danshu_flyer'] },
         log: '안내지 위에 "아빠 응원해"라고 적었다.',
         schedule: { id: 'jp_danshu_meeting', years: 1 } },
@@ -434,46 +386,10 @@
     log: '{sis1}[이/가] 봉투 속 지폐를 같이 세어 주었다.'
   });
   E({
-    id: 'cn_mid_autumn', age: [5, 14], countries: ['cn'], cooldown: 4,
-    text: '중추절, 옥상에 돗자리를 펴고 월병 하나를 여섯 조각으로 나눈다. {mother}[이/가] 제일 큰 조각을 막내에게 밀어 준다.',
-    choices: [
-      { text: '큰 조각을 {mother}에게 돌려준다', effects: { rel: { mother: 6 }, happy: 2 },
-        log: '{mother}[은/는] 웃으며 반으로 다시 나눴다.' },
-      { text: '달빛 아래 리프팅 묘기를 보여 준다',
-        check: { stat: 'football', diff: 30 },
-        success: { effects: { football: 2, happy: 3, rel: { family: 2 } }, log: '스무 번 성공! 박수가 쏟아졌다.' },
-        fail: { effects: { happy: -1 }, log: '공이 옆집 빨래로 날아갔다.' } }
-    ]
-  });
-  E({
     id: 'cn_dragon_boat', age: [6, 15], countries: ['cn'], cooldown: 5,
     text: '단오절, 강가에서 용선 경기가 열렸다. {bro}[이/가] 동네 팀 노잡이로 나간다.',
     effects: { happy: 3, grit: 1, rel: { bro: 4 } },
     log: '쫑쯔를 입에 문 채 목이 쉬도록 응원했다.'
-  });
-  E({
-    id: 'cn_brick_goals', age: [6, 11], countries: ['cn'], cooldown: 4,
-    cond: { fb: ['none', 'local'] },
-    text: '저녁 공터, 벽돌 두 개가 골대다. 아침엔 태극권 하던 할아버지들이 이제는 훈수를 둔다.',
-    choices: [
-      { text: '할아버지 말대로 왼발을 써 본다', effects: { football: 3, smarts: 1 },
-        log: '"그렇지! 양발을 써야 큰다!" 할아버지가 부채를 흔들었다.' },
-      { text: '내 방식대로 드리블한다',
-        check: { stat: 'football', diff: 35 },
-        success: { effects: { football: 3, happy: 2 }, log: '다섯 명을 제쳤다. 공터가 들썩였다.' },
-        fail: { effects: { football: 1 }, log: '벽돌 골대를 걷어차 발가락이 아팠다.' } }
-    ]
-  });
-  E({
-    id: 'cn_homework_night', age: [8, 12], countries: ['cn'], cooldown: 3,
-    cond: { edu: ['elem'] },
-    text: '밤 10시, 숙제가 아직 산더미다. 일을 마치고 돌아온 {mother}[이/가] 졸린 눈으로 옆에 앉는다.',
-    choices: [
-      { text: '끝까지 다 하고 잔다', effects: { smarts: 3, health: -1 },
-        log: '{mother}[은/는] 숙제 검사 사인을 하다 먼저 잠들었다.' },
-      { text: '{mother}께 먼저 주무시라고 한다', effects: { rel: { mother: 4 }, smarts: 1 },
-        log: '혼자 남은 책상 위로 달빛이 들었다.' }
-    ]
   });
   E({
     id: 'cn_zhongkao', age: [15, 15], countries: ['cn'], once: true,
@@ -498,7 +414,7 @@
         success: { effects: { smarts: 5, health: -2, flags: ['cn_gaokao_done', 'cn_gaokao_good'] }, log: '시험장에서 손이 떨리지 않았다.' },
         fail: { effects: { smarts: 2, health: -3, happy: -3, flags: ['cn_gaokao_done'] }, log: '시험 첫날 밤 한숨도 못 잤다.' },
         schedule: { id: 'cn_gaokao_result', years: 1 } },
-      { text: '운동으로 머리를 비우며 공부한다',
+      { text: '운동으로 머리를 비우며 공부한다', alt: { text: '{hobbyAct}[으로/로] 머리를 비우며 공부한다', log: '저녁 30분 {hobbyAct}[이/가] 최고의 휴식이었다.' },
         check: { stat: 'grit', diff: 45 },
         success: { effects: { smarts: 3, health: 2, flags: ['cn_gaokao_done', 'cn_gaokao_good'] }, log: '저녁 30분 공차기가 최고의 휴식이었다.' },
         fail: { effects: { smarts: 1, flags: ['cn_gaokao_done'] }, log: '30분이 자꾸 두 시간이 되었다.' },
@@ -517,18 +433,7 @@
     ]
   });
   E({
-    id: 'cn_shanghai_winter', age: [12, 15], countries: ['cn'], once: true,
-    cond: { flags: ['moved_alone'] },
-    text: '{bigcity}의 첫 겨울. 축축한 추위가 뼛속까지 스민다. 겨울이 없는 섬에서 온 {name}에겐 패딩조차 없다.',
-    choices: [
-      { text: '{mother}에게 영상 통화를 건다', effects: { happy: 3, rel: { mother: 5 }, flags: ['homesick'] },
-        log: '{mother}[은/는] 다음 날 바로 두꺼운 솜옷을 부쳤다.' },
-      { text: '코치에게 사정을 말한다', effects: { rel: { coach: 4 }, happy: 2 },
-        log: '{coach}[이/가] 구단 창고에서 겨울 점퍼를 꺼내 주었다.' }
-    ]
-  });
-  E({
-    id: 'cn_accent_tease', age: [12, 16], countries: ['cn'], once: true,
+    id: 'cn_accent_tease', flavour: 'football', age: [12, 16], countries: ['cn'], once: true,
     cond: { flags: ['moved_alone'] },
     text: '훈련 중 {name}[이/가] 말을 할 때마다 누군가 섬 억양을 흉내 낸다. "야, 코코넛!"',
     choices: [
@@ -545,8 +450,9 @@
     cond: FATHER_STRUGGLING,
     text: '{father}[이/가] 장비 정리를 하다 말고 바이주 잔을 연거푸 비운다. 아침에 공원에 늦게 나가 혼났다는 이야기가 들린다.',
     choices: [
-      { text: '{father}의 손을 잡고 진심을 말한다', effects: { rel: { father: 5 }, happy: -1, fx: ['fatherSeekHelp'] },
-        log: '"아빠가 아프면 우리도 아파요." {father}[은/는] 고개를 끄덕였다.' },
+      { text: '{father}의 손을 잡고 진심을 말한다', check: { stat: 'social', diff: 45 },
+          success: { effects: { rel: { father: 5 }, happy: -1, fx: ['fatherSeekHelp'] }, log: '"아빠가 아프면 우리도 아파요." {father}[은/는] 고개를 끄덕였다.' },
+          fail: { effects: { rel: { father: -4 }, happy: -3 }, log: '손을 뿌리친 {father}[이/가] 잔을 하나 더 채웠다. "체면 깎이게 어디서 훈계야."' } },
       { text: '{sis1}[과/와] 병원 상담을 알아본다', effects: { rel: { sis1: 5 }, flags: ['cn_sis_hospital'] },
         log: '{sis1}[이/가] 시립병원 상담 예약 번호를 적어 왔다.',
         schedule: { id: 'cn_father_clinic', years: 1 } },
@@ -626,17 +532,7 @@
     log: '{name}[은/는] "{bro}[이/가] 공 차는 거 봐 준 거"라고 말했다. {bro}[이/가] 머리를 헝클어 줬다.'
   });
   E({
-    id: 'us_malasada_day', age: [4, 12], countries: ['us'], cooldown: 4,
-    text: '말라사다 데이! {mother}[이/가] 할머니에게 배운 대로 설탕 묻힌 도넛을 튀긴다. 이 동네 포르투갈계 이민자들이 백 년 넘게 지켜 온 날이다.',
-    choices: [
-      { text: '반죽 굴리는 걸 돕는다', effects: { rel: { mother: 5 }, happy: 3 },
-        log: '얼굴이 설탕투성이가 되었다.' },
-      { text: '이웃집에 돌린다', effects: { happy: 3, fx: ['newFriend'] },
-        log: '옆집 아이가 답례로 축구공을 빌려줬다.' }
-    ]
-  });
-  E({
-    id: 'us_halloween_kit', age: [5, 12], countries: ['us'], cooldown: 3,
+    id: 'us_halloween_kit', origin: ['middle', 'poor', 'slum'], age: [5, 12], countries: ['us'], cooldown: 3,
     cond: { money: [0, 3000] },
     text: '할로윈. 가게 코스튬은 너무 비싸다. {father}[이/가] {localClub}의 낡은 유니폼에 번호를 꿰매 준다.',
     effects: { happy: 3, rel: { father: 4 } },
@@ -716,18 +612,7 @@
     ]
   });
   E({
-    id: 'us_la_homesick', age: [12, 15], countries: ['us'], once: true,
-    cond: { flags: ['moved_alone'] },
-    text: '{bigcity} 아카데미 하숙집. 창밖은 바다 대신 8차선 고속도로다. 휴대폰 배경 화면 속 힐로 해변만 자꾸 들여다본다.',
-    choices: [
-      { text: '가족 영상 통화를 한다', effects: { happy: 4, rel: { family: 3 }, flags: ['homesick'] },
-        log: '{sis1}[이/가] 화면 너머로 무지개를 보여 줬다.' },
-      { text: '하숙집 아주머니에게 스팸 무스비를 만들어 드린다', effects: { happy: 3, smarts: 1, fx: ['newFriend'] },
-        log: '하숙집 아들이 단짝이 되었다.' }
-    ]
-  });
-  E({
-    id: 'us_pidgin_tease', age: [12, 16], countries: ['us'], once: true,
+    id: 'us_pidgin_tease', flavour: 'football', age: [12, 16], countries: ['us'], once: true,
     cond: { flags: ['moved_alone'] },
     text: '{name}[이/가] 섬 사투리로 "브라~" 하고 부르자 팀원들이 따라 하며 웃는다. 누군가는 "서핑이나 하지 왜 왔냐"고 한다.',
     choices: [
@@ -744,8 +629,9 @@
     cond: FATHER_STRUGGLING,
     text: '경기장 주차장, 장비 트럭 옆에서 {father}[이/가] 맥주 캔을 들고 비틀거린다. 다른 부모들이 수군거린다.',
     choices: [
-      { text: '{father}[을/를] 차에 태우고 조용히 이야기한다', effects: { rel: { father: 5 }, happy: -2, fx: ['fatherSeekHelp'] },
-        log: '{father}[은/는] 핸들에 이마를 대고 "모임에 다시 나가 볼게"라고 했다.' },
+      { text: '{father}[을/를] 차에 태우고 조용히 이야기한다', check: { stat: 'smarts', diff: 45 },
+          success: { effects: { rel: { father: 5 }, happy: -2, fx: ['fatherSeekHelp'] }, log: '{father}[은/는] 핸들에 이마를 대고 "모임에 다시 나가 볼게"라고 했다.' },
+          fail: { effects: { rel: { father: -4 }, health: -2, happy: -2 }, log: '{father}[이/가] 굳이 운전대를 잡겠다고 우겼다. 트럭이 주차장 기둥을 긁었고, 둘 다 한마디도 하지 않았다.' } },
       { text: '학교 상담 선생님께 털어놓는다', effects: { happy: 1, flags: ['us_counselor'] },
         log: '상담 선생님이 가족 지원 프로그램 안내서를 건넸다.',
         schedule: { id: 'us_family_program', years: 1 } },
@@ -826,49 +712,11 @@
     log: '반짝이 가루가 일주일 동안 머리에서 떨어졌다.'
   });
   E({
-    id: 'br_sao_joao', age: [5, 13], countries: ['br'], cooldown: 4,
-    text: '6월 상주앙 축제. 소 모형을 앞세운 행렬과 북소리가 동네를 채운다. {sis1}[이/가] 콰드릴랴 춤 짝꿍이 필요하다고 한다.',
-    choices: [
-      { text: '{sis1}[과/와] 춤을 춘다', effects: { happy: 3, looks: 1, rel: { sis1: 5 } },
-        log: '발을 세 번 밟았지만 {sis1}[은/는] 끝까지 웃었다.' },
-      { text: '축제 마당 구석에서 공을 찬다',
-        check: { stat: 'football', diff: 30 },
-        success: { effects: { football: 3 }, log: '옥수수 노점 아저씨가 "저 꼬마 물건이다"라고 소리쳤다.' },
-        fail: { effects: { happy: -1 }, log: '공이 옥수수 솥으로 날아갔다. 사과하느라 바빴다.' } }
-    ]
-  });
-  E({
-    id: 'br_pelada', age: [5, 11], countries: ['br'], cooldown: 3,
-    cond: { fb: ['none', 'local'] },
-    text: '언덕 골목 펠라다. 슬리퍼 두 짝이 골대고, 해가 지면 경기 끝이다. 마지막 공이 {name}에게 왔다.',
-    choices: [
-      { text: '혼자 드리블로 끝낸다',
-        check: { stat: 'football', diff: 35 },
-        success: { effects: { football: 3, happy: 3, fame: 1 }, log: '셋을 제치고 넣었다. 골목 어른들이 박수를 쳤다.' },
-        fail: { effects: { football: 1 }, log: '공이 하수구로 빠졌다. 다 같이 건지느라 해가 졌다.' } },
-      { text: '친구에게 패스한다', effects: { football: 2, rel: { friend: 3 } },
-        log: '친구의 골. 둘이 껴안고 흙바닥을 굴렀다.' }
-    ]
-  });
-  E({
     id: 'br_futsal', age: [8, 13], countries: ['br'], cooldown: 3,
     cond: { fb: ['local', 'regional'] },
     text: '비 오는 시즌엔 학교 체육관 풋살 대회. 좁은 코트에서 공이 발에서 떨어질 틈이 없다.',
     effects: { football: 3, smarts: 1 },
     log: '{coach}[이/가] "좁은 데서 배운 기술은 넓은 데서 빛난다"고 했다.'
-  });
-  E({
-    id: 'br_peneira', age: [11, 14], countries: ['br'], once: true,
-    cond: { fb: ['local', 'regional'], stats: { football: [45, 100] }, flags: ['!moved_alone'] },
-    text: '{bigClub}의 페네이라(공개 선수 선발)에 수백 명이 몰렸다. 주어진 시간은 단 15분이다.',
-    choices: [
-      { text: '15분 안에 모든 걸 보여 준다',
-        check: { stat: 'football', diff: 60 },
-        success: { effects: { football: 3, fame: 2, happy: 4, rel: { coach: 3 } }, log: '스카우트가 수첩에 이름을 적었다. "연락하마."' },
-        fail: { effects: { grit: 4, happy: -3 }, log: '번호가 불리지 않았다. 버스 창밖을 보며 다음을 다짐했다.' } },
-      { text: '긴장 풀고 즐긴다', effects: { football: 1, happy: 3 },
-        log: '결과와 상관없이 그날 새 친구 셋을 사귀었다.' }
-    ]
   });
   E({
     id: 'br_enem', age: [18, 18], countries: ['br'], once: true,
@@ -899,18 +747,7 @@
     ]
   });
   E({
-    id: 'br_sp_homesick', age: [12, 15], countries: ['br'], once: true,
-    cond: { flags: ['moved_alone'] },
-    text: '{bigcity}의 회색 하늘. 아카데미 숙소 식당의 콩 요리는 {mother}의 {food}[과/와] 맛이 다르다.',
-    choices: [
-      { text: '{mother}에게 음성 메시지를 보낸다', effects: { happy: 3, rel: { mother: 5 }, flags: ['homesick'] },
-        log: '답장은 10분짜리 음성. 마지막엔 "사랑한다, 우리 막내"이었다.' },
-      { text: '같은 북동부 출신 동료를 찾는다', effects: { happy: 4, fx: ['newFriend'] },
-        log: '둘이서 숙소 주방을 빌려 고향 음식을 흉내 냈다.' }
-    ]
-  });
-  E({
-    id: 'br_sotaque', age: [12, 16], countries: ['br'], once: true,
+    id: 'br_sotaque', flavour: 'football', age: [12, 16], countries: ['br'], once: true,
     cond: { flags: ['moved_alone'] },
     text: '{name}의 북부 억양을 두고 라커룸에서 농담이 오간다. 웃음 사이에 가시가 섞여 있다.',
     choices: [
@@ -927,8 +764,9 @@
     cond: FATHER_STRUGGLING,
     text: '{localClub} 클럽하우스 뒤편, {father}[이/가] 카샤사 병을 든 채 벤치에 앉아 있다. 장비 가방은 아직 열리지도 않았다.',
     choices: [
-      { text: '옆에 앉아 손을 잡는다', effects: { rel: { father: 5 }, happy: -1, fx: ['fatherSeekHelp'] },
-        log: '{father}[은/는] "너 경기 보러 맑은 정신으로 가고 싶다"며 울었다.' },
+      { text: '옆에 앉아 손을 잡는다', check: { stat: 'social', diff: 45 },
+          success: { effects: { rel: { father: 5 }, happy: -1, fx: ['fatherSeekHelp'] }, log: '{father}[은/는] "너 경기 보러 맑은 정신으로 가고 싶다"며 울었다.' },
+          fail: { effects: { rel: { father: -3 }, happy: -4 }, log: '{father}[은/는] 벤치에서 일어나 비틀거리며 골목으로 사라졌다. 새벽에야 이웃이 업어 데려왔다.' } },
       { text: '{bro}[과/와] 공공 정신건강센터를 알아본다', effects: { rel: { bro: 5 }, flags: ['br_caps'] },
         log: '{bro}[이/가] 동네 보건소에서 상담 일정을 받아 왔다.',
         schedule: { id: 'br_father_caps', years: 1 } },
@@ -970,7 +808,7 @@
       { text: '{mother}의 집 지붕을 고친다', effects: { money: -800, happy: 4, rel: { mother: 6 } },
         log: '비 오는 밤, {mother}[이/가] "이제 양동이가 필요 없다"고 문자를 보냈다.' },
       { text: '저축하고 크리스마스 선물만 산다', effects: { money: 400, rel: { family: 2 } },
-        log: '조카들 선물로 축구공 세 개를 샀다.' }
+        log: '조카들 선물로 장난감 세 개를 샀다.' }
     ]
   });
   E({
@@ -1026,23 +864,11 @@
     id: 'ar_mate_round', age: [9, 16], countries: ['ar'], cooldown: 4,
     text: '저녁, 난로 옆에서 마테가 한 바퀴 돈다. 마테 잔이 {name}에게 오자 {mother}[이/가] "요즘 무슨 생각 하니?" 하고 묻는다.',
     choices: [
-      { text: '축구 선수가 되고 싶다고 털어놓는다', effects: { happy: 3, rel: { mother: 5 }, grit: 1 },
+      { text: '축구 선수가 되고 싶다고 털어놓는다', alt: { text: '좋아하는 {hobbyAct} 이야기를 털어놓는다', log: '{mother}[은/는] "그럼 엄마는 제일 큰 소리로 응원할게"라고 했다.' }, effects: { happy: 3, rel: { mother: 5 }, grit: 1 },
         log: '{mother}[은/는] "그럼 엄마는 제일 큰 소리로 응원할게"라고 했다.' },
-      { text: '학교 이야기를 한다', effects: { smarts: 2, rel: { mother: 3 } },
-        log: '{sis1}[이/가] 숙제를 도와주겠다고 나섰다.' }
-    ]
-  });
-  E({
-    id: 'ar_potrero', age: [5, 11], countries: ['ar'], cooldown: 3,
-    cond: { fb: ['none', 'local'] },
-    text: '동네 포트레로(흙 공터). 남쪽 바람이 공을 자꾸 되돌려 보낸다. 형들이 "바람을 이용해!"라고 외친다.',
-    choices: [
-      { text: '바람을 타고 감아 찬다',
-        check: { stat: 'football', diff: 35 },
-        success: { effects: { football: 3, happy: 3 }, log: '공이 휘어 들어갔다. 형들이 머리를 감싸 쥐었다.' },
-        fail: { effects: { football: 1 }, log: '공이 바람을 타고 이웃집 지붕에 올라갔다.' } },
-      { text: '낮게 깔아 드리블한다', effects: { football: 2, grit: 2 },
-        log: '흙먼지 속에서 공이 발에 붙어 다녔다.' }
+      { text: '학교 이야기를 한다', check: { stat: 'smarts', diff: 40 },
+          success: { effects: { smarts: 2, rel: { mother: 3 } }, log: '{sis1}[이/가] 숙제를 도와주겠다고 나섰다.' },
+          fail: { effects: { happy: -2, rel: { mother: -1 } }, log: '말하다 보니 수학 시험 점수까지 나와 버렸다. 마테가 식는 동안 잔소리가 이어졌다.' } }
     ]
   });
   E({
@@ -1094,18 +920,7 @@
     ]
   });
   E({
-    id: 'ar_bsas_homesick', age: [12, 15], countries: ['ar'], once: true,
-    cond: { flags: ['moved_alone'] },
-    text: '{bigcity}의 하숙집. 밤새 버스 소리가 끊이지 않는다. 남쪽 끝 고향의 거센 바람 소리가 그립다.',
-    choices: [
-      { text: '{mother}에게 전화한다', effects: { happy: 3, rel: { mother: 5 }, flags: ['homesick'] },
-        log: '"바람 소리 들려줄게." {mother}[이/가] 창문을 열어 줬다.' },
-      { text: '하숙집 가족과 아사도를 굽는다', effects: { happy: 4, fx: ['newFriend'] },
-        log: '고향식 양고기 굽는 법을 알려 주자 집주인이 감탄했다.' }
-    ]
-  });
-  E({
-    id: 'ar_south_accent', age: [12, 16], countries: ['ar'], once: true,
+    id: 'ar_south_accent', flavour: 'football', age: [12, 16], countries: ['ar'], once: true,
     cond: { flags: ['moved_alone'] },
     text: '"펭귄 동네에서 왔냐?" 동료들이 {name}의 남쪽 말투를 흉내 낸다.',
     choices: [
@@ -1122,8 +937,9 @@
     cond: FATHER_STRUGGLING,
     text: '경기가 끝난 뒤 {father}[이/가] 클럽 바에서 일어나지 못하고 있다. 동네 아저씨들이 걱정스러운 눈으로 {name}[을/를] 본다.',
     choices: [
-      { text: '{father}[을/를] 부축해 집에 가며 이야기한다', effects: { rel: { father: 5 }, happy: -2, fx: ['fatherSeekHelp'] },
-        log: '바람 속에서 {father}[이/가] "도와줄래?"라고 말했다.' },
+      { text: '{father}[을/를] 부축해 집에 가며 이야기한다', check: { stat: 'health', diff: 40 },
+          success: { effects: { rel: { father: 5 }, happy: -2, fx: ['fatherSeekHelp'] }, log: '바람 속에서 {father}[이/가] "도와줄래?"라고 말했다.' },
+          fail: { effects: { health: -3, rel: { father: -2 } }, log: '무게를 못 이겨 둘이 함께 보도블록에 넘어졌다. 무릎이 까진 채로 이웃 아저씨를 불러야 했다.' } },
       { text: '{sis1}[과/와] 병원 상담을 예약한다', effects: { rel: { sis1: 5 }, flags: ['ar_clinic'] },
         log: '{sis1}[이/가] 시립병원 중독 상담 번호를 찾아 냉장고에 붙였다.',
         schedule: { id: 'ar_father_clinic', years: 1 } },
@@ -1202,30 +1018,6 @@
     log: '연기 냄새와 노랫소리가 골목 끝까지 퍼졌다.'
   });
   E({
-    id: 'za_umngqusho', age: [5, 14], countries: ['za'], cooldown: 4,
-    cond: { money: [0, 4000] },
-    text: '{mother}[이/가] 큰 냄비 가득 우뭉쿠쇼를 끓였다. 옆집 할머니가 아프다는 소식을 들었다며 한 그릇을 덜어 놓는다.',
-    choices: [
-      { text: '할머니 댁에 직접 가져다 드린다', effects: { happy: 3, rel: { mother: 5 } },
-        log: '"우리가 있어 네가 있다." 할머니가 이마에 입을 맞춰 줬다.' },
-      { text: '가는 길에 친구들과 공부터 찬다', effects: { football: 2, rel: { mother: -2 } },
-        log: '죽이 식어 버렸다. 할머니는 그래도 고맙다고 했다.' }
-    ]
-  });
-  E({
-    id: 'za_plastic_ball', age: [5, 11], countries: ['za'], cooldown: 3,
-    cond: { fb: ['none', 'local'] },
-    text: '공이 찢어졌다. {bro}[이/가] 비닐봉지를 겹겹이 뭉치고 끈으로 묶어 새 공을 만들어 준다. 페트병 두 개가 골대다.',
-    choices: [
-      { text: '비닐 공으로 기술을 연습한다',
-        check: { stat: 'football', diff: 30 },
-        success: { effects: { football: 3, happy: 3 }, log: '제멋대로 튀는 공에 익숙해지자 진짜 공은 쉬웠다.' },
-        fail: { effects: { football: 1, happy: 1 }, log: '공이 풀려 버렸다. 다 같이 다시 묶었다.' } },
-      { text: '{bro}[과/와] 1대1을 한다', effects: { football: 2, rel: { bro: 5 } },
-        log: '{bro}[은/는] 일부러 져 주는 척하다 진짜로 졌다.' }
-    ]
-  });
-  E({
     id: 'za_kasi_cup', age: [10, 17], countries: ['za'], cooldown: 3,
     cond: { fb: ['none', 'local', 'regional'] },
     text: '크리스마스 연휴 타운십 토너먼트. 우승 상품은 새 축구화 한 켤레와 동네 자랑거리다.',
@@ -1269,18 +1061,7 @@
     ]
   });
   E({
-    id: 'za_joburg_homesick', age: [12, 15], countries: ['za'], once: true,
-    cond: { flags: ['moved_alone'] },
-    text: '{bigcity} 고지대의 겨울밤은 뼈가 시리다. 창밖엔 바다 대신 광산 언덕이 보인다.',
-    choices: [
-      { text: '{mother}에게 음성 메시지를 남긴다', effects: { happy: 3, rel: { mother: 5 }, flags: ['homesick'] },
-        log: '{mother}[은/는] 교회 성가대 노래를 녹음해서 보내 줬다.' },
-      { text: '숙소 동료들과 고향 노래를 부른다', effects: { happy: 4, fx: ['newFriend'] },
-        log: '각자 고향 노래를 하나씩 불렀다. 언어는 달라도 박자는 같았다.' }
-    ]
-  });
-  E({
-    id: 'za_click_tease', age: [12, 16], countries: ['za'], once: true,
+    id: 'za_click_tease', flavour: 'football', age: [12, 16], countries: ['za'], once: true,
     cond: { flags: ['moved_alone'] },
     text: '{name}[이/가] 코사어 억양으로 영어를 하자 몇몇이 따라 하며 웃는다.',
     choices: [
@@ -1288,7 +1069,7 @@
         check: { stat: 'happy', diff: 40 },
         success: { effects: { happy: 3, fx: ['newFriend'] }, log: '다들 혀를 차며 따라 하다 웃음보가 터졌다. 놀리던 녀석이 제일 열심이었다.' },
         fail: { effects: { happy: -3 }, log: '분위기가 어색해졌다. 그래도 고개는 숙이지 않았다.' } },
-      { text: '{coach}에게 이야기한다', effects: { rel: { coach: 4 }, happy: 1 },
+      { text: '훈련이 끝난 뒤 {coach}에게 사정을 털어놓는다', effects: { rel: { coach: 4 }, happy: 1 },
         log: '{coach}[은/는] "이 나라엔 공용어가 열한 개 넘게 있다. 다 우리 말이다"라고 팀에 말했다.' }
     ]
   });
@@ -1297,8 +1078,9 @@
     cond: FATHER_STRUGGLING,
     text: '해가 진 지 한참인데 {father}[이/가] 돌아오지 않는다. 동네 술집 앞에서 장비 가방을 베고 앉아 있는 {father}[을/를] 찾았다.',
     choices: [
-      { text: '함께 걸어오며 마음을 말한다', effects: { rel: { father: 5 }, happy: -2, fx: ['fatherSeekHelp'] },
-        log: '{father}[은/는] 별을 올려다보며 "도움을 받아 보겠다"고 했다.' },
+      { text: '함께 걸어오며 마음을 말한다', check: { stat: 'grit', diff: 40 },
+          success: { effects: { rel: { father: 5 }, happy: -2, fx: ['fatherSeekHelp'] }, log: '{father}[은/는] 별을 올려다보며 "도움을 받아 보겠다"고 했다.' },
+          fail: { effects: { rel: { father: -4 }, happy: -2 }, log: '"집에나 가 있어." {father}[은/는] 술집 앞 친구들에게 돌아갔다. 어두운 길을 혼자 걸어 돌아왔다.' } },
       { text: '교회 목사님께 상담을 부탁한다', effects: { rel: { mother: 3 }, flags: ['za_pastor'] },
         log: '목사님이 지역 중독 상담 모임을 소개해 주겠다고 했다.',
         schedule: { id: 'za_father_group', years: 1 } },
@@ -1391,36 +1173,11 @@
     log: '별 등을 다는 날, {name}[은/는] {father}의 어깨 위에 올라갔다.'
   });
   E({
-    id: 'in_diwali_neighbors', age: [5, 14], countries: ['in'], cooldown: 4,
-    text: '디왈리 밤, 옆집 친구네가 등잔과 과자를 들고 왔다. "우리 집에도 와서 불꽃놀이 같이 보자!"',
-    choices: [
-      { text: '{mother}[과/와] 함께 답례 과자를 들고 간다', effects: { happy: 4, rel: { mother: 3 }, fx: ['newFriend'] },
-        log: '등불이 골목을 가득 채웠다. 친구 할머니가 이마에 축복을 해 줬다.' },
-      { text: '친구랑 등불 사이에서 공을 찬다',
-        check: { stat: 'football', diff: 30 },
-        success: { effects: { football: 2, happy: 3 }, log: '등잔 하나 안 건드리고 드리블했다. 다들 놀랐다.' },
-        fail: { effects: { happy: -2 }, log: '등잔을 하나 쓰러뜨렸다. 진심으로 사과하고 다시 불을 붙였다.' } }
-    ]
-  });
-  E({
     id: 'in_monsoon_football', age: [6, 13], countries: ['in'], cooldown: 3,
     cond: { fb: ['none', 'local'] },
     text: '몬순 비가 쏟아지는 논두렁 옆 공터. 공이 흙탕물에 멈출 때마다 아이들이 비명을 지르며 웃는다.',
     effects: { football: 3, happy: 3, health: -1 },
     log: '{mother}[이/가] 흙투성이 옷을 보고 한숨을 쉬다 결국 웃었다.'
-  });
-  E({
-    id: 'in_cricket_pressure', age: [8, 14], countries: ['in'], once: true,
-    cond: { fb: ['none', 'local'] },
-    text: '친척 삼촌이 크리켓 배트를 선물하며 말한다. "축구로 밥 먹고 살겠냐? 이 나라는 크리켓이지!"',
-    choices: [
-      { text: '축구를 고집한다', effects: { football: 2, grit: 2, rel: { family: -1 } },
-        log: '{father}[이/가] 조용히 편을 들어 줬다. "우리 동네는 축구 동네야."' },
-      { text: '둘 다 해 본다', effects: { health: 2, happy: 2, grit: 1 },
-        log: '크리켓으로 다진 눈썰미가 골키퍼 앞에서 도움이 됐다.' },
-      { text: '크리켓으로 갈아탄다', effects: { happy: 2, flags: ['in_cricket'] },
-        log: '삼촌이 동네방네 자랑을 했다.' }
-    ]
   });
   E({
     id: 'in_board10', age: [15, 16], countries: ['in'], once: true,
@@ -1467,18 +1224,7 @@
     ]
   });
   E({
-    id: 'in_kolkata_homesick', age: [12, 15], countries: ['in'], once: true,
-    cond: { flags: ['moved_alone'] },
-    text: '{bigcity} 아카데미 기숙사. 음식도 말도 다르다. {mother}의 {food} 냄새가 꿈에 나온다.',
-    choices: [
-      { text: '집에 편지를 쓴다', effects: { happy: 3, rel: { mother: 5 }, flags: ['homesick'] },
-        log: '답장에 {mother}[이/가] 말린 생선 한 봉지를 함께 넣었다.' },
-      { text: '식당 아주머니께 고향 요리를 설명한다', effects: { happy: 4, smarts: 1, fx: ['newFriend'] },
-        log: '다음 주 메뉴에 피시 커리가 올라왔다. 맛은 조금 달랐지만 눈물이 났다.' }
-    ]
-  });
-  E({
-    id: 'in_language_tease', age: [12, 16], countries: ['in'], once: true,
+    id: 'in_language_tease', flavour: 'football', age: [12, 16], countries: ['in'], once: true,
     cond: { flags: ['moved_alone'] },
     text: '동료들이 벵골어로 농담을 주고받다 {name}[을/를] 보며 웃는다. 콘칸어 억양의 힌디어도 놀림거리가 됐다.',
     choices: [
@@ -1495,8 +1241,9 @@
     cond: FATHER_STRUGGLING,
     text: '{father}[이/가] 장비 정리를 하다 말고 페니 병을 기울이고 있다. 오늘 아침에도 공원 일을 나가지 못했다.',
     choices: [
-      { text: '{father} 곁에 앉아 진심을 말한다', effects: { rel: { father: 5 }, happy: -2, fx: ['fatherSeekHelp'] },
-        log: '{father}[은/는] 오래 침묵하다 "내일 같이 병원에 가 보자"고 했다.' },
+      { text: '{father} 곁에 앉아 진심을 말한다', check: { stat: 'social', diff: 45 },
+          success: { effects: { rel: { father: 5 }, happy: -2, fx: ['fatherSeekHelp'] }, log: '{father}[은/는] 오래 침묵하다 "내일 같이 병원에 가 보자"고 했다.' },
+          fail: { effects: { rel: { father: -4 }, happy: -3 }, log: '{father}[이/가] 병을 쾅 내려놓았다. "네가 이 집 가장이냐?" 그 말이 한동안 귀에서 떠나지 않았다.' } },
       { text: '본당 신부님께 도움을 청한다', effects: { rel: { mother: 3 }, flags: ['in_parish_help'] },
         log: '신부님이 마르가오의 회복 모임을 알아봐 주겠다고 했다.',
         schedule: { id: 'in_father_recovery', years: 1 } },
@@ -1531,7 +1278,7 @@
     choices: [
       { text: '한번 만나 본다', check: { stat: 'looks', diff: 40 },
         success: { effects: { happy: 4, fx: ['newPartner'] }, log: '어색한 차 한잔이 세 시간짜리 산책이 되었다.' },
-        fail: { effects: { happy: -1 }, log: '서로 축구와 크리켓 이야기만 하다 헤어졌다.' } },
+        fail: { effects: { happy: -1 }, log: '서로 크리켓 이야기만 하다 헤어졌다.' } },
       { text: '"인연은 제가 찾을게요" 웃으며 사양한다', effects: { happy: 1 },
         log: '이모들은 "다음 결혼식에서 보자"며 물러났다.' }
     ]

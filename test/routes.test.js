@@ -68,6 +68,10 @@ test('no footballer or academy content after the sporting age; old heroes play �
   const s = E.newGame({ country: 'kr', seed: 'old-fb' });
   while (s.queue.length) E.choose(s, 0);
   s.age = 50; s.queue = [];
+  // round 8: football is a hobby; without it there is no football activity at all
+  s.hobbies = ['read']; s.hobbyEver = { read: 6 };
+  assert.ok(!E.activities(s).some(a => a.id === 'football'), 'no football activity without the football hobby');
+  s.hobbies = ['football']; s.hobbyEver = { football: 6 };
   const fa = E.activities(s).find(a => a.id === 'football');
   assert.ok(fa && fa.label === '조기축구', 'a 50-year-old off the football route plays 조기축구: ' + (fa && fa.label));
   s.age = 61;
@@ -249,7 +253,8 @@ test('youth-only jobs (볼보이) age out through a narrated, legal exit; a plai
   // new game: a 17-year-old ballboy keeps the job to 22 and grows out of it at 23
   const y = E.newGame({ country: 'kr', seed: 'ballboy' }); while (y.queue.length) E.choose(y, 0);
   y.age = 17; y.edu.stage = 'none'; y.fb.stage = 'none'; E.startJob(y, 'ballboy', 0); RT.sync(y, true);
-  for (let a = 18; a <= 22; a++) { ageUpQuiet(y); assert.strictEqual(y.job && y.job.id, 'ballboy', 'still a ballboy at ' + a); }
+  // keep the job performance steady so a random 실적 부진 firing does not end the job first
+  for (let a = 18; a <= 22; a++) { y.job.perf = 60; ageUpQuiet(y); assert.strictEqual(y.job && y.job.id, 'ballboy', 'still a ballboy at ' + a); }
   ageUpQuiet(y);
   assert.strictEqual(y.job, null);
   assert.ok(y.log.some(l => l.age === 23 && /볼보이/.test(l.t) && /어른의 일자리/.test(l.t)), 'the exit is narrated');

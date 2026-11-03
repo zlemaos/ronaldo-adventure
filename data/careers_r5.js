@@ -74,7 +74,7 @@
 
   /* ---------------- service / business ---------------- */
   K('street_vendor', '노점상', 'service', 'apron',
-    { minAge: 16, maxAge: 85, degree: 'none' },
+    { minAge: 16, maxAge: 70, degree: 'none' },
     [5000, 120000], ['리어카 노점', '단골 생긴 노점', '푸드트럭 사장', '포장마차 거리 터줏대감'],
     'grit', [2, 1, 3, 1, 0], '비 오는 날엔 붕어빵, 더운 날엔 슬러시. 날씨가 사장님이다.');
   K('pawnshop_owner', '전당포 주인', 'finance', 'suit',

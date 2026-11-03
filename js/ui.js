@@ -305,8 +305,10 @@
         box.appendChild(h('<div class="stat" data-k="' + k + '"><span>' + STAT_ICONS[k] + ' ' + SHORT[k] + '</span><div class="bar"><i></i></div><span class="v"></span></div>'));
       });
     }
+    var shown = E.Life ? E.Life.uiStats(s) : C.STATS;
     C.STATS.forEach(function (k) {
       var row = box.querySelector('[data-k="' + k + '"]');
+      row.style.display = shown.indexOf(k) >= 0 ? '' : 'none';
       var v = s.stats[k], i = row.querySelector('i'), vv = row.querySelector('.v');
       i.style.width = v + '%'; i.style.backgroundColor = STAT_COLORS[k];
       if (prevStats[k] != null && prevStats[k] !== v) {
@@ -326,6 +328,10 @@
     if (t.gamble > 0) out.push('<span class="tchip ' + stageCls + '">' + C.TRAIT_ICONS.gamble + ' 도박 ' + t.gamble + ' · ' + esc(E.gambleStage(s)) + '</span>');
     if (t.alcohol > 0) out.push('<span class="tchip' + (t.alcohol >= 50 ? ' bad2' : t.alcohol >= 25 ? ' bad1' : '') + '">' + C.TRAIT_ICONS.alcohol + ' 음주 ' + t.alcohol + '</span>');
     if (t.record > 0) out.push('<span class="tchip bad2">' + C.TRAIT_ICONS.record + ' 전과 ' + t.record + '범</span>');
+    // round 8: where the hero was born and what they love doing (취미 = hobby)
+    var Lf = E.Life;
+    if (Lf && s.origin) out.unshift('<span class="tchip" title="' + esc((RA.data.origins[s.origin] || {}).desc || '') + '">' + esc(Lf.originLabel(s)) + '</span>');
+    (s.hobbies || []).forEach(function (id) { var h = Lf && Lf.hobby(id); if (h) out.push('<span class="tchip good" title="취미: ' + esc(h.desc) + '">' + h.icon + ' ' + esc(h.name) + '</span>'); });
     box.innerHTML = '<span class="traits-h">특성</span>' + out.join('');
   }
   // 타고난 몸·재능: body specs rolled at birth and base talents (태교 → 조기 교육 → 학교 과정)
@@ -376,7 +382,10 @@
   function renderTabs() {
     var box = $('#tabs'); box.innerHTML = '';
     if (!isPhone() && app.tab === 'log') app.tab = 'acts';
-    TABS.forEach(function (t) {
+    var tabs = TABS;
+    // the 축구 tab exists only for a hero who knows football; a selected one moves to 학업·직업
+    if (E.Life && app.s) { var vt = E.Life.uiTabs(app.s, TABS, app.tab); tabs = vt.tabs; app.tab = vt.tab; }
+    tabs.forEach(function (t) {
       var b = h('<button class="tab' + (t[0] === 'log' ? ' log-tab' : '') + (app.tab === t[0] ? ' on' : '') + '">' + t[1] + '</button>');
       b.addEventListener('click', function () { A.play('click'); app.tab = t[0]; renderTabs(); renderPanel(); });
       box.appendChild(b);

@@ -222,7 +222,7 @@
       return '아직 소식이 없다. 조급해하지 않기로 했다.';
     } },
     { id: 'pet', label: '반려동물 입양', icon: '🐶', min: 8, max: 100, avail: function (s) { return s.flags.has_pet ? '이미 반려동물이 있다' : true; }, run: function (s) {
-      eff(s, { happy: 6 }); return E.FX.adoptPet(s) + ' 이름은 "' + E.pick(s, ['골키퍼', '드리블', '코너킥', '뭉치', '보리']) + '".';
+      eff(s, { happy: 6 }); return E.FX.adoptPet(s) + ' 이름은 "' + E.pick(s, ['콩이', '초코', '하루', '뭉치', '보리']) + '".';
     } },
     { id: 'house', label: '집 사기', icon: '🏡', min: 25, max: 100, avail: function (s) { return s.flags.homeowner ? '이미 집이 있다' : true; }, run: function (s) { return E.FX.buyHouse(s); } },
     { id: 'car', label: '차 사기', icon: '🚗', min: 18, max: 100, avail: function (s) { return s.flags.car_owner ? '이미 차가 있다' : true; }, run: function (s) { return E.FX.buyCar(s); } },

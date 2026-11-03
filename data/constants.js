@@ -6,7 +6,7 @@
   RA.data = RA.data || {};
 
   RA.C = {
-    SAVE_VERSION: 6,
+    SAVE_VERSION: 7,
     HERO_NAME: '호날두',          // the hero is always 호날두 (male or female)
     STATS: ['health', 'happy', 'smarts', 'looks', 'football', 'grit', 'social', 'fame'],
     STAT_LABELS: {
@@ -64,7 +64,10 @@
       'suspend', 'expel', 'holdBack', 'careerEndingInjury', 'deport', 'bankrupt', 'rehab', 'fbBan', 'quickJob',
       'dropOut', 'enlist',
       // round 7: route moments (js/routes.js)
-      'rtSkill', 'rtBig', 'rtSetback', 'rtInjury', 'rtScandal', 'rtBurnout'
+      'rtSkill', 'rtBig', 'rtSetback', 'rtInjury', 'rtScandal', 'rtBurnout',
+      // round 8: hobbies, the dark side, drinking and sponsor arcs (js/life.js)
+      'hobbyBoost', 'wayOut', 'flee', 'goStraight', 'streetClash', 'drunkCrash',
+      'spnTake', 'spnFall', 'spnSurvive', 'spnCooperate', 'whistle'
     ],
     // Traits: hidden/visible tendencies that bad (and good) choices build up. Effects and cond.traits use these keys.
     TRAITS: ['mischief', 'rep', 'gamble', 'alcohol', 'record'],
@@ -78,7 +81,8 @@
       'spouse', 'child', 'coach', 'city', 'hometown', 'region', 'bigcity', 'capital', 'house',
       'localClub', 'regionalClub', 'academy', 'bigClub', 'rivalClub', 'league', 'nationalTeam',
       'abroadClub', 'food', 'food2', 'holiday', 'holiday2', 'school', 'exam', 'univ', 'job',
-      'fatherJob', 'fatherJob2', 'motherJob', 'currency', 'leader', 'country', 'sportsClub', 'houseLong', 'siblings', 'siblingsAll'],
+      'fatherJob', 'fatherJob2', 'motherJob', 'currency', 'leader', 'country', 'sportsClub', 'houseLong', 'siblings', 'siblingsAll',
+      'hobby', 'hobbyAct', 'hood'],
     // pixel pictures for milestone cards (drawn in js/pixel.js → Pixel.drawMilestone)
     MILESTONE_PICS: ['birth', 'smile', 'steps', 'word', 'ball', 'move', 'sibling', 'birthday', 'ceremony', 'festival',
       'preschool', 'prenatal', 'focus_lang', 'focus_music', 'focus_play', 'focus_sports'],

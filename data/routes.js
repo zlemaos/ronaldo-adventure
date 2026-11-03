@@ -68,7 +68,9 @@
     { to: 'school', on: ['quit', 'fail', 'fired', 'release', 'burnout', 'scandal', 'disband', 'injury', 'deport', 'retire', 'choice', 'enroll'] },
     { to: 'prison', on: ['crime'] },
     { to: 'retired', on: ['retire'] },
-    { to: 'crime', on: ['choice'] },
+    { to: 'gang', on: ['choice'] },
+    { to: 'con', on: ['choice'] },
+    { to: 'thief', on: ['choice'] },
     { to: 'gamble', on: ['choice'] },
     { to: 'religion', on: ['calling', 'choice'] }
   ];
@@ -223,6 +225,30 @@
       festival: ['여름 록 페스티벌 무대에서 슬램이 터졌다.', '해외 페스티벌 초청 메일이 왔다.', '투어 버스에서 새 곡의 가사를 썼다.'],
       headliner: ['메인 무대 마지막 순서. 수만 개의 불빛.', '데뷔 10주년 공연이 경기장에서 열렸다.', '후배 밴드들이 우리 곡을 커버했다.'],
       reunion: ['해체했던 멤버들이 다시 합주실에 모였다.', '머리는 희끗해도 첫 코드는 그대로였다.', '재결성 공연 표가 순식간에 사라졌다.'] } });
+
+  route({ id: 'rapper', name: '래퍼', icon: '🎧', group: '연예계', scene: 'stage', careers: ['rapper'],
+    fit: { lang: 2, music: 2, stage: 2, voice: 1 },
+    entry: { age: [13, 35], tracks: ['music', 'general', 'trainee'], how: '크루 가입·사이퍼', text: '라임 노트와 마이크 하나로 동네 크루의 사이퍼(돌아가며 즉흥 랩을 하는 모임)에서 시작한다.' },
+    athlete: { decline: 45, end: 70 },
+    stages: [
+      { id: 'crew', t: '언더그라운드 크루', train: true, min: 1, max: 6 },
+      { id: 'mixtape', t: '믹스테이프 래퍼', lvl: 0, skill: 35, min: 1, max: 6 },
+      { id: 'show', t: '〈쇼미더라임〉 출신', lvl: 1, skill: 48, min: 1, max: 6 },
+      { id: 'debut', t: '정식 데뷔 래퍼', lvl: 2, skill: 58, min: 1, max: 8 },
+      { id: 'chart', t: '차트 래퍼', lvl: 3, skill: 68, min: 2, max: 10 },
+      { id: 'legend', t: '레이블 대표·레전드', lvl: 4, skill: 78, fit: 58, peak: true, min: 2 },
+      { id: 'oldschool', t: '올드스쿨 레전드', lvl: 3, late: true }],
+    exits: [X('singer', 'choice quit', { stage: 'debut' }), X('creator', 'fail quit scandal', { career: 'youtuber' }), X('teaching', 'quit retire fail', { career: 'vocal_coach' }),
+      X('media', 'choice retire', { career: 'radio_dj' }), X('service', 'fail quit', { career: 'barista' })],
+    endings: { win: ['🎧', '언더에서 올라온 전설', '골목 사이퍼에서 시작한 가사가 시대의 노래가 됐다.'], fall: ['📼', '끝나지 않은 믹스테이프', '수백 곡을 썼지만 세상은 끝내 듣지 않았다.'] },
+    lines: {
+      crew: ['지하 연습실에서 크루 형들의 비트에 첫 벌스를 얹었다.', '공원 사이퍼에서 프리스타일을 하다 가사를 까먹었다. 다들 웃어 줬다.', '라임 노트 한 권을 다 채웠다.'],
+      mixtape: ['무료 믹스테이프를 올렸다. 재생 수 214회.', '작은 클럽 공연에서 관객 서른 명이 따라 불렀다.', '중고 마이크로 방에서 녹음했다. 옆집이 벽을 두드렸다.'],
+      show: ['〈쇼미더라임〉 1차 예선 번호표를 목에 걸었다.', '방송에서 디스전을 이겼다. 실시간 검색어에 이름이 올랐다.', '탈락했지만 그 무대 영상이 백만 회를 넘었다.'],
+      debut: ['레이블과 정식 계약서에 사인했다.', '첫 정규 앨범 트랙리스트를 새벽까지 고쳤다.', '음원 사이트 신곡 차트에 처음 이름이 걸렸다.'],
+      chart: ['피처링 요청이 하루에 세 건씩 들어온다.', '대학 축제 무대에서 떼창이 터졌다.', '내 가사를 문신으로 새긴 팬을 만났다.'],
+      legend: ['내 이름을 건 레이블을 차렸다. 첫 신인을 뽑았다.', '페스티벌 헤드라이너로 마지막 곡을 불렀다.', '후배 래퍼들이 내 가사를 오마주했다.'],
+      oldschool: ['요즘 비트는 빠르다. 그래도 내 라임은 아직 통한다.', '〈쇼미더라임〉 심사위원석에 앉았다.', '데뷔 20주년 공연에 옛 크루가 모였다.'] } });
 
   route({ id: 'actor', name: '배우', icon: '🎬', group: '연예계', scene: 'studio', careers: ['actor'],
     fit: { looks: 2, stage: 2, lang: 1, voice: 1 },
@@ -388,7 +414,7 @@
     ['hum', 'sci', 'study', 'general'],
     { win: ['💼', '샐러리맨 신화', '말단 사원에서 회사의 꼭대기까지 올랐다.'], fall: ['📦', '상자 하나 들고 나온 날', '책상 위 짐을 상자에 담아 회사를 나왔다.'] },
     { early: ['신입 교육 첫날 사원증 사진이 이상하게 나왔다.', '회의록을 쓰며 사내 용어를 외웠다.', '첫 월급날 통장을 세 번 확인했다.'], mid: ['팀 프로젝트 발표를 맡았다.', '출장 가방을 싸는 손이 익숙해졌다.', '후배가 처음 들어왔다.'], top: ['임원 회의 맨 끝자리에 앉았다.', '분기 실적 보고를 직접 했다.', '회사 창립 기념식에서 연설했다.'], late: ['정년이 다가와 인수인계 문서를 쓴다.', '후배들이 점심을 사겠다고 줄을 섰다.', '30년 치 명함첩을 정리했다.'] },
-    [X('startup', 'choice burnout', { career: 'entrepreneur' }), X('cook', 'choice burnout', { career: 'restaurant_owner' }), X('merchant', 'fired burnout choice'), X('public', 'choice')]);
+    [X('startup', 'choice burnout', { career: 'entrepreneur' }), X('cook', 'choice burnout', { career: 'restaurant_owner' }), X('merchant', 'fired burnout'), X('public', 'choice', { career: 'civil_servant' })]);
   G2('startup', '창업가', '🚀', '직장', 'office', ['entrepreneur'], ['study', 'sci', 'general'],
     { win: ['🦄', '유니콘을 만든 사람', '차고에서 시작한 회사가 세상을 바꿨다.'], fall: ['🧯', '문 닫은 스타트업', '마지막 투자 미팅이 끝나고 사무실 불을 껐다.'] },
     { early: ['공유 오피스 구석 책상에서 밤을 새웠다.', '투자자 미팅에서 열 번째 거절을 들었다.', '첫 고객의 결제 알림에 소리를 질렀다.'], mid: ['직원이 열 명이 됐다. 월급날이 무섭다.', '시리즈 투자 계약서를 읽느라 밤을 새웠다.', '경쟁사가 비슷한 서비스를 냈다.'], top: ['회사 가치가 조 단위로 평가됐다.', '창업 강연 무대에 섰다.', '해외 지사를 열었다.'], late: ['회사를 후배 경영진에게 맡겼다.', '젊은 창업가들의 멘토가 됐다.', '첫 사무실 열쇠를 아직 갖고 있다.'] },
@@ -452,39 +478,97 @@
   G2('trades', '기술직', '🔧', '직장', 'workshop', ['engineer', 'electrician', 'plumber', 'carpenter', 'mechanic', 'welder', 'construction_worker', 'factory_worker'], ['tech', 'sci', 'general'],
     { win: ['🔧', '명장(名匠)', '그의 손을 거친 것은 수십 년이 지나도 멀쩡했다.'], fall: ['⚙️', '멈춰 선 공장', '기계 소리가 멈춘 날, 일자리도 사라졌다.'] },
     { early: ['공구 이름을 외우느라 수첩을 들고 다녔다.', '선배 옆에서 볼트를 건넸다.', '안전화가 발에 익었다.'], mid: ['혼자 맡은 현장을 무사히 마쳤다.', '기능사 자격증을 땄다.', '후배에게 요령을 가르쳤다.'], top: ['기능 명장으로 선정됐다.', '내 이름을 건 작업장을 열었다.', '큰 현장의 총책임을 맡았다.'], late: ['손이 예전 같지 않아 감독 일을 맡았다.', '공구 상자를 후배에게 물려줬다.', '기술 학교에서 특강을 했다.'] },
-    [X('merchant', 'choice fired'), X('transport', 'fired choice')]);
+    [X('merchant', 'fired'), X('transport', 'fired choice', { career: 'truck_driver' })]);
   G2('farm', '농어업', '🌾', '직장', 'farm', ['farmer', 'fisher', 'haenyeo', 'beekeeper', 'rancher', 'forester', 'smart_farmer', 'simmani'], ['general', 'tech', 'sci'],
     { win: ['🌾', '땅과 바다의 장인', '그가 거둔 것으로 동네 식탁이 풍성했다.'], fall: ['🌧️', '흉년', '태풍이 지나간 뒤 다시 일어서지 못했다.'] },
     { early: ['새벽 다섯 시에 일어나 밭·배로 나갔다.', '날씨 예보를 하루 세 번 확인했다.', '어르신들에게 요령을 배웠다.'], mid: ['첫 수확·첫 만선의 기쁨.', '직거래 단골이 생겼다.', '장비를 새로 들였다.'], top: ['품평회에서 상을 받았다.', '지역 조합을 이끌게 됐다.', '내 이름을 건 브랜드가 생겼다.'], late: ['일을 줄이고 텃밭만 가꾼다.', '귀농한 젊은이들을 도와줬다.', '땅·배를 물려줄 준비를 했다.'] },
-    [X('merchant', 'choice fail'), X('cook', 'choice', { career: 'restaurant_owner' })]);
+    [X('merchant', 'fail'), X('cook', 'choice', { career: 'restaurant_owner' })]);
   G2('military', '군인', '🎖️', '직장', 'barracks', ['soldier', 'army_officer', 'fighter_pilot', 'navy_sailor', 'special_forces', 'mercenary'], ['tech', 'sport', 'general'],
     { win: ['🎖️', '별을 단 군인', '어깨의 별만큼 무거운 책임을 졌다.'], fall: ['🪖', '전역 신고', '군복을 벗고 낯선 사회로 나왔다.'] },
     { early: ['기상나팔에 맞춰 몸이 먼저 일어났다.', '첫 야외 훈련에서 텐트를 쳤다.', '사격 점수가 올랐다.'], mid: ['부대 대항 훈련에서 1등을 했다.', '부하들을 이끌었다.', '파견 근무를 다녀왔다.'], top: ['부대를 지휘하는 자리에 올랐다.', '훈장을 받았다.', '국가 행사에서 열병을 지휘했다.'], late: ['전역 날짜가 다가왔다.', '후배들에게 지휘봉을 넘겼다.', '전우회 모임에 나갔다.'] },
-    [X('safety', 'retire choice', { career: 'police' }), X('transport', 'retire', { career: 'airline_pilot' }), X('public', 'retire choice')]);
+    [X('safety', 'retire choice', { career: 'police' }), X('transport', 'retire', { career: 'airline_pilot' }), X('public', 'retire choice', { career: 'civil_servant' })]);
   G2('safety', '경찰·소방', '🚓', '직장', 'office', ['police', 'firefighter', 'detective', 'prison_guard', 'coast_guard', 'lifeguard', 'bounty_hunter'], ['sport', 'tech', 'general'],
     { win: ['🚒', '동네의 영웅', '위험한 순간마다 가장 먼저 달려간 사람.'], fall: ['📛', '배지를 반납한 날', '마지막 근무 후 배지를 책상에 내려놓았다.'] },
     { early: ['첫 출동 사이렌에 심장이 튀어나올 뻔했다.', '야간 순찰을 돌았다.', '선배에게 현장 수칙을 배웠다.'], mid: ['위험한 현장에서 사람을 구했다.', '표창을 받았다.', '팀을 이끄는 반장이 됐다.'], top: ['서장·본부장 자리에 올랐다.', '큰 사건을 해결해 뉴스에 나왔다.', '훈장을 받았다.'], late: ['정년을 앞두고 내근으로 옮겼다.', '후배들의 무사 귀환을 기다린다.', '퇴임식에서 동료들이 경례했다.'] },
-    [X('public', 'choice'), X('sports_staff', 'choice', { career: 'personal_trainer' })]);
+    [X('public', 'choice', { career: 'civil_servant' }), X('sports_staff', 'choice', { career: 'personal_trainer' })]);
   G2('transport', '운송', '🚚', '직장', 'road', ['taxi_driver', 'bus_driver', 'truck_driver', 'airline_pilot', 'ship_captain', 'train_driver', 'drone_pilot', 'designated_driver'], ['tech', 'general'],
     { win: ['🛫', '무사고의 달인', '수십 년 동안 한 번도 사고를 내지 않았다.'], fall: ['🚧', '멈춘 바퀴', '운전대를 다시 잡지 못했다.'] },
     { early: ['처음 맡은 노선을 세 번 미리 돌아봤다.', '야간 운행 뒤 해장국을 먹었다.', '단골 손님이 생겼다.'], mid: ['무사고 표창을 받았다.', '장거리 운행이 익숙해졌다.', '새 차량을 배정받았다.'], top: ['교관이 되어 신입을 가르쳤다.', '노선 책임자가 됐다.', '회사 대표 운전자로 뽑혔다.'], late: ['운행 시간을 줄였다.', '마지막 운행 날 손님들이 박수 쳤다.', '운전대에서 손을 뗄 준비를 했다.'] },
-    [X('merchant', 'choice fired'), X('service', 'choice')]);
+    [X('merchant', 'fired'), X('service', 'fired')]);
   G2('service', '서비스직', '🛎️', '직장', 'shop', ['barista', 'hairdresser', 'dog_trainer', 'funeral_director', 'hotel_concierge', 'wedding_planner', 'cleaner', 'flight_attendant'], ['cook', 'general', 'art'],
     { win: ['🛎️', '단골이 줄 선 사람', '그가 있는 가게는 늘 북적였다.'], fall: ['🧹', '마지막 마감 청소', '불 꺼진 매장을 혼자 정리했다.'] },
     { early: ['첫 손님 앞에서 손이 떨렸다.', '유니폼 이름표를 처음 달았다.', '매장 메뉴와 규칙을 외웠다.'], mid: ['손님이 나를 찾아 다시 왔다.', '매장 교육을 맡았다.', '친절 사원으로 뽑혔다.'], top: ['매장·팀을 책임지는 자리에 올랐다.', '내 가게를 열었다.', '업계 대회에서 상을 받았다.'], late: ['일하는 날을 줄였다.', '후배에게 가게를 맡겼다.', '오랜 단골들과 인사를 나눴다.'] },
-    [X('merchant', 'choice'), X('cook', 'choice', { career: 'chef' })]);
+    [X('merchant', 'fail quit'), X('cook', 'choice', { career: 'chef' })]);
   G2('religion', '종교', '🙏', '직장', 'temple', ['monk', 'priest', 'pastor', 'shaman', 'missionary', 'cult_leader', 'fortune_teller'], ['hum', 'general'],
     { win: ['🙏', '많은 이의 스승', '그의 말 한마디에 많은 사람이 위로받았다.'], fall: ['🕯️', '흔들린 믿음', '믿음이 흔들린 날, 길을 잃었다.'] },
     { early: ['새벽 예불·기도로 하루를 시작했다.', '경전을 한 줄씩 옮겨 적었다.', '마당을 쓸며 마음을 비웠다.'], mid: ['고민을 들고 찾아오는 사람이 늘었다.', '봉사 활동을 이끌었다.', '설법·설교를 맡았다.'], top: ['큰 공동체를 이끄는 자리에 올랐다.', '많은 사람 앞에서 축복을 전했다.', '해외에서도 가르침을 청했다.'], late: ['조용한 곳에서 수행에 전념한다.', '제자에게 자리를 물려줬다.', '평생의 가르침을 책으로 남겼다.'] },
     [X('none', 'choice', {}), X('teaching', 'choice', { career: 'cram_tutor' })]);
-  G2('crime', '뒷골목', '🕶️', '어둠', 'alley', ['pickpocket', 'gangster', 'con_artist', 'drug_smuggler', 'cyber_criminal', 'cat_burglar', 'loan_shark', 'counterfeiter', 'yabawi', 'smuggler'], ['general'],
-    { win: 'kingpin', fall: 'jailbird' },
-    { early: ['뒷골목 형님들 심부름을 했다.', '경찰차 사이렌에 골목으로 숨었다.', '돈 세는 법보다 숨기는 법을 먼저 배웠다.'], mid: ['내 구역이 생겼다.', '배신자 소문이 돌았다.', '정체 모를 돈이 통장을 스쳐 갔다.'], top: ['조직의 꼭대기에 올랐다.', '경쟁 조직과 협상 테이블에 앉았다.', '모두가 내 눈치를 본다.'], late: ['잠을 이루지 못하는 밤이 늘었다.', '손을 씻을 방법을 생각했다.', '옛 동료들이 하나둘 사라졌다.'] },
-    [X('gamble', 'choice'), X('merchant', 'quit choice')]);
   G2('gamble', '도박꾼', '🎲', '어둠', 'casino', ['pro_gambler'], ['general'],
     { win: 'casino_king', fall: 'broke_gambler' },
     { early: ['카지노 딜러 테이블에서 칩을 셌다.', '밤과 낮이 바뀌었다.', '첫 큰 판에서 손이 떨렸다.'], mid: ['VIP 룸에 초대받았다.', '확률표를 외우고 다녔다.', '빚과 잭팟 사이를 오갔다.'], top: ['전설의 테이블에 앉았다.', '토너먼트 우승 상금을 받았다.', '모두가 내 베팅을 따라 했다.'], late: ['칩 대신 기억만 남았다.', '테이블에 앉는 날을 줄였다.', '젊은 도박꾼에게 그만두라고 했다.'] },
-    [X('merchant', 'quit choice'), X('crime', 'choice fail')]);
+    [X('merchant', 'quit'), X('con', 'choice fail')]);
+
+  // ================================================================ dark routes (round 8): ladders with police, rivals and betrayal
+  // (js/life.js RT.darkYear queues the risks each year). They are never on a school notice board
+  // (entry.offer false): a hero gets in through the street (일진 → 패거리 → 조직 막내), prison, an offer, or a job search.
+  // Ways out: prison (crime), escape abroad (flee), going straight (quit → an ordinary job), death, or the boss's chair.
+  route({ id: 'gang', name: '조직', icon: '🕶️', group: '어둠', scene: 'alley', careers: ['gangster', 'loan_shark', 'drug_smuggler'], dark: true,
+    fit: { build: 2, reflex: 1, grit: 1, mischief: 2 },
+    entry: { age: [15, 45], tracks: ['general'], anyTrack: true, offer: false, how: '형님들 밑으로 들어감', text: '동네 형님의 소개로 조직의 막내가 된다. 들어가기는 쉽고 나오기는 어렵다.' },
+    athlete: { decline: 52, end: 72 },
+    stages: [
+      { id: 'runner', t: '조직 막내', lvl: 0, min: 1 },
+      { id: 'soldier', t: '행동대원', lvl: 1, skill: 35, min: 1 },
+      { id: 'lieutenant', t: '중간 보스', lvl: 2, skill: 55, min: 2 },
+      { id: 'boss', t: '보스', lvl: 3, skill: 72, fit: 48, peak: true, min: 2 },
+      { id: 'elder', t: '은퇴한 큰형님', lvl: -1, late: true }],
+    exits: [X('merchant', 'quit', { career: 'street_vendor' }), X('trades', 'quit', { career: 'construction_worker' }), X('transport', 'quit', { career: 'truck_driver' }),
+      X('con', 'choice'), X('none', 'flee')],
+    endings: { win: ['🕶️', '밤의 도시를 쥔 보스', '골목 심부름꾼이 도시의 밤을 손에 쥐었다. 그 자리는 늘 누군가 노리고 있었다.'], fall: ['🩸', '버려진 행동대원', '형님들을 위해 살았지만, 마지막엔 아무도 오지 않았다.'] },
+    lines: {
+      runner: ['형님들 차 문을 열어 드리고 담배 심부름을 했다.', '구역 가게들을 돌며 봉투를 걷었다. 손이 떨렸다.', '사무실 바닥을 닦으며 서열부터 외웠다.'],
+      soldier: ['다른 구역 애들과 패싸움이 붙었다. 눈두덩이 부었다.', '형님이 처음으로 이름을 불러 줬다.', '경찰차가 지나가면 고개부터 숙였다.'],
+      lieutenant: ['내 밑으로 애들이 열 명 생겼다.', '유흥가 두 블록이 내 관리 구역이 됐다.', '조직 회의 자리에 내 의자가 생겼다.'],
+      boss: ['도시의 밤이 내 말 한마디로 움직인다.', '경쟁 조직 보스와 같은 식탁에 앉았다.', '경호원 없이는 문밖에 나가지 않는다.'],
+      elder: ['명절마다 옛 식구들이 인사를 온다. 반은 감옥에 있다.', '잠귀가 밝아졌다. 작은 소리에도 깬다.', '젊은 애들에게 "이 바닥엔 오지 마라"고 했다.'] } });
+  route({ id: 'con', name: '사기·꾼', icon: '🃏', group: '어둠', scene: 'alley', careers: ['con_artist', 'yabawi', 'counterfeiter', 'cyber_criminal'], dark: true,
+    fit: { smarts: 2, lang: 1, stage: 1, mischief: 2 },
+    entry: { age: [16, 65], tracks: ['general'], anyTrack: true, offer: false, how: '판에 바람잡이로 들어감', text: '말솜씨와 눈치로 야바위판·사기판의 바람잡이부터 시작한다.' },
+    athlete: { decline: 62, end: 80 },
+    stages: [
+      { id: 'shill', t: '바람잡이', lvl: 0, min: 1 },
+      { id: 'hustler', t: '꾼', lvl: 1, skill: 35, min: 1 },
+      { id: 'planner', t: '판 설계자', lvl: 2, skill: 55, min: 2 },
+      { id: 'legend', t: '전설의 사기꾼', lvl: 3, skill: 72, fit: 52, peak: true, min: 2 },
+      { id: 'elder', t: '손 씻은 늙은 꾼', lvl: -1, late: true }],
+    exits: [X('merchant', 'quit', { career: 'street_vendor' }), X('office', 'quit', { career: 'insurance_agent', ignoreReq: true }), X('gamble', 'choice'),
+      X('gang', 'choice'), X('none', 'flee')],
+    endings: { win: ['🃏', '전설의 사기꾼', '수많은 판을 짰지만 아무도 그의 진짜 이름을 몰랐다.'], fall: ['🧾', '들통난 판', '마지막 판에서 모든 게 들통났다. 속인 사람들의 얼굴이 꿈에 나왔다.'] },
+    lines: {
+      shill: ['야바위판 옆에서 "와, 또 맞혔다!"를 외쳤다.', '선배 꾼의 손놀림을 몰래 따라 해 봤다.', '하루 일당보다 판이 깨질 때 도망치는 법을 먼저 배웠다.'],
+      hustler: ['가짜 명함이 세 종류가 됐다.', '처음으로 혼자 판을 굴렸다. 상대는 끝까지 몰랐다.', '말 한마디로 낯선 사람의 지갑이 열렸다.'],
+      planner: ['판 하나에 사람 다섯을 붙였다. 각본은 내가 썼다.', '대포폰을 한 달마다 바꿨다.', '피해자 이야기가 뉴스에 나왔다. 채널을 돌렸다.'],
+      legend: ['업계에서 내 이름은 소문으로만 돈다.', '판 하나로 빌딩 값이 오갔다.', '수사관들이 내 수법에 별명을 붙였다.'],
+      elder: ['이제는 판을 짜지 않는다. 대신 사기 예방 강연 요청이 왔다.', '속였던 사람들의 얼굴이 하나씩 떠오른다.', '젊은 꾼이 찾아왔다. 돌려보냈다.'] } });
+  route({ id: 'thief', name: '털이·밀수', icon: '🧤', group: '어둠', scene: 'alley', careers: ['pickpocket', 'cat_burglar', 'smuggler'], dark: true,
+    fit: { reflex: 2, dex: 2, flex: 1, mischief: 1 },
+    entry: { age: [13, 45], tracks: ['general'], anyTrack: true, offer: false, how: '패거리 털이에 끼어듦', text: '날랜 손과 몸으로 소매치기·빈집털이·밀수 운반부터 시작한다.' },
+    athlete: { decline: 42, end: 62 },
+    stages: [
+      { id: 'snatch', t: '좀도둑', lvl: 0, min: 1 },
+      { id: 'crew', t: '털이 조직원', lvl: 1, skill: 35, min: 1 },
+      { id: 'pro', t: '전문 털이범', lvl: 2, skill: 55, min: 2 },
+      { id: 'phantom', t: '잡히지 않는 대도', lvl: 3, skill: 72, fit: 55, peak: true, min: 2 },
+      { id: 'elder', t: '은퇴한 대도', lvl: -1, late: true }],
+    exits: [X('transport', 'quit', { career: 'truck_driver' }), X('merchant', 'quit', { career: 'street_vendor' }), X('trades', 'quit', { career: 'mechanic' }),
+      X('gang', 'choice'), X('none', 'flee')],
+    endings: { win: ['🧤', '잡히지 않은 대도', '수많은 금고가 열렸지만 아무도 그를 잡지 못했다.'], fall: ['🚔', '덜미', '마지막 한 탕에서 덜미를 잡혔다.'] },
+    lines: {
+      snatch: ['시장 골목에서 지갑 하나를 빼냈다. 심장이 귀까지 뛰었다.', 'CCTV 위치를 하나씩 외웠다.', '훔친 물건을 장물아비에게 헐값에 넘겼다.'],
+      crew: ['털이 조직에서 망보는 일을 맡았다.', '항구 창고에서 보따리를 옮겼다. 내용물은 묻지 않았다.', '동료가 잡혀갔다. 며칠 숨어 지냈다.'],
+      pro: ['자물쇠 하나를 30초에 열었다.', '세관 앞에서 웃는 얼굴로 가방을 끌고 지나갔다.', '경찰 수배 전단에 비슷한 얼굴이 실렸다.'],
+      phantom: ['신문이 내 사건을 "유령의 짓"이라고 불렀다.', '단 한 번도 흔적을 남기지 않았다.', '금고 회사가 내 수법을 연구한다는 소문을 들었다.'],
+      elder: ['손가락이 굳었다. 이제 자물쇠는 못 연다.', '옛 동료의 장례식에 몰래 다녀왔다.', '경찰서 앞을 지나며 모자를 눌러썼다. 버릇이다.'] } });
 
   // ================================================================ states (no ladder of their own)
   function ST(id, name, icon, scene, careers, exits, lines) { route({ id: id, name: name, icon: icon, group: '상태', scene: scene, careers: careers, state: true, exits: exits, lines: lines }); }
@@ -497,7 +581,7 @@
     performer: { flex: 2, reflex: 2, stage: 2, sport: 1 }, esports: { reflex: 3, logic: 2 }, sports_staff: { sport: 2, lang: 1, social: 1 },
     trades: { dex: 3, build: 1, logic: 1 }, farm: { endurance: 2, build: 1, grit: 1 }, military: { build: 2, endurance: 2, grit: 2 },
     safety: { build: 1, endurance: 2, reflex: 1, grit: 1 }, transport: { reflex: 2, endurance: 1, grit: 1 }, service: { social: 2, taste: 1, looks: 1 },
-    religion: { lang: 1, social: 1, grit: 2 }, crime: { reflex: 1, mischief: 2, smarts: 1 }, gamble: { logic: 1, mischief: 2 }
+    religion: { lang: 1, social: 1, grit: 2 }, gamble: { logic: 1, mischief: 2 }
   };
   R.forEach(function (r) { if (GFIT[r.id]) r.fit = GFIT[r.id]; });
 
@@ -506,7 +590,7 @@
   ST('none', '쉬는 중', '🛋️', 'home', [], ['*entry'], { any: ['구인 공고를 넘겨 보다 하루가 갔다.', '이력서를 고쳐 썼다.', '동네 도서관에서 진로 책을 읽었다.', '친척 모임에서 "요즘 뭐 하니?"를 들었다.'] });
   ST('parttime', '아르바이트', '🧾', 'shop', ['convenience_clerk', 'delivery_rider', 'cafe_parttime', 'fastfood_crew', 'newspaper_carrier', 'tutor_parttime', 'pc_bang_parttime', 'cinema_parttime', 'flyer_parttime', 'car_wash_parttime', 'ballboy', 'mascot_parttime', 'lifeguard_parttime'], ['*entry'],
     { any: ['시급 계산을 하며 퇴근했다.', '사장님이 다음 달 근무표를 줬다.', '진상 손님을 웃으며 넘겼다.', '알바 동료와 야식을 먹었다.'] });
-  ST('prison', '수감', '⛓️', 'prison', [], [X('none', 'release_jail'), X('school', 'release_jail'), X('crime', 'choice')], {});
+  ST('prison', '수감', '⛓️', 'prison', [], [X('none', 'release_jail'), X('school', 'release_jail'), X('gang', 'choice'), X('con', 'choice'), X('thief', 'choice')], {});
   ST('retired', '은퇴 생활', '🌅', 'home', [], [X('parttime', 'entry choice'), X('merchant', 'entry choice'), X('service', 'entry choice'), X('transport', 'entry choice'), X('farm', 'entry choice')], { any: ['아침 산책 코스를 하나 늘렸다.', '동네 경로당 바둑판 앞에 앉았다.', '손주 사진을 휴대폰 배경으로 바꿨다.', '텃밭 상추가 잘 자랐다.'] });
 
   // ---------------------------------------------------------------- route tags of older events
@@ -521,8 +605,9 @@
   var EMP = ['employee'], WORK = ['working'];
   RA.data.routeTags = {
     life_ya_monk_retreat: ['adrift', 'employee', 'retired'], life_any_monk_return: ['religion'],
-    car_malpractice_exposed: ['medical'], car_bribe_caught: ['public', 'politics', 'safety', 'military', 'law'], car_exploit_traced: ['it', 'crime', 'none'],
-    car_forgery_exposed: ['art', 'design', 'crime', 'none'], car_books_audit: ['office', 'startup'], car_embezzle_caught: ['office', 'public', 'startup'],
+    life_ya_side_hustle: ['adrift', 'merchant', 'service', 'cook'],
+    car_malpractice_exposed: ['medical'], car_bribe_caught: ['public', 'politics', 'safety', 'military', 'law'], car_exploit_traced: ['it', 'con', 'none'],
+    car_forgery_exposed: ['art', 'design', 'con', 'none'], car_books_audit: ['office', 'startup'], car_embezzle_caught: ['office', 'public', 'startup'],
     car_pol_coverup_exposed: ['politics'], car_crime_old_crew: ['adrift', 'employee'],
     rl_teen_parttime: ['school', 'none'], rl_start_business: ['office', 'none'], rl_volunteer_service: ['adrift', 'school'],
     rl_old_silver_job: ['retired', 'none'], gam_vip_invite: ['adrift'], path_19: ['none'], path_19_family_trade: ['none'],

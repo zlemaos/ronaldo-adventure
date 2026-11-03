@@ -74,7 +74,7 @@
       { text: '도전한다', check: { stat: 'smarts', diff: 60 },
         success: { effects: { smarts: 3, fame: 2, flags: ['talent_science'] }, log: '은상! 처음으로 공부가 재밌어졌다.' },
         fail: { effects: { smarts: 1, happy: -1 }, log: '본선에서 떨어졌지만 세상은 넓다는 걸 배웠다.' } },
-      { text: '축구 시간이 줄어서 싫다', effects: { football: 1 }, log: '선생님이 아쉬워했다.' }
+      { text: '축구 시간이 줄어서 싫다', alt: { text: '{hobbyAct} 시간이 줄어서 싫다', effects: { happy: 1 } }, effects: { football: 1 }, log: '선생님이 아쉬워했다.' }
     ] });
   E({ id: 'path_talent_looks', age: [12, 19], once: true, cond: { stats: { looks: [70, 100] } },
     text: '길을 걷는데 누군가 명함을 내민다. "연예 기획사입니다. 오디션 볼래요?"',
@@ -95,7 +95,9 @@
   E({ id: 'path_talent_hands', age: [10, 17], once: true, cond: { stats: { grit: [60, 100] } },
     text: '동네 정비소 아저씨가 고장 난 자전거를 고치는 걸 보고 말한다. "손재주가 좋구나."',
     choices: [
-      { text: '주말마다 일을 배운다', effects: { grit: 2, smarts: 1, flags: ['talent_hands', 'path_trade'] }, log: '기름 묻은 장갑이 훈장처럼 느껴졌다.' },
+      { text: '주말마다 일을 배운다', check: { stat: 'grit', diff: 55 },
+          success: { effects: { grit: 2, smarts: 1, flags: ['talent_hands', 'path_trade'] }, log: '기름 묻은 장갑이 훈장처럼 느껴졌다.' },
+          fail: { effects: { health: -3, grit: 1 }, log: '첫 주에 렌치에 손가락을 찧었다. 아저씨는 "손재주보다 조심성이 먼저"라며 돌려보냈다.' } },
       { text: '고맙다고만 한다', effects: { happy: 1 }, log: '자전거를 타고 바람을 갈랐다.' }
     ] });
   E({ id: 'path_talent_game', age: [12, 19], once: true, cond: { stats: { smarts: [50, 100] } },
@@ -109,14 +111,10 @@
   E({ id: 'path_talent_trickster', age: [11, 19], once: true, cond: { traits: { mischief: [25, 100] } },
     text: '말재주로 친구들 간식을 모조리 따냈다. 누가 말한다. "너 나중에 장사하면 대박 나겠다."',
     choices: [
-      { text: '이 재능으로 돈을 벌어 본다', risky: true, effects: { mischief: 4, money: 50, flags: ['talent_trickster'] }, log: '시장 골목 어르신들이 "꼬마 장사꾼"이라 불렀다.' },
+      { text: '이 재능으로 돈을 벌어 본다', risky: true, check: { stat: 'social', diff: 50 },
+          success: { effects: { mischief: 4, money: 50, flags: ['talent_trickster'] }, log: '시장 골목 어르신들이 "꼬마 장사꾼"이라 불렀다.' },
+          fail: { effects: { mischief: 3, money: -20, rep: -3, rel: { mother: -3 } }, log: '부풀린 값에 속은 손님이 집까지 찾아왔다. 번 돈을 다 돌려주고 용돈까지 털렸다.' } },
       { text: '친구들에게 간식을 돌려준다', effects: { rep: 3, social: 2, mischief: -2 }, log: '다들 웃으며 다시 나눠 먹었다.' }
-    ] });
-  E({ id: 'path_talent_coach', age: [8, 15], once: true, cond: { stats: { football: [40, 100] }, fb: ['none'] },
-    text: '동네 체육 선생님이 골목 축구를 보다가 다가왔다. "제대로 배워 볼 생각 없니?"',
-    choices: [
-      { text: '동네 클럽에 들어간다', effects: { happy: 3, fx: ['joinLocalClub'], flags: ['path_football'] }, log: '첫 유니폼이 무릎까지 내려왔다.' },
-      { text: '그냥 재미로 찬다', effects: { happy: 2 }, log: '골목 축구가 제일 재밌다.' }
     ] });
 
   // ================================================================ teen part-time offers (15-19)

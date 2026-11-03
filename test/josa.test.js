@@ -71,7 +71,7 @@ test('the academy farewell line reads correctly in every country', () => {
     const s = E.newGame({ country: c, seed: 'farewell' });
     const ev = E.eventIndex().canon_academy_offer;
     const line = E.render(s, ev.choices[0].log);
-    const home = RA.data.countries[c].places.hometown;
+    const home = E.vars(s).hometown;
     assert.ok(line.includes(home + T.particle(home, '을/를') + ' 떠나는 날'), line);
   }
 });
