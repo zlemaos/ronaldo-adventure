@@ -583,7 +583,7 @@
         success: { effects: { smarts: 4, grit: 2 }, log: '점수가 예상보다 훨씬 잘 나왔다.' },
         fail: { effects: { smarts: 2 }, log: '평균 정도. 다시 볼 기회는 있다.' } },
       { text: '돈을 모아 과외를 받는다', req: { money: 1500 }, effects: { money: -1500, smarts: 5 },
-        log: '여름 아르바이트비가 전부 과외비가 되었다.' },
+        log: '과외비를 내고 수업을 시작했다.' },
       { text: '시즌 경기에 집중한다', effects: { football: 3, smarts: -1 },
         log: '연습 문제집은 축구 가방 밑바닥에서 구겨졌다.' }
     ]
@@ -603,7 +603,7 @@
   E({
     id: 'us_second_offer', age: [18, 20], countries: ['us'], once: true, weight: 1,
     cond: { flags: ['us_scholar_wait'] },
-    text: '한 시즌이 지났다. 그때 그 코치가 다시 연락해 왔다. "아직 자리 있다, 생각 있나?"',
+    text: '장학금을 제안했던 코치가 다시 연락해 왔다. "아직 자리 있다, 생각 있나?"',
     choices: [
       { text: '이번엔 받아들인다', effects: { happy: 4, flags: ['scholarship'] },
         log: '돌아서 온 길이지만 늦지 않았다.' },
@@ -630,10 +630,10 @@
     text: '경기장 주차장, 장비 트럭 옆에서 {father}[이/가] 맥주 캔을 들고 비틀거린다. 다른 부모들이 수군거린다.',
     choices: [
       { text: '{father}[을/를] 차에 태우고 조용히 이야기한다', check: { stat: 'smarts', diff: 45 },
-          success: { effects: { rel: { father: 5 }, happy: -2, fx: ['fatherSeekHelp'] }, log: '{father}[은/는] 핸들에 이마를 대고 "모임에 다시 나가 볼게"라고 했다.' },
+          success: { effects: { rel: { father: 5 }, happy: -2, fx: ['fatherSeekHelp'] }, log: '{father}[은/는] 핸들에 이마를 대고 "회복 모임을 알아볼게"라고 했다.' },
           fail: { effects: { rel: { father: -4 }, health: -2, happy: -2 }, log: '{father}[이/가] 굳이 운전대를 잡겠다고 우겼다. 트럭이 주차장 기둥을 긁었고, 둘 다 한마디도 하지 않았다.' } },
-      { text: '학교 상담 선생님께 털어놓는다', effects: { happy: 1, flags: ['us_counselor'] },
-        log: '상담 선생님이 가족 지원 프로그램 안내서를 건넸다.',
+      { text: '지역 상담 센터에 털어놓는다', effects: { happy: 1, flags: ['us_counselor'] },
+        log: '상담사가 가족 지원 프로그램 안내서를 건넸다.',
         schedule: { id: 'us_family_program', years: 1 } },
       { text: '창피해서 먼저 집에 간다', effects: { happy: -4, rel: { father: -2 } },
         log: '혼자 걷는 길이 유난히 길었다.' }
@@ -662,11 +662,11 @@
   E({
     id: 'us_benefits', age: [22, 40], countries: ['us'], once: true,
     cond: { career: 'any' },
-    text: '첫 정규직 서류. 건강보험 플랜과 퇴직연금 비율을 고르라는 서류가 열 장이다.',
+    text: '건강보험과 노후 자금 계획을 살펴본다. 비교할 서류가 열 장이다.',
     choices: [
       { text: '꼼꼼히 비교하고 연금을 넣는다',
         check: { stat: 'smarts', diff: 40 },
-        success: { effects: { money: 800, smarts: 1 }, log: '회사 매칭까지 챙겼다. 미래의 내가 고마워할 것이다.' },
+        success: { effects: { money: 800, smarts: 1 }, log: '조건을 비교해 지출을 줄였다. 미래의 내가 고마워할 것이다.' },
         fail: { effects: { money: -200 }, log: '공제액을 잘못 골라 병원비가 생각보다 나왔다.' } },
       { text: '{sis1}에게 전화해서 물어본다', effects: { rel: { sis1: 4 }, money: 300 },
         log: '{sis1}[은/는] 한 시간 동안 엑셀을 공유해 줬다.' }
@@ -677,7 +677,7 @@
     cond: { rel: { mother: 'alive' } },
     text: '독립기념일, 형제들이 힐로 해변 공원에 모였다. 바비큐 그릴 앞은 여전히 {bro}의 자리다.',
     effects: { happy: 3, rel: { family: 4 } },
-    log: '불꽃놀이 아래서 {mother}[이/가] 다 큰 막내 머리를 쓰다듬었다.'
+    log: '불꽃놀이 아래서 {mother}[이/가] 내 어깨를 다정하게 감쌌다.'
   });
   E({
     id: 'us_beach_wedding', age: [24, 45], countries: ['us'], once: true,
@@ -699,9 +699,9 @@
   });
   E({
     id: 'us_retire_hilo', age: [63, 90], countries: ['us'], cooldown: 5,
-    text: '은퇴 후 고향으로 돌아왔다. 아침마다 해변을 걷고 동네 아이들 축구 교실에서 콘을 놓는다. 꼭 {father}처럼.',
+    text: '고향 해변을 걷다가 동네 아이들 축구 교실을 구경했다. 연습을 준비하는 손길이 분주하다.',
     effects: { health: 3, happy: 4 },
-    log: '꼬마 하나가 "왕년에 축구 하셨어요?"라고 물었다.'
+    log: '콘을 놓는 일을 거들자 아이들이 고맙다고 인사했다.'
   });
 
   /* =============================================================== BRAZIL */
@@ -743,7 +743,7 @@
       { text: '먼 곳의 연방대학에 도전한다', effects: { smarts: 2, happy: 2, flags: ['br_far_univ'] },
         log: '{sis2}[이/가] "넌 늘 멀리 가는 애였어"라며 웃었다.' },
       { text: '가까운 주립대학을 고른다', effects: { happy: 3, rel: { mother: 3 } },
-        log: '{mother}[은/는] 막내가 곁에 남는다며 기뻐했다.' }
+        log: '{mother}[은/는] 가까운 곳을 골랐다며 기뻐했다.' }
     ]
   });
   E({
@@ -765,7 +765,7 @@
     text: '{localClub} 클럽하우스 뒤편, {father}[이/가] 카샤사 병을 든 채 벤치에 앉아 있다. 장비 가방은 아직 열리지도 않았다.',
     choices: [
       { text: '옆에 앉아 손을 잡는다', check: { stat: 'social', diff: 45 },
-          success: { effects: { rel: { father: 5 }, happy: -1, fx: ['fatherSeekHelp'] }, log: '{father}[은/는] "너 경기 보러 맑은 정신으로 가고 싶다"며 울었다.' },
+          success: { effects: { rel: { father: 5 }, happy: -1, fx: ['fatherSeekHelp'] }, log: '{father}[은/는] "너와 맑은 정신으로 시간을 보내고 싶다"며 울었다.' },
           fail: { effects: { rel: { father: -3 }, happy: -4 }, log: '{father}[은/는] 벤치에서 일어나 비틀거리며 골목으로 사라졌다. 새벽에야 이웃이 업어 데려왔다.' } },
       { text: '{bro}[과/와] 공공 정신건강센터를 알아본다', effects: { rel: { bro: 5 }, flags: ['br_caps'] },
         log: '{bro}[이/가] 동네 보건소에서 상담 일정을 받아 왔다.',
