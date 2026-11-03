@@ -76,20 +76,20 @@
         { text: '그냥 피운다', risky: true, effects: { happy: 1, health: -2, money: -200 }, log: '연기와 함께 결심도 날아갔다.' }
       ] },
     { id: 'rl_teen_crush', age: [13, 19], decision: true, cooldown: 3, cond: { rel: { partner: 'no', spouse: 'no' } },
-      text: '같은 반 아이가 자꾸 눈에 들어온다. 고백할까?',
+      text: '자주 만나는 또래가 자꾸 눈에 들어온다. 고백할까?',
       choices: [
         { text: '쪽지로 마음을 전한다', check: { stat: 'social', diff: 40 },
           success: { effects: { happy: 6, fx: ['newPartner'] }, log: '답장에 하트가 그려져 있었다!' },
           fail: { effects: { happy: -4 }, log: '"우린 친구로 지내자." 쪽지는 서랍 속으로.' } },
         { text: '축제날 공개 고백한다', risky: true, check: { stat: 'looks', diff: 50 },
           success: { effects: { happy: 8, fame: 2, fx: ['newPartner'] }, log: '모두의 환호 속에 고개를 끄덕였다!' },
-          fail: { effects: { happy: -7, rep: -2 }, log: '정적. 그날 영상이 학교에 다 퍼졌다.' } },
+          fail: { effects: { happy: -7, rep: -2 }, log: '정적. 그날 영상이 지인들 사이에 퍼졌다.' } },
         { text: '마음속에만 둔다', effects: { happy: -1, smarts: 1 }, log: '일기장에만 이름을 적었다.' }
       ] },
     { id: 'rl_teen_parttime', age: [15, 19], decision: true, cooldown: 4, cond: { career: 'none' },
       text: '동네 편의점에서 주말 알바를 구한다는 공고가 붙었다.',
       choices: [
-        { text: '지원한다', career: 'convenience_clerk', effects: { grit: 1, money: 50 }, log: '첫 월급으로 부모님께 {food}[을/를] 샀다.' },
+        { text: '지원한다', career: 'convenience_clerk', effects: { grit: 1, money: 50 }, log: '일해서 번 돈으로 {food}[을/를] 사 먹었다.' },
         { text: '공부에 집중한다', effects: { smarts: 2 }, log: '돈 대신 시간을 택했다.' },
         { text: '친구와 중고 거래로 돈을 번다', risky: true, check: { odds: 0.45 },
           success: { effects: { money: 200, smarts: 1, happy: 3 }, log: '운동화를 되팔아 꽤 남겼다.' },
@@ -111,12 +111,12 @@
         { text: '음료수로 건배한다', effects: { social: 1, health: 1 }, log: '맨정신으로 모두를 집에 데려다줬다.' }
       ] },
     { id: 'rl_teen_dye_hair', age: [14, 19], decision: true, cooldown: 4,
-      text: '머리를 밝은 색으로 염색해 보고 싶다. 교칙에는 걸린다.',
+      text: '머리를 밝은 색으로 염색해 보고 싶다. 주변 반응이 걱정된다.',
       choices: [
         { text: '과감하게 염색한다', risky: true, check: { odds: 0.5 },
-          success: { effects: { looks: 3, happy: 4, fame: 1, mischief: 1 }, log: '학교에서 제일 눈에 띄는 머리가 됐다.' },
-          fail: { effects: { looks: 1, mischief: 2, rep: -2, happy: -2 }, log: '교문 앞에서 걸려 바로 검게 덮었다.' } },
-        { text: '방학 때까지 참는다', effects: { grit: 1 }, log: '방학 첫날 염색했다. 개학 전날 다시 검게.' }
+          success: { effects: { looks: 3, happy: 4, fame: 1, mischief: 1 }, log: '어디서나 눈에 띄는 머리가 됐다.' },
+          fail: { effects: { looks: 1, mischief: 2, rep: -2, happy: -2 }, log: '주변의 따가운 시선을 견디다 결국 검게 덮었다.' } },
+        { text: '조금 더 생각한다', effects: { grit: 1 }, log: '서두르지 않고 어울리는 색부터 찾아봤다.' }
       ] },
     { id: 'rl_teen_skip_school', age: [13, 18], decision: true, cooldown: 4, cond: { edu: ['middle', 'high'] },
       text: '날씨가 너무 좋다. 친구가 수업을 빼먹고 바다에 가자고 한다.',
@@ -138,7 +138,7 @@
       text: 'SNS에 올린 영상이 조금씩 퍼지고 있다. 더 자극적으로 찍어 볼까?',
       choices: [
         { text: '위험한 묘기 영상을 찍는다', risky: true, check: { odds: 0.4 },
-          success: { effects: { fame: 4, happy: 4 }, log: '조회수가 폭발했다. 학교에서 나를 알아본다.' },
+          success: { effects: { fame: 4, happy: 4 }, log: '조회수가 폭발했다. 주변에서 나를 알아본다.' },
           fail: { effects: { health: -5, rep: -2 }, log: '착지에 실패했다. 깁스한 사진만 남았다.' } },
         { text: '일상 브이로그를 꾸준히 올린다', effects: { fame: 1, social: 1, looks: 1 }, log: '구독자가 천천히 늘었다.' },
         { text: '계정을 비공개로 돌린다', effects: { happy: 1, smarts: 1 }, log: '알림이 꺼지니 마음이 조용해졌다.' }
@@ -154,7 +154,7 @@
       text: '친구가 중고 오토바이를 싸게 넘기겠다고 한다.',
       choices: [
         { text: '산다', risky: true, check: { odds: 0.6 },
-          success: { effects: { happy: 6, looks: 1, money: -400, mischief: 1 }, log: '{city} 해안도로를 달리며 바람을 맞았다.' },
+          success: { effects: { happy: 6, looks: 1, money: -400, mischief: 1 }, log: '{city}의 도로를 달리며 바람을 맞았다.' },
           fail: { effects: { health: -8, money: -600, fx: ['injury'] }, log: '빗길에 미끄러졌다. 병원에서 한 달을 보냈다.' } },
         { text: '자전거로 만족한다', effects: { health: 2, grit: 1 }, log: '페달을 밟을수록 다리가 단단해졌다.' }
       ] },
@@ -206,11 +206,11 @@
           fail: { effects: { money: -250, happy: -3 }, log: '재고가 풀려 값이 떨어졌다. 신발장만 꽉 찼다.' } }
       ] },
     { id: 'rl_teen_volunteer_or_job', age: [15, 19], decision: true, cooldown: 4,
-      text: '방학 계획을 세워야 한다. 시간은 한정돼 있다.',
+      text: '여유 시간을 어떻게 보낼지 계획을 세운다. 시간은 한정돼 있다.',
       choices: [
         { text: '해외 봉사를 간다', effects: { social: 3, rep: 3, money: -500, happy: 3 }, log: '처음 보는 아이들과 공을 찼다. 말이 안 통해도 웃었다.' },
         { text: '공장 단기 알바를 한다', effects: { grit: 3, money: 400, health: -1 }, log: '손이 거칠어진 만큼 통장이 두꺼워졌다.' },
-        { text: '하루 종일 축구만 한다', effects: { football: 3, health: 1 }, log: '방학이 끝날 때 얼굴이 새까매졌다.' }
+        { text: '하루 종일 축구만 한다', effects: { football: 3, health: 1 }, log: '햇볕 아래 뛰다 보니 얼굴이 새까매졌다.' }
       ] },
     { id: 'rl_teen_tattoo', age: [17, 30], decision: true, cooldown: 5,
       text: '친구가 같이 우정 타투를 새기자고 한다.',
@@ -235,7 +235,7 @@
       choices: [
         { text: '가입한다', effects: { money: -400, happy: 1, flags: ['insured'] }, log: '서명을 마치니 마음 한쪽이 든든했다.' },
         { text: '그 돈을 모아 비상금으로 둔다', effects: { money: 200, smarts: 1 }, log: '비상금 통장을 하나 만들었다.' },
-        { text: '아직 젊으니 패스', risky: true, check: { odds: 0.7 },
+        { text: '지금은 가입하지 않는다', risky: true, check: { odds: 0.7 },
           success: { effects: { money: 400, happy: 1 }, log: '아픈 데 없이 한 해가 지나갔다. 아낀 돈으로 여행을 갔다.' },
           fail: { effects: { money: -2500, health: -3 }, log: '맹장 수술을 했다. 병원비 고지서에 눈앞이 캄캄했다.' } }
       ] },
@@ -244,8 +244,8 @@
       choices: [
         { text: '적금에 넣는다', effects: { money: 300, smarts: 1 }, log: '이자는 작아도 마음은 편했다.' },
         { text: '주식에 투자한다', risky: true, bet: { odds: 0.55, mult: 1.6, stake: 'medium', addict: 0 },
-          success: { effects: { happy: 4, smarts: 1 }, log: '빨간 숫자가 떴다! 수익을 챙겨 나왔다.' },
-          fail: { effects: { happy: -4 }, log: '파란 숫자만 가득했다. 손절하고 앱을 지웠다.' } },
+          success: { effects: { happy: 4, smarts: 1 }, log: '가격이 올랐다! 수익을 챙겨 나왔다.' },
+          fail: { effects: { happy: -4 }, log: '가격이 떨어졌다. 손절하고 앱을 지웠다.' } },
         { text: '자기 계발에 쓴다', effects: { smarts: 3, money: -300 }, log: '자격증 강의를 끊었다. 미래의 나에게 투자했다.' }
       ] },
     { id: 'rl_credit_card', age: [20, 55], decision: true, cooldown: 4,
@@ -277,7 +277,7 @@
       text: '마음에 드는 집이 나왔다. 대출을 끼면 계약할 수 있다.',
       choices: [
         { text: '대출받아 산다', effects: { happy: 5, fx: ['buyHouse'] }, log: '내 이름으로 된 열쇠를 받았다.' },
-        { text: '전세로 몇 년 더 산다', effects: { money: -500, smarts: 1 }, log: '보증금을 맡기고 기회를 엿보기로 했다.' },
+        { text: '일단 빌려서 산다', effects: { money: -500, smarts: 1 }, log: '임대 계약을 하고 기회를 엿보기로 했다.' },
         { text: '집값이 오를 곳에 무리해서 산다', risky: true, check: { odds: 0.5 },
           success: { effects: { money: 8000, happy: 5, fx: ['buyHouse'] }, log: '2년 만에 집값이 뛰었다. 신의 한 수였다.' },
           fail: { effects: { money: -5000, happy: -6 }, log: '계약 직전 사기 매물이었다. 계약금을 날렸다.' } }
@@ -286,13 +286,13 @@
       text: '은퇴가 남의 일 같지 않다. 노후 자금을 어떻게 굴릴까?',
       choices: [
         { text: '연금 저축을 늘린다', effects: { money: -500, smarts: 1, happy: 1, flags: ['pension_saver'] }, log: '매달 조금씩 미래의 나에게 송금했다.' },
-        { text: '지금 즐기며 산다', effects: { happy: 4, money: -800 }, log: '가족과 여행을 다녀왔다. 노후는 그때 생각하기로.' },
+        { text: '지금 즐기며 산다', effects: { happy: 4, money: -800 }, log: '여행을 다녀왔다. 노후는 그때 생각하기로.' },
         { text: '고수익 상품에 넣는다', risky: true, bet: { odds: 0.45, mult: 1.8, stake: 'medium', addict: 1 },
           success: { effects: { happy: 3 }, log: '수익률이 꽤 좋았다. 노후 걱정이 조금 줄었다.' },
           fail: { effects: { happy: -5 }, log: '상품이 부실했다. 원금이 쪼그라들었다.' } }
       ] },
     { id: 'rl_side_hustle', age: [20, 55], decision: true, cooldown: 4, cond: { career: 'any' },
-      text: '퇴근 후 시간이 남는다. 부업을 해 볼까?',
+      text: '하던 일을 마치고 시간이 남는다. 부업을 해 볼까?',
       choices: [
         { text: '주말 배달 알바', effects: { money: 1200, health: -2, grit: 2 }, log: '주말마다 {city} 골목을 누볐다.' },
         { text: '온라인 쇼핑몰을 연다', risky: true, check: { odds: 0.4 },
@@ -307,7 +307,7 @@
           success: { effects: { happy: 6 }, log: '5등... 아니 3등이다! 손이 떨렸다.' },
           fail: { effects: { happy: -1 }, log: '역시 꽝이다. 꿈은 그냥 꿈이었다.' } },
         { text: '열 장을 몰아 산다', risky: true, bet: { odds: 0.15, mult: 4, stake: 'medium', addict: 4 },
-          success: { effects: { happy: 8, fame: 1 }, log: '당첨! 동네 판매점에 "1등 배출" 현수막이 붙었다.' },
+          success: { effects: { happy: 8, fame: 1 }, log: '당첨! 산 복권들을 다시 펼쳐 숫자를 확인했다.' },
           fail: { effects: { happy: -3 }, log: '열 장 모두 꽝. 다음 주를 기약했다.' } },
         { text: '그냥 지나간다', effects: { smarts: 1 }, log: '돼지꿈은 {food} 먹는 걸로 대신했다.' }
       ] },
@@ -321,10 +321,10 @@
 
     // ================================================================ adults: health
     { id: 'rl_drinking_night', age: [20, 64], decision: true, cooldown: 3,
-      text: '회식 2차, 3차로 이어진다. "한 잔만 더!"',
+      text: '술자리가 2차, 3차로 이어진다. "한 잔만 더!"',
       choices: [
         { text: '끝까지 달린다', risky: true, check: { odds: 0.5 },
-          success: { effects: { social: 3, happy: 3, alcohol: 5, rep: 2 }, log: '상사와 어깨동무를 했다. 다음 날 프로젝트를 맡았다.' },
+          success: { effects: { social: 3, happy: 3, alcohol: 5, rep: 2 }, log: '함께한 사람들과 어깨동무를 했다. 한층 가까워졌다.' },
           fail: { effects: { health: -4, alcohol: 6, rep: -4 }, log: '길에서 잠들었다. 기억은 없고 사진만 남았다.' } },
         { text: '1차만 하고 빠진다', effects: { health: 1, social: -1 }, log: '조용히 택시를 탔다. 아침이 상쾌했다.' },
         { text: '술 대신 노래방만 간다', effects: { happy: 3, social: 2 }, log: '맨정신으로 부른 노래가 제일 신났다.' }
@@ -342,13 +342,13 @@
       text: '마감이 내일이다. 오늘 밤을 새우면 끝낼 수 있다.',
       choices: [
         { text: '밤을 새운다', risky: true, check: { odds: 0.55 },
-          success: { effects: { health: -2, rep: 3, money: 500, fx: ['promote'] }, log: '새벽 5시에 완성. 결과물이 인정받아 승진했다.' },
+          success: { effects: { health: -2, rep: 3, money: 500, fx: ['promote'] }, log: '새벽 5시에 완성. 결과물을 인정받았다.' },
           fail: { effects: { health: -4, happy: -3 }, log: '졸다가 실수했다. 다시 해야 했다.' } },
         { text: '자고 일찍 출근한다', effects: { health: 1, smarts: 1 }, log: '맑은 머리로 두 시간 만에 끝냈다.' },
         { text: '마감 연장을 요청한다', effects: { rep: -1, happy: 1 }, log: '하루 더 받았다. 대신 눈치도 받았다.' }
       ] },
     { id: 'rl_checkup', age: [30, 90], decision: true, cooldown: 4,
-      text: '건강검진 안내문이 왔다. 귀찮아서 미뤄 둔 지 2년째다.',
+      text: '건강검진 안내문이 왔다. 시간을 내서 가야 할까?',
       choices: [
         { text: '정밀 검진을 받는다', check: { odds: 0.8 },
           success: { effects: { health: 2, money: -200, happy: 1 }, log: '모두 정상. 의사가 운동만 더 하라고 했다.' },
@@ -370,8 +370,8 @@
       choices: [
         { text: '여덟 시간 수면을 지킨다', effects: { health: 3, happy: 2, money: -200 }, log: '일은 조금 줄었지만 얼굴에 생기가 돌았다.' },
         { text: '이번 분기만 더 버틴다', risky: true, check: { odds: 0.5 },
-          success: { effects: { money: 1500, rep: 2, health: -3 }, log: '목표를 달성해 성과급을 받았다.' },
-          fail: { effects: { health: -6, happy: -4 }, log: '출근길에 쓰러졌다. 한 달을 쉬었다.' } }
+          success: { effects: { money: 1500, rep: 2, health: -3 }, log: '목표를 달성해 수입이 늘었다.' },
+          fail: { effects: { health: -6, happy: -4 }, log: '무리하다 쓰러졌다. 한동안 쉬어야 했다.' } }
       ] },
 
     // ================================================================ adults: relationships
@@ -396,15 +396,15 @@
         { text: '아직은 이르다', effects: { rel: { partner: -3 }, smarts: 1 }, log: '{partner}[은/는] 고개를 끄덕였지만 말이 줄었다.' }
       ] },
     { id: 'rl_temptation_partner', age: [18, 50], decision: true, cooldown: 5, cond: { rel: { partner: 'yes' } },
-      text: '모임에서 만난 사람이 노골적으로 호감을 표한다. {partner}[은/는] 며칠 집을 비웠다.',
+      text: '모임에서 만난 사람이 노골적으로 호감을 표한다. {partner}[은/는] 오늘 이 자리에 없다.',
       choices: [
         { text: '선을 긋고 집에 간다', effects: { rep: 2, rel: { partner: 4 } }, log: '{partner}에게 전화를 걸었다. 목소리가 반가웠다.' },
         { text: '몰래 만난다', risky: true, check: { odds: 0.45 },
           success: { effects: { happy: 4, mischief: 4, rep: -1 }, log: '들키지 않았다. 그런데 거울을 보기가 싫었다.' },
-          fail: { effects: { happy: -8, rep: -6, mischief: 4, fx: ['breakup'] }, log: '메시지를 들켰다. {partner}[은/는] 짐을 싸서 나갔다.' } }
+          fail: { effects: { happy: -8, rep: -6, mischief: 4, fx: ['breakup'] }, log: '메시지를 들켰다. 관계가 끝났다.' } }
       ] },
     { id: 'rl_temptation_spouse', age: [25, 70], decision: true, cooldown: 6, cond: { rel: { spouse: 'yes' } },
-      text: '옛 연인에게서 "한번 볼래?" 하는 연락이 왔다.',
+      text: '예전에 알던 사람이 사적인 만남을 제안해 왔다.',
       choices: [
         { text: '답장하지 않는다', effects: { rep: 1, rel: { spouse: 3 } }, log: '메시지를 지우고 {spouse}[과/와] 산책을 나갔다.' },
         { text: '{spouse}에게 털어놓는다', effects: { rel: { spouse: 6 }, social: 1 }, log: '{spouse}[이/가] "말해 줘서 고마워"라고 했다.' },
@@ -418,7 +418,7 @@
         { text: '부부 상담을 받는다', check: { stat: 'social', diff: 35 },
           success: { effects: { money: -500, happy: 4, rel: { spouse: 12 } }, log: '오래 묵은 서운함을 털어놓았다. 다시 손을 잡았다.' },
           fail: { effects: { money: -500, happy: -2, rel: { spouse: -4 } }, log: '상담실에서도 싸웠다. 갈 길이 멀다.' } },
-        { text: '아이들 생각해 참고 산다', effects: { happy: -4, grit: 2, rel: { spouse: -2 } }, log: '평온한 척하는 하루가 이어졌다.' },
+        { text: '관계를 유지하며 참고 산다', effects: { happy: -4, grit: 2, rel: { spouse: -2 } }, log: '평온한 척하는 하루가 이어졌다.' },
         { text: '이혼을 결심한다', risky: true, effects: { happy: 2, fx: ['divorce'] }, log: '서로를 위해 내린 결정이었다. 그래도 아팠다.' }
       ] },
     { id: 'rl_have_kid', age: [25, 45], decision: true, cooldown: 4, cond: { rel: { spouse: 'yes' } },
@@ -453,8 +453,8 @@
     { id: 'rl_care_father', age: [35, 75], decision: true, cooldown: 5, cond: { rel: { father: 'alive' } },
       text: '{father}[이/가] 병원 가는 날마다 길을 헤맨다. 누군가 곁에 있어야 한다.',
       choices: [
-        { text: '휴가를 내고 함께 다닌다', effects: { money: -500, rel: { father: 10 }, happy: 1 }, log: '진료실 앞에서 오랜만에 긴 이야기를 나눴다.' },
-        { text: '형제들과 순번을 정한다', check: { stat: 'social', diff: 35 },
+        { text: '시간을 내고 함께 다닌다', effects: { money: -500, rel: { father: 10 }, happy: 1 }, log: '진료실 앞에서 오랜만에 긴 이야기를 나눴다.' },
+        { text: '주변에 함께 도와 달라고 부탁한다', check: { stat: 'social', diff: 35 },
           success: { effects: { social: 2, rel: { father: 5, siblings: 4 } }, log: '단톡방에 깔끔한 표가 올라왔다.' },
           fail: { effects: { rel: { siblings: -6 }, happy: -2 }, log: '누가 더 했느니 하며 언성이 높아졌다.' } },
         { text: '간병인을 쓴다', effects: { money: -2000, rel: { father: 2 } }, log: '마음은 편했지만 지갑이 얇아졌다.' }
@@ -475,44 +475,44 @@
         { text: '봉사만 다닌다', effects: { social: 2, rep: 2 }, log: '주말마다 산책 봉사를 했다.' }
       ] },
     { id: 'rl_office_gossip', age: [22, 62], decision: true, cooldown: 4, cond: { career: 'any' },
-      text: '동료들이 팀장 뒷담화 단톡방에 초대했다.',
+      text: '같은 업계 사람들이 다른 관계자의 뒷담화를 하는 단톡방에 초대했다.',
       choices: [
         { text: '같이 맞장구친다', risky: true, check: { odds: 0.55 },
-          success: { effects: { social: 2, happy: 2, mischief: 2 }, log: '동료들과 부쩍 가까워졌다.' },
-          fail: { effects: { rep: -6, happy: -4, fx: ['demote'] }, log: '캡처가 팀장에게 넘어갔다. 분위기가 싸늘해졌다.' } },
+          success: { effects: { social: 2, happy: 2, mischief: 2 }, log: '대화에 낀 사람들과 부쩍 가까워졌다.' },
+          fail: { effects: { rep: -6, happy: -4, fx: ['demote'] }, log: '캡처가 당사자에게 넘어갔다. 일터에서의 평판까지 흔들렸다.' } },
         { text: '조용히 나간다', effects: { rep: 1, social: -1 }, log: '"쟤 왜 저래" 소리가 들렸지만 마음은 편했다.' }
       ] },
     { id: 'rl_job_offer', age: [24, 60], decision: true, cooldown: 5, cond: { career: 'any' },
-      text: '경쟁사에서 연봉을 더 주겠다며 이직을 제안한다.',
+      text: '일을 넓힐 제안이 들어왔다. 보수는 좋아 보이지만 책임도 커진다.',
       choices: [
-        { text: '옮긴다', risky: true, check: { odds: 0.6 },
-          success: { effects: { money: 3000, happy: 3, fx: ['promote'] }, log: '새 직장에서 직급도 한 단계 올랐다.' },
-          fail: { effects: { happy: -4, fx: ['quitJob'] }, log: '입사 직전 제안이 취소됐다. 이미 사표는 냈다.' } },
-        { text: '제안서를 들고 연봉 협상한다', check: { stat: 'social', diff: 45 },
-          success: { effects: { money: 1500, rep: 1 }, log: '회사가 붙잡았다. 연봉이 올랐다.' },
-          fail: { effects: { rep: -2 }, log: '"그럼 가시든가요." 머쓱하게 자리로 돌아왔다.' } },
+        { text: '제안을 받아들인다', risky: true, check: { odds: 0.6 },
+          success: { effects: { money: 3000, happy: 3, fx: ['promote'] }, log: '더 큰 역할을 맡으며 수입도 늘었다.' },
+          fail: { effects: { happy: -4, fx: ['quitJob'] }, log: '계획이 틀어졌다. 하던 일까지 정리하게 됐다.' } },
+        { text: '조건을 협상한다', check: { stat: 'social', diff: 45 },
+          success: { effects: { money: 1500, rep: 1 }, log: '협상이 잘 풀려 추가 보수를 받았다.' },
+          fail: { effects: { rep: -2 }, log: '요구가 받아들여지지 않았다. 분위기만 어색해졌다.' } },
         { text: '지금 자리에 만족한다', effects: { happy: 1, grit: 1 }, log: '익숙한 책상이 좋다.' }
       ] },
     { id: 'rl_start_business', age: [25, 60], decision: true, cooldown: 6,
       text: '오래 꿈꿔 온 가게 자리가 났다. 지금 아니면 못 할 것 같다.',
       choices: [
-        { text: '퇴직금 걸고 창업한다', risky: true, career: 'entrepreneur', effects: { money: -3000, happy: 4, grit: 2 }, log: '간판을 달던 날 손이 떨렸다.' },
+        { text: '자금을 마련해 창업한다', risky: true, career: 'entrepreneur', effects: { money: -3000, happy: 4, grit: 2 }, log: '간판을 달던 날 손이 떨렸다.' },
         { text: '작은 가게부터 시작한다', career: 'restaurant_owner', effects: { money: -1500, happy: 3 }, log: '테이블 네 개짜리 {food} 가게를 열었다.' },
         { text: '꿈은 꿈으로 둔다', effects: { happy: -2, money: 300 }, log: '가게 자리에 다른 간판이 걸렸다.' }
       ] },
     { id: 'rl_quit_job_dream', age: [26, 55], decision: true, cooldown: 6, cond: { career: 'any' },
-      text: '출근길마다 숨이 막힌다. 다 내려놓고 쉬고 싶다.',
+      text: '일을 시작하려면 숨이 막힌다. 다 내려놓고 쉬고 싶다.',
       choices: [
-        { text: '사표를 던지고 1년 쉰다', risky: true, effects: { happy: 6, health: 3, money: -3000, fx: ['quitJob'] }, log: '1년 동안 {country} 구석구석을 걸었다.' },
-        { text: '휴직 제도를 쓴다', effects: { happy: 3, health: 2, money: -1000 }, log: '석 달 쉬고 돌아오니 일이 다시 보였다.' },
-        { text: '조금만 더 버틴다', effects: { grit: 2, happy: -3, money: 500 }, log: '오늘도 지하철에 몸을 실었다.' }
+        { text: '일을 그만두고 쉰다', risky: true, effects: { happy: 6, health: 3, money: -3000, fx: ['quitJob'] }, log: '{country}의 여러 곳을 걸으며 마음을 정리했다.' },
+        { text: '잠시 일정을 줄인다', effects: { happy: 3, health: 2, money: -1000 }, log: '쉴 시간을 내니 일이 다시 보였다.' },
+        { text: '조금만 더 버틴다', effects: { grit: 2, happy: -3, money: 500 }, log: '오늘도 하던 일에 집중했다.' }
       ] },
 
     // ================================================================ moving / service
     { id: 'rl_move_bigcity', age: [19, 45], decision: true, cooldown: 6,
       text: '{bigcity}에 가면 기회가 많다고들 한다. 짐을 쌀까?',
       choices: [
-        { text: '{bigcity}[으로/로] 올라간다', alt: { text: '{bigcity}[으로/로] 올라간다', log: '부모님이 구해 준 오피스텔에서 시작했다. 일은 잘 풀렸다.' }, risky: true, check: { odds: 0.55 },
+        { text: '{bigcity}[으로/로] 올라간다', alt: { text: '{bigcity}[으로/로] 올라간다', log: '새 거처에서 시작했다. 일은 잘 풀렸다.' }, risky: true, check: { odds: 0.55 },
           success: { effects: { money: 2000, smarts: 2, happy: 2, flags: ['moved_bigcity'] }, log: '좁은 원룸에서 시작했지만 일이 잘 풀렸다.' },
           fail: { effects: { money: -1500, happy: -4, flags: ['moved_bigcity'] }, log: '월세와 외로움에 지쳤다.' } },
         { text: '{city}에 남는다', effects: { happy: 2, social: 1 }, log: '익숙한 골목, 익숙한 얼굴들. 그것도 행복이다.' }
@@ -523,7 +523,7 @@
         { text: '이민을 결심한다', risky: true, check: { odds: 0.6 },
           success: { effects: { happy: 4, smarts: 2, money: 1000, fx: ['moveAbroad'] }, log: '공항에서 {food}[을/를] 마지막으로 먹었다. 새 삶이 시작됐다.' },
           fail: { effects: { money: -2000, happy: -4 }, log: '비자가 거절됐다. 비행기표만 남았다.' } },
-        { text: '1년만 워킹홀리데이로 간다', effects: { happy: 4, social: 2, money: -500 }, log: '세상이 넓다는 걸 배우고 돌아왔다.' },
+        { text: '단기 체류로 먼저 알아본다', effects: { happy: 4, social: 2, money: -500 }, log: '세상이 넓다는 걸 배우고 돌아왔다.' },
         { text: '{country}에 남는다', effects: { happy: 1 }, log: '고마운 제안이었지만 여기가 내 자리다.' }
       ] },
     { id: 'rl_return_home', age: [30, 70], decision: true, cooldown: 7,
@@ -534,7 +534,7 @@
         { text: '여기서 끝까지 버틴다', effects: { grit: 2, money: 500 }, log: '도시의 불빛 속에 다시 출근했다.' }
       ] },
     { id: 'rl_volunteer_service', age: [18, 28], countries: NOT_KR, decision: true, cooldown: 5, cond: { flags: ['!mil_done'] },
-      text: '군 모병관이 학교 앞에서 지원병을 모집한다. 학비 지원도 있다고 한다.',
+      text: '군 모병관이 거리에서 지원병을 모집한다. 학비 지원도 있다고 한다.',
       choices: [
         { text: '입대한다', effects: { grit: 3, health: 2, rep: 2, fx: ['enlist'] }, log: '머리를 짧게 깎았다. 새벽 기상이 시작됐다.' },
         { text: '예비군 훈련만 받는다', effects: { grit: 2, money: 300 }, log: '주말마다 훈련장에 나갔다.' },
@@ -543,11 +543,12 @@
 
     // ================================================================ old age (65+)
     { id: 'rl_old_grandkids', age: [58, 95], decision: true, cooldown: 4, cond: { rel: { children: 'yes' } },
-      text: '{child}[이/가] 맞벌이라며 손주를 봐 줄 수 있냐고 묻는다.',
+      when: function (s) { return !!s.achievements.grandparent && s.age - s.achievements.grandparent >= 3; },
+      text: '가족에게서 손주를 잠시 봐 줄 수 있냐는 부탁이 왔다.',
       choices: [
-        { text: '기꺼이 돌본다', effects: { happy: 4, health: -2, rel: { children: 8 } }, log: '손주가 "할머니 할아버지 최고!" 하고 안겼다.' },
+        { text: '기꺼이 돌본다', effects: { happy: 4, health: -2, rel: { children: 8 } }, log: '손주가 "최고!" 하며 품에 안겼다.' },
         { text: '주 이틀만 맡는다', effects: { happy: 2, rel: { children: 4 } }, log: '나머지 날엔 내 시간을 지켰다.' },
-        { text: '내 인생도 있다며 거절한다', effects: { happy: 1, rel: { children: -6 } }, log: '{child}[은/는] 서운한 얼굴로 돌아갔다.' }
+        { text: '내 인생도 있다며 거절한다', effects: { happy: 1, rel: { children: -6 } }, log: '전화 너머로 서운한 목소리가 들렸다.' }
       ] },
     { id: 'rl_old_will', age: [65, 100], decision: true, cooldown: 6,
       text: '변호사가 유언장을 미리 써 두라고 권한다.',
@@ -561,7 +562,7 @@
       choices: [
         { text: '건물 청소 일을 한다', career: 'cleaner', effects: { health: 1, happy: 2 }, log: '아침마다 갈 곳이 생겼다.' },
         { text: '전단 배포 일을 한다', career: 'flyer_parttime', effects: { health: 2 }, log: '{city} 골목을 걸으며 만보를 채웠다.' },
-        { text: '쉬면서 손주들 본다', effects: { happy: 2 }, log: '일은 젊은이들 몫이다.' }
+        { text: '쉬면서 내 시간을 보낸다', effects: { happy: 2 }, log: '지금은 쉬어 가기로 했다.' }
       ] },
     { id: 'rl_old_scam_call', age: [60, 100], decision: true, cooldown: 4,
       text: '"고객님 계좌가 범죄에 연루됐습니다." 수상한 전화가 왔다.',
@@ -581,9 +582,9 @@
         { text: '노래만 열심히 한다', effects: { happy: 2, health: 1 }, log: '목청이 트이니 기분도 트였다.' }
       ] },
     { id: 'rl_old_remarry', age: [60, 95], decision: true, cooldown: 4, cond: { rel: { partner: 'yes', spouse: 'no' } },
-      text: '{partner}[과/와] 함께하는 노년이 즐겁다. 재혼 이야기가 나온다.',
+      text: '{partner}[과/와] 함께하는 노년이 즐겁다. 결혼 이야기가 나온다.',
       choices: [
-        { text: '조촐하게 재혼한다', effects: { happy: 5, money: -800, fx: ['marry'] }, log: '가까운 사람들만 모여 축하해 줬다.' },
+        { text: '조촐하게 결혼한다', effects: { happy: 5, money: -800, fx: ['marry'] }, log: '가까운 사람들만 모여 축하해 줬다.' },
         { text: '혼인 신고 없이 함께 산다', effects: { happy: 3, rel: { partner: 5 } }, log: '서류보다 매일의 아침이 중요했다.' },
         { text: '각자 집에서 지내며 만난다', effects: { happy: 2, rel: { partner: 2 } }, log: '적당한 거리가 오히려 좋았다.' }
       ] },
@@ -598,17 +599,17 @@
     { id: 'rl_old_leading_room', age: [60, 95], decision: true, cooldown: 5, cond: { money: [1000, 100000000] },
       text: '"원금 보장, 월 10% 수익!" 주식 리딩방 초대 문자가 왔다.',
       choices: [
-        { text: '조금만 넣어 본다', risky: true, bet: { odds: 0.25, mult: 2.5, stake: 'big', addict: 2 },
+        { text: '큰돈을 넣어 본다', risky: true, bet: { odds: 0.25, mult: 2.5, stake: 'big', addict: 2 },
           success: { effects: { happy: 4 }, log: '진짜로 수익이 났다. 바로 빼서 다시는 안 들어갔다.' },
           fail: { effects: { happy: -6, rep: -1 }, log: '방이 사라졌다. 신고했지만 돈은 돌아오지 않았다.' } },
         { text: '바로 차단한다', effects: { smarts: 1 }, log: '세상에 공짜 수익은 없다.' }
       ] },
     { id: 'rl_old_garden_trip', age: [65, 95], decision: true, cooldown: 3,
-      text: '시간이 많아졌다. 남은 날들을 어떻게 보낼까?',
+      text: '여유 시간을 어떻게 보낼지 생각해 본다.',
       choices: [
-        { text: '텃밭을 가꾼다', effects: { health: 2, happy: 3 }, log: '첫 수확한 상추로 {food}[을/를] 싸 먹었다.' },
+        { text: '텃밭을 가꾼다', effects: { health: 2, happy: 3 }, log: '수확한 상추를 식탁에 올렸다.' },
         { text: '배낭여행을 떠난다', risky: true, check: { stat: 'health', diff: 35 },
-          success: { effects: { happy: 7, smarts: 1, money: -1500, flags: ['traveler'] }, log: '이 나이에 처음 본 오로라에 눈물이 났다.' },
+          success: { effects: { happy: 7, smarts: 1, money: -1500, flags: ['traveler'] }, log: '여행지에서 본 오로라에 눈물이 났다.' },
           fail: { effects: { health: -5, money: -2000 }, log: '여행지에서 탈이 나 병원 신세를 졌다.' } },
         { text: '노인 대학에 등록한다', effects: { smarts: 2, social: 2, money: -100 }, log: '스마트폰 사진 찍는 법을 배웠다.' }
       ] },
@@ -621,7 +622,7 @@
           fail: { effects: { happy: -3, rep: -2 }, log: '자랑이 길어지자 하나둘 자리를 떴다.' } },
         { text: '추억은 추억으로 둔다', effects: { happy: 1 }, log: '오래된 졸업 앨범을 넘겨 봤다.' }
       ] },
-    { id: 'rl_old_support_kids', age: [60, 95], decision: true, cooldown: 5, cond: { rel: { children: 'yes' }, money: [3000, 100000000] },
+    { id: 'rl_old_support_kids', age: [60, 95], decision: true, cooldown: 5, cond: { rel: { children: 'yes' }, childAge: [18, 100], money: [3000, 100000000] },
       text: '{child}[이/가] 집 장만에 보태 달라며 조심스레 운을 뗀다.',
       choices: [
         { text: '노후 자금을 떼어 준다', effects: { money: -3000, rel: { children: 10 }, happy: 2 }, log: '{child}[이/가] 연신 고개를 숙였다.' },
