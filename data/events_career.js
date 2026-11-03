@@ -27,7 +27,7 @@
       { text: '훈련장에 침대를 들여놓는다', check: { stat: 'grit', diff: 55 },
         success: { effects: { fame: 3, health: -3, fx: ['promote'] }, log: '다섯 경기 4승 1무. 구단주가 연장 계약서를 들고 왔다.' },
         fail: { effects: { happy: -6, fx: ['fired'] }, log: '1승 4패. 짐 상자를 들고 훈련장을 나왔다.' } },
-      { text: '먼저 사임한다', effects: { happy: 2, fame: -1, fx: ['quitJob'] }, log: '"가족과 시간을 보내겠다"는 말을 남겼다. 실제로 그랬다.' }
+      { text: '먼저 사임한다', effects: { happy: 2, fame: -1, fx: ['quitJob'] }, log: '"잠시 쉬겠다"는 말을 남겼다. 오랜만에 여유로운 아침을 맞았다.' }
     ]
   });
   E({
@@ -102,7 +102,7 @@
   /* ================= MEDICAL ================= */
   E({
     id: 'car_med_night_shift', age: [22, 65], cooldown: 3,
-    cond: { sector: ['medical'] },
+    cond: { career: ['doctor', 'surgeon', 'nurse', 'paramedic'] },
     text: '36시간째 당직. 응급실 문이 또 열리고 구급차 불빛이 벽에 번진다.',
     choices: [
       { text: '커피를 한 잔 더 마신다', effects: { health: -3, grit: 2 }, log: '심장이 커피 박자로 뛰었지만 환자는 무사히 넘겼다.' },
@@ -135,7 +135,7 @@
   E({
     id: 'car_malpractice_exposed', age: [26, 80], weight: 1,
     cond: { flags: ['hid_malpractice'] },
-    text: '2년 전 고쳐 쓴 기록이 병원 감사에서 드러났다. 법무팀이 {name}[을/를] 찾는다.',
+    text: '예전에 고쳐 쓴 기록이 병원 감사에서 드러났다. 법무팀이 {name}[을/를] 찾는다.',
     choices: [
       { text: '모든 걸 털어놓는다', effects: { money: -20000, fame: -3, unflags: ['hid_malpractice'], fx: ['demote'] }, log: '면허는 지켰지만 한 단계 내려앉았다. 마음은 오히려 가벼워졌다.' },
       { text: '끝까지 부인한다', check: { stat: 'smarts', diff: 70 },
@@ -167,13 +167,13 @@
   });
   E({
     id: 'car_med_epidemic', age: [24, 65], once: true, weight: 4,
-    cond: { sector: ['medical'] },
+    cond: { career: ['doctor', 'surgeon', 'nurse', 'paramedic'] },
     text: '{city}에 독한 전염병이 돌기 시작했다. 병원이 지원자를 찾는다.',
     choices: [
       { text: '최전선에 자원한다', check: { stat: 'health', diff: 50 },
         success: { effects: { fame: 4, happy: 4, grit: 4, fx: ['promote'] }, log: '석 달 동안 방호복 속에서 살았다. 시민들이 병원 앞에 꽃을 두고 갔다.' },
         fail: { effects: { health: -6, fx: ['getSick'] }, log: '결국 감염됐다. 환자에서 다시 의료진으로 돌아오기까지 오래 걸렸다.' } },
-      { text: '가족을 위해 후방에 남는다', effects: { rel: { family: 3 }, happy: -2 }, log: '가족은 안도했다. 마음 한구석은 계속 응급실에 가 있었다.' }
+      { text: '후방 지원에 남는다', effects: { rel: { family: 3 }, happy: -2 }, log: '위험은 덜했지만 마음 한구석은 계속 응급실에 가 있었다.' }
     ]
   });
   E({
@@ -221,7 +221,7 @@
   E({
     id: 'car_bribe_caught', age: [20, 90], weight: 1,
     cond: { flags: ['took_bribe'] },
-    text: '감찰반이 사무실 문을 두드렸다. 3년 전 그 종이 가방 사진을 들고.',
+    text: '감찰반이 사무실 문을 두드렸다. 예전에 받았던 그 종이 가방 사진을 들고.',
     choices: [
       { text: '최고의 변호사를 선임한다', check: { stat: 'smarts', diff: 70 },
         success: { effects: { money: -50000, fame: -3, unflags: ['took_bribe'], fx: ['fired'] }, log: '감옥은 피했다. 직장과 명예는 피하지 못했다.' },
@@ -242,7 +242,7 @@
   });
   E({
     id: 'car_lawyer_probono', age: [25, 75], cooldown: 6,
-    cond: { career: ['lawyer', 'paralegal'] },
+    cond: { career: ['lawyer'] },
     text: '{hometown} 시장 상인들이 재개발 업체에 쫓겨날 처지라며 찾아왔다. 돈은 없단다.',
     choices: [
       { text: '무료로 맡는다', check: { stat: 'smarts', diff: 55 },
@@ -277,7 +277,7 @@
   E({
     id: 'car_startup_result', age: [22, 70], weight: 1,
     cond: { flags: ['startup_bet'] },
-    text: '3년이 지났다. 동기의 회사에 대기업 인수 제안이 들어왔다는 소문이 돈다.',
+    text: '지분을 받았던 지인의 회사에 대기업 인수 제안이 들어왔다는 소문이 돈다.',
     choices: [
       { text: '끝까지 지분을 쥐고 있는다', check: { stat: 'grit', diff: 55 },
         success: { effects: { money: 400000, happy: 8, unflags: ['startup_bet'] }, log: '인수 성사! 통장 잔고의 0 개수를 세다 손이 떨렸다.' },
@@ -425,7 +425,7 @@
   });
   E({
     id: 'car_teacher_parent_complaint', age: [22, 65], cooldown: 4,
-    cond: { sector: ['education'] },
+    cond: { career: ['teacher', 'pe_teacher'] },
     text: '학부모가 밤 11시에 전화했다. "우리 애가 왜 반장이 아니죠?"',
     choices: [
       { text: '차분히 설명한다', check: { stat: 'smarts', diff: 45 },
@@ -526,7 +526,7 @@
     choices: [
       { text: '수사에 협조한다', effects: { fame: -3, money: -20000, unflags: ['forged_art'] }, log: '집행유예. 오히려 "천재 위작가"로 전시 제안이 왔다.' },
       { text: '해외로 도망친다', check: { stat: 'smarts', diff: 65 },
-        success: { effects: { happy: -4, unflags: ['forged_art'], fx: ['moveAbroad'] }, log: '새 나라, 새 이름. 붓은 다시는 잡지 않았다.' },
+        success: { effects: { happy: -4, unflags: ['forged_art'], fx: ['moveAbroad'] }, log: '새 나라에서 숨을 돌렸다. 한동안 붓을 잡을 때마다 손이 떨렸다.' },
         fail: { effects: { fame: -5, unflags: ['forged_art'], fx: ['jail'] }, log: '공항 출국 심사대에서 체포됐다.' } }
     ]
   });
@@ -691,7 +691,7 @@
     text: '통장 잔고로 버틸 수 있는 날이 딱 두 달 남았다. 직원들 눈빛이 불안하다.',
     choices: [
       { text: '사업 방향을 확 튼다', check: { stat: 'smarts', diff: 55 },
-        success: { effects: { money: 30000, happy: 4, fx: ['promote'] }, log: '버리려던 부가 기능이 대박을 쳤다.' },
+        success: { effects: { money: 30000, happy: 4, fx: ['promote'] }, log: '새롭게 내놓은 상품이 대박을 쳤다.' },
         fail: { effects: { money: -10000, happy: -6, fx: ['quitJob'] }, log: '결국 폐업 신고서를 냈다. 마지막 날 직원들과 {food}[을/를] 먹었다.' } },
       { text: '내 돈을 털어 넣는다', effects: { money: -20000, grit: 3 }, log: '석 달을 더 벌었다. 그 석 달이 회사를 살릴지는 아직 모른다.' },
       { text: '가족에게 손을 벌린다', effects: { money: 8000, rel: { family: -3 } }, log: '{mother}[이/가] 적금을 깼다. 꼭 갚겠다고 다짐했다.' }
@@ -710,12 +710,12 @@
   E({
     id: 'car_books_audit', age: [30, 90], weight: 1,
     cond: { flags: ['cooked_books'] },
-    text: '금융감독 당국이 특별 감사를 시작했다. 3년 전 그 분기 장부가 책상 위에 펼쳐져 있다.',
+    text: '금융감독 당국이 특별 감사를 시작했다. 고쳐 썼던 그 분기 장부가 책상 위에 펼쳐져 있다.',
     choices: [
       { text: '재무 담당자에게 책임을 돌린다', check: { stat: 'smarts', diff: 70 },
         success: { effects: { fame: -4, unflags: ['cooked_books'], fx: ['quitJob'] }, log: '빠져나왔다. 하지만 업계 전체가 {name}의 이름을 기억했다.' },
         fail: { effects: { fame: -6, money: -100000, unflags: ['cooked_books'], fx: ['jail'] }, log: '그 담당자가 녹음 파일을 갖고 있었다.' } },
-      { text: '모든 책임을 진다', effects: { fame: -3, money: -150000, unflags: ['cooked_books'], fx: ['fired'] }, log: '전 재산에 가까운 과징금을 냈다. 그래도 감옥은 피했다.' }
+      { text: '모든 책임을 진다', effects: { fame: -3, money: -150000, unflags: ['cooked_books'], fx: ['fired'] }, log: '거액의 과징금이 부과됐다. 그래도 감옥은 피했다.' }
     ]
   });
   E({
@@ -785,7 +785,7 @@
   /* ================= FINANCE ================= */
   E({
     id: 'car_fin_market_crash', age: [21, 75], cooldown: 6,
-    cond: { sector: ['finance'] },
+    cond: { career: ['stock_trader', 'investment_banker'] },
     text: '장 시작 10분 만에 시장이 8% 빠졌다. 사무실 전화가 동시에 울린다.',
     choices: [
       { text: '버틴다', check: { stat: 'grit', diff: 55 },
@@ -796,10 +796,10 @@
   });
   E({
     id: 'car_banker_embezzle', age: [22, 65], cooldown: 8,
-    cond: { career: ['banker', 'accountant', 'insurance_agent'], flags: ['!embezzled'], money: [0, 20000] },
-    text: '휴면 계좌 하나가 수년째 아무도 건드리지 않은 채 잠들어 있다. 마침 {name}의 카드값이 밀렸다.',
+    cond: { career: ['banker'], flags: ['!embezzled'], money: [0, 20000] },
+    text: '휴면 계좌 하나가 수년째 아무도 건드리지 않은 채 잠들어 있다. 그 돈을 쓰고 싶다는 유혹이 든다.',
     choices: [
-      { text: '못 본 척한다', effects: { happy: 1 }, log: '카드값은 분할로 갚기로 했다. 마음은 편했다.' },
+      { text: '못 본 척한다', effects: { happy: 1 }, log: '남의 돈에는 손대지 않았다. 마음은 편했다.' },
       { text: '"잠깐만 빌리는 거야"', effects: { money: 30000, happy: -3, flags: ['embezzled'] }, log: '아무도 몰랐다. 매일 아침 출근하는 발걸음이 무거웠다.',
         schedule: { id: 'car_embezzle_caught', years: 2 } },
       { text: '내부 감사팀에 신고한다', effects: { fame: 1, fx: ['promote'] }, log: '관리 허점을 찾아낸 공로로 승진했다.' }
@@ -866,7 +866,7 @@
   E({
     id: 'car_pol_coverup_exposed', age: [25, 95], weight: 1,
     cond: { flags: ['pol_dirty'] },
-    text: '탐사보도 프로그램이 {name}의 2년 전 일을 특집으로 다뤘다. 증거 자료가 화면 가득 이어진다.',
+    text: '탐사보도 프로그램이 {name}의 과거 일을 특집으로 다뤘다. 증거 자료가 화면 가득 이어진다.',
     choices: [
       { text: '눈물의 기자회견', check: { stat: 'looks', diff: 60 },
         success: { effects: { fame: -3, unflags: ['pol_dirty'], fx: ['demote'] }, log: '한 계단 내려왔지만 정치 생명은 붙어 있다.' },
@@ -1015,7 +1015,7 @@
     text: '고도 3만 피트, 경고음이 조종석을 가득 채운다. 엔진 하나가 멈췄다.',
     choices: [
       { text: '침착하게 비상 착륙한다', check: { stat: 'smarts', diff: 60 },
-        success: { effects: { fame: 5, happy: 5, fx: ['promote'] }, log: '활주로에 안착했다. 승객들의 박수 소리가 기장실까지 들렸다.' },
+        success: { effects: { fame: 5, happy: 5, fx: ['promote'] }, log: '활주로에 안착했다. 관제사의 안도하는 목소리가 무전으로 들렸다.' },
         fail: { effects: { health: -6, happy: -5, fx: ['injury'] }, log: '거친 착륙이었다. 모두 살았지만 조사 위원회 앞에 서야 했다.' } },
       { text: '매뉴얼을 한 줄씩 따른다', check: { stat: 'grit', diff: 50 },
         success: { effects: { grit: 2, fame: 2 }, log: '교과서 같은 대응. 이후 훈련 영상으로 쓰였다.' },
@@ -1112,7 +1112,7 @@
   /* ================= AGRICULTURE / FISHING ================= */
   E({
     id: 'car_agri_typhoon', age: [16, 90], cooldown: 4,
-    cond: { sector: ['agri'] },
+    cond: { career: ['farmer', 'smart_farmer'] },
     text: '역대급 태풍이 {region}[으로/로] 북상 중이라는 예보. 수확까지는 2주가 남았다.',
     choices: [
       { text: '밤새 시설을 보강한다', check: { stat: 'grit', diff: 50 },
@@ -1126,7 +1126,7 @@
   });
   E({
     id: 'car_agri_drought', age: [16, 90], cooldown: 5,
-    cond: { career: ['farmer', 'rancher', 'smart_farmer', 'beekeeper'] },
+    cond: { career: ['farmer', 'smart_farmer'] },
     text: '석 달째 비가 오지 않는다. 땅이 거북이 등처럼 갈라졌다.',
     choices: [
       { text: '관정을 판다', effects: { money: -6000, grit: 2 }, log: '지하수가 터졌다. 동네 사람들이 물을 받으러 왔다.' },
@@ -1143,7 +1143,7 @@
   });
   E({
     id: 'car_fisher_big_catch', age: [16, 85], cooldown: 3,
-    cond: { career: ['fisher', 'haenyeo', 'ship_captain'] },
+    cond: { career: ['fisher'] },
     text: '그물이 끊어질 듯 무겁다. 배 위의 모두가 숨을 죽인다.',
     choices: [
       { text: '힘으로 끌어올린다', check: { stat: 'health', diff: 55 },
@@ -1169,7 +1169,7 @@
     text: '분봉이 났다! 벌 수만 마리가 옆집 빨랫줄에 공 모양으로 매달렸다.',
     choices: [
       { text: '맨손으로 조용히 포획한다', check: { stat: 'grit', diff: 50 },
-        success: { effects: { money: 2000, fame: 1 }, log: '옆집 아이가 영상을 찍었다. "벌의 아버지"라는 별명이 생겼다.' },
+        success: { effects: { money: 2000, fame: 1 }, log: '옆집 아이가 영상을 찍었다. "벌의 수호자"라는 별명이 생겼다.' },
         fail: { effects: { health: -4, looks: -2 }, log: '얼굴이 {food}처럼 부었다.' } },
       { text: '옆집에 꿀 한 통을 들고 사과하러 간다', effects: { money: -50, rel: { family: 1 }, happy: 2 }, log: '옆집 사람이 그 꿀을 마음에 들어 해 단골이 됐다.' }
     ]
@@ -1225,7 +1225,7 @@
     cond: { career: ['mechanic', 'car_wash_parttime'] },
     text: '{bigClub} 스타 선수의 슈퍼카가 들어왔다. 열쇠를 건네며 "조심해 주세요"라고 한다.',
     choices: [
-      { text: '완벽하게 정비한다', effects: { money: 2000, fame: 1, happy: 3 }, log: '선수가 사인 유니폼을 두고 갔다. 정비소 벽에 걸렸다.' },
+      { text: '맡은 작업을 꼼꼼하게 끝낸다', effects: { money: 2000, fame: 1, happy: 3 }, log: '선수가 사인 유니폼을 두고 갔다. 작업장 벽에 걸렸다.' },
       { text: '동네 한 바퀴만 시운전한다', check: { stat: 'grit', diff: 55 },
         success: { effects: { happy: 6 }, log: '인생 최고의 3분이었다. 아무도 모른다.' },
         fail: { effects: { money: -8000, happy: -5 }, log: '과속 카메라에 찍혔다. 고지서는 선수 집으로 갔다.' } }
@@ -1259,7 +1259,7 @@
     choices: [
       { text: '미소로 끝까지 응대한다', effects: { grit: 2, happy: -2 }, log: '손님은 결국 사과도 없이 떠났지만, 뒷사람들이 팁을 두고 갔다.' },
       { text: '"모르겠습니다, 누구세요?"', check: { stat: 'looks', diff: 50 },
-        success: { effects: { happy: 5, fame: 1 }, log: '줄 선 사람들이 박수를 쳤다. 사장님도 몰래 웃었다.' },
+        success: { effects: { happy: 5, fame: 1 }, log: '줄 선 사람들이 박수를 쳤다. 뒤쪽에서 누군가 웃음을 참았다.' },
         fail: { effects: { happy: -2, fx: ['demote'] }, log: '알고 보니 건물주였다.' } }
     ]
   });
@@ -1304,7 +1304,7 @@
   });
   E({
     id: 'car_flight_attendant_turbulence', age: [20, 55], cooldown: 4,
-    cond: { career: ['flight_attendant', 'hotel_concierge'] },
+    cond: { career: ['flight_attendant'] },
     text: '{abroadClub} 선수단이 단체로 탑승했다. 그중 한 명이 계속 무리한 요구를 한다.',
     choices: [
       { text: '프로답게 응대한다', effects: { grit: 2, money: 300 }, log: '착륙 후 그 선수가 미안하다며 사인볼을 줬다.' },
@@ -1336,7 +1336,7 @@
   });
   E({
     id: 'car_transport_drowsy', age: [21, 80], cooldown: 4,
-    cond: { sector: ['transport'] },
+    cond: { career: ['taxi_driver', 'bus_driver', 'truck_driver', 'designated_driver'] },
     text: '새벽 4시, 연속 운행 12시간째. 눈꺼풀이 천근만근이다.',
     choices: [
       { text: '다음 휴게소에서 무조건 쉰다', effects: { health: 1, money: -200 }, log: '20분 쪽잠을 잤다. 배차는 늦었지만 살아서 집에 갔다.' },
@@ -1350,7 +1350,7 @@
     cond: { career: ['ship_captain', 'fisher', 'navy_sailor'] },
     text: '예보에 없던 폭풍이 몰려온다. 파도가 갑판을 넘는다.',
     choices: [
-      { text: '항구로 회항한다', effects: { money: -3000, smarts: 1 }, log: '조업은 망쳤지만 선원 모두 무사히 돌아왔다.' },
+      { text: '항구로 회항한다', effects: { money: -3000, smarts: 1 }, log: '일정은 틀어졌지만 선원 모두 무사히 돌아왔다.' },
       { text: '폭풍을 정면으로 뚫는다', check: { stat: 'grit', diff: 60 },
         success: { effects: { money: 8000, fame: 2, fx: ['promote'] }, log: '아침 해와 함께 무사히 목적지에 닿았다. 선원들이 {name}[을/를] 다시 봤다.' },
         fail: { effects: { health: -6, money: -10000, fx: ['injury'] }, log: '배가 크게 상했다. 해경에 구조됐다.' } }
@@ -1364,7 +1364,7 @@
   });
   E({
     id: 'car_bus_lost_kid', age: [22, 70], cooldown: 6,
-    cond: { career: ['bus_driver', 'train_driver', 'taxi_driver'] },
+    cond: { career: ['bus_driver'] },
     text: '종점에 도착했는데 맨 뒷자리에 혼자 남은 아이가 울먹이고 있다.',
     choices: [
       { text: '경찰에 연락하고 곁을 지킨다', effects: { happy: 5, fame: 1 }, log: '부모가 달려와 아이를 안았다. 다음 주에 회사로 감사 편지가 왔다.' },
@@ -1411,7 +1411,7 @@
   E({
     id: 'car_priest_confession', age: [25, 85], cooldown: 6,
     cond: { career: ['priest', 'pastor'] },
-    text: '고해소 너머 목소리가 떨린다. 동네에서 일어난 큰 사건의 진범인 것 같다.',
+    text: '단둘이 상담하던 중 상대의 목소리가 떨린다. 동네에서 일어난 큰 사건의 진범인 것 같다.',
     choices: [
       { text: '자수하도록 끝까지 설득한다', check: { stat: 'smarts', diff: 55 },
         success: { effects: { happy: 5, fame: 2 }, log: '다음 날 그 사람이 경찰서에 걸어 들어갔다는 소식이 들렸다.' },
@@ -1494,7 +1494,7 @@
   E({
     id: 'car_crime_old_crew', age: [18, 85], weight: 1, once: true,
     cond: { flags: ['went_straight'] },
-    text: '정직하게 산 지 2년. 옛 동료가 일터 앞에 나타났다. "딱 한 건만. 너 없인 안 돼."',
+    text: '과거를 뒤로하고 지내던 어느 날, 옛 동료가 찾아왔다. "딱 한 건만. 너 없인 안 돼."',
     choices: [
       { text: '단호하게 돌려보낸다', check: { stat: 'grit', diff: 50 },
         success: { effects: { happy: 5, grit: 3 }, log: '그의 뒷모습을 보며 진짜로 끝났다는 걸 알았다.' },
@@ -1522,7 +1522,7 @@
     choices: [
       { text: '우체통에 지갑을 넣는다', effects: { happy: 4 }, log: '지갑이 주인에게 돌아갔다는 걸 확인할 길은 없지만, 그렇게 믿기로 했다.' },
       { text: '돈만 빼고 버린다', effects: { money: 40, happy: -3 }, log: '그 사진 속 아이의 얼굴이 계속 떠올랐다.' },
-      { text: '이 일을 그만둔다', effects: { happy: 3, grit: 2, fx: ['quitJob'] }, log: '빠른 손을 다른 데 쓰기로 했다. 일단 {food} 가게 아르바이트부터.' }
+      { text: '이 일을 그만둔다', effects: { happy: 3, grit: 2, fx: ['quitJob'] }, log: '빠른 손을 다른 데 쓰기로 했다. 정직한 일자리부터 찾아보기로 했다.' }
     ]
   });
   E({
@@ -1587,7 +1587,7 @@
     text: '대기업 비리를 증명할 내부 문서를 손에 넣었다. 그날 밤 윗선에서 전화가 온다. "그 기사, 내리지?"',
     choices: [
       { text: '보도를 강행한다', check: { stat: 'grit', diff: 55 },
-        success: { effects: { fame: 6, happy: 6, fx: ['promote'] }, log: '1면 특종. 국정조사가 열렸다. 기자상을 받으며 {mother}에게 트로피를 바쳤다.' },
+        success: { effects: { fame: 6, happy: 6, fx: ['promote'] }, log: '특종 보도가 나갔다. 국정조사가 열렸다. 보도상을 받으며 {mother}에게 트로피를 바쳤다.' },
         fail: { effects: { happy: -5, fx: ['demote'] }, log: '기사는 나갔지만 {name}[은/는] 지방 지국으로 발령 났다.' } },
       { text: '기사를 묻는다', effects: { money: 5000, happy: -5 }, log: '석 달 뒤 다른 매체가 그 기사를 썼다. 서랍 속 문서가 무거웠다.' }
     ]
@@ -1634,7 +1634,7 @@
   E({
     id: 'car_pt_first_paycheck', age: [14, 25], once: true,
     cond: { sector: ['parttime'] },
-    text: '태어나 처음 받은 월급. 통장 알림을 다섯 번은 다시 봤다.',
+    text: '이번 알바비가 들어왔다. 통장 알림을 다섯 번은 다시 봤다.',
     choices: [
       { text: '{mother}에게 내복을 사 드린다', effects: { money: -100, happy: 6, rel: { mother: 8 } }, log: '{mother}[은/는] 내복을 장롱 깊숙이 넣어 두고 "아까워서 못 입겠다"고 했다.' },
       { text: '꿈의 축구화를 산다', effects: { money: -200, happy: 5, football: 1 }, log: '새 축구화 냄새를 맡으며 잠들었다.' },
@@ -1643,7 +1643,7 @@
   });
   E({
     id: 'car_pt_rude_customer', age: [14, 40], cooldown: 3,
-    cond: { sector: ['parttime'] },
+    cond: { career: ['convenience_clerk', 'cafe_parttime', 'fastfood_crew', 'pc_bang_parttime', 'cinema_parttime'] },
     text: '손님이 계산대에 동전을 던지며 "빨리빨리 안 해?"라고 소리친다.',
     choices: [
       { text: '꾹 참고 웃는다', effects: { grit: 2, happy: -2 }, log: '퇴근길에 {friend}[과/와] 그 손님 흉내를 내며 실컷 웃었다.' },
@@ -1708,7 +1708,7 @@
   });
   E({
     id: 'car_pt_exam_week', age: [14, 19], cooldown: 2,
-    cond: { sector: ['parttime'], edu: ['middle', 'high'] },
+    cond: { career: ['convenience_clerk', 'cafe_parttime', 'fastfood_crew', 'pc_bang_parttime', 'cinema_parttime'], edu: ['middle', 'high'] },
     text: '시험이 사흘 남았는데 알바 사장님이 주말 대타를 부탁한다.',
     choices: [
       { text: '공부를 택한다', effects: { smarts: 3, money: -100 }, log: '시험은 생각보다 잘 봤다. 사장님은 조금 서운해했다.' },
