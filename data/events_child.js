@@ -21,14 +21,14 @@
       { text: '양동이를 받쳐 두고 베개 싸움을 벌인다', effects: { happy: 5, rel: { siblings: 5 }, health: -1 }, log: '양동이가 엎어져 이불이 다 젖었다. 그래도 그날 밤 웃음소리가 빗소리보다 컸다.' },
       { text: '"나중에 큰 집 사 줄게" 하고 {mother}[과/와] 새끼손가락을 건다', effects: { grit: 3, rel: { mother: 4 }, flags: ['promised_house'] }, log: '{mother}[은/는] 웃었지만 눈가가 촉촉했다. 그 약속은 오래 마음에 남았다.' }
     ] });
-  K({ id: 'canon_mother_shift', weight: 20, once: true, age: [6, 12], cond: { flags: ['!heir'], rel: { mother: 'alive' } },
+  K({ id: 'canon_mother_shift', weight: 20, once: true, age: [6, 12], cond: { flags: ['!heir'], rel: { mother: 'alive' }, edu: SCHOOL },
     text: '{motherJob}[으로/로] 일하는 {mother}[이/가] 손목에 붕대를 감고 왔다. 그래도 내일 일을 나가겠다고 한다.',
     choices: [
       { text: '장을 봐서 저녁을 대신 짓는다', check: { stat: 'smarts', diff: 30 },
         success: { effects: { grit: 3, rel: { mother: 7 } }, log: '삐뚤빼뚤한 계란밥이었다. {mother}[은/는] 한 숟갈 뜨고 한참 고개를 숙였다.' },
         fail: { effects: { money: -30, happy: -2, rel: { mother: 3 } }, log: '밥을 홀랑 태우고 냄비 바닥까지 눌어붙었다. 결국 {mother}[이/가] 다친 손으로 다시 지었다.' } },
       { text: '학교를 하루 빠지고 {mother}의 일터에 따라간다', risky: true, check: { odds: 0.6 },
-        success: { effects: { rel: { mother: 9 }, grit: 2, smarts: -1 }, log: '상자를 나르고 손님 물건을 챙겼다. 사장님이 "아들 하나 잘 뒀다"고 했다.' },
+        success: { effects: { rel: { mother: 9 }, grit: 2, smarts: -1 }, log: '일터에서 작은 심부름을 도왔다. "자녀가 든든하네" 하는 말을 들었다.' },
         fail: { effects: { rep: -2, rel: { mother: 2 }, happy: -2 }, log: '무단결석이라며 담임이 집에 전화했다. {mother}[은/는] 고맙다면서도 다시는 그러지 말라고 했다.' } },
       { text: '형제들을 모아 집안일 당번표를 만든다', check: { stat: 'social', diff: 40 },
         success: { effects: { social: 3, rel: { siblings: 4, mother: 4 } }, log: '냉장고에 당번표가 붙었다. 설거지 담당은 {bro}[이/가] 됐다.' },
@@ -44,23 +44,23 @@
       { text: '{bro}[과/와] 아빠를 지키자고 약속한다', effects: { rel: { bro: 5 }, smarts: 1, flags: ['father_drinking'] }, log: '{bro}[이/가] 새끼손가락을 걸었다. 그날부터 둘이 번갈아 현관 불을 켜 두었다.' }
     ] });
   K({ id: 'life_child_father_promise', age: [8, 12], cond: { rel: { father: 'alive' }, flags: ['father_drinking'] },
-    text: '학교 발표회 날. 맨 앞줄에 앉겠다던 {father}[이/가] 동네 술집에 있다는 이야기가 들려왔다.',
+    text: '동네 발표회 날. 맨 앞줄에 앉겠다던 {father}[이/가] 동네 술집에 있다는 이야기가 들려왔다.',
     choices: [
       { text: '발표회 전에 술집으로 직접 찾아간다', risky: true, check: { stat: 'grit', diff: 45 },
         success: { effects: { rel: { father: 6 }, grit: 2, fx: ['fatherSeekHelp'] }, log: '문간에 선 나를 보고 {father}[이/가] 잔을 내려놓았다. 발표회 끝 무렵, 뒷줄에서 박수 소리가 들렸다.' },
         fail: { effects: { happy: -6, flags: ['trauma'] }, log: '취한 어른들이 "애가 왜 여기 있냐"며 웃었다. {father}[은/는] 나를 보지도 못했다.' } },
-      { text: '"아빠 아픈 거 싫어" 쪽지를 베개 밑에 둔다', effects: { happy: -2, rel: { father: 4 }, fx: ['fatherSeekHelp'] }, log: '다음 날 아침 쪽지가 사라져 있었다. {father}[은/는] 처음으로 "미안하다"고 했다.' },
+      { text: '"아빠 아픈 거 싫어" 쪽지를 베개 밑에 둔다', effects: { happy: -2, rel: { father: 4 }, fx: ['fatherSeekHelp'] }, log: '다음 날 아침 쪽지가 사라져 있었다. {father}[은/는] 조용히 "미안하다"고 했다.' },
       { text: '빈자리를 보며 혼자 무대에 선다', effects: { grit: 3, rel: { father: -4 } }, log: '마지막 인사까지 목소리가 떨리지 않았다. 객석의 빈 의자는 끝까지 비어 있었다.' }
     ] });
   K({ id: 'life_child_sibling_fight', age: [6, 12], cond: { rel: { sis2: 'alive' } },
     text: '{sis2}[이/가] 아끼던 머리핀을 빌렸다가 운동장에서 잃어버렸다. {sis2}[이/가] 온 집을 뒤지고 있다.',
     choices: [
-      { text: '솔직히 말하고 용돈으로 물어 준다', effects: { money: -20, rel: { sis2: 4 }, happy: -1 }, log: '석 달 치 용돈이 날아갔다. {sis2}[은/는] 새 핀보다 솔직하게 말한 걸 더 오래 기억했다.' },
+      { text: '솔직히 말하고 용돈으로 물어 준다', effects: { money: -20, rel: { sis2: 4 }, happy: -1 }, log: '모아 둔 돈을 꺼냈다. {sis2}[은/는] 새 핀보다 솔직하게 말해 준 걸 고마워했다.' },
       { text: '모르는 척 같이 찾는 시늉을 한다', risky: true, check: { odds: 0.5 },
         success: { effects: { happy: 1, mischief: 2 }, log: '{sis2}[은/는] 결국 포기했다. 그 뒤로 그 핀 얘기만 나오면 괜히 딴청을 부렸다.' },
-        fail: { effects: { rel: { sis2: -8, mother: -3 }, mischief: 2 }, log: '같은 반 아이가 "네 동생이 운동장에서 잃어버렸던데?" 하고 일러바쳤다. 한 달 동안 말을 안 했다.' } },
+        fail: { effects: { rel: { sis2: -8, mother: -3 }, mischief: 2 }, log: '그 모습을 본 아이가 잃어버린 사람이 누구인지 일러바쳤다. 한동안 말을 안 했다.' } },
       { text: '철사와 단추로 비슷한 걸 만들어 준다', check: { stat: 'smarts', diff: 40 },
-        success: { effects: { rel: { sis2: 6 }, happy: 2 }, log: '삐뚤어졌지만 세상에 하나뿐인 핀이었다. {sis2}[은/는] 그걸 몇 년이나 꽂고 다녔다.' },
+        success: { effects: { rel: { sis2: 6 }, happy: 2 }, log: '삐뚤어졌지만 세상에 하나뿐인 핀이었다. {sis2}[은/는] 거울 앞에서 곧바로 꽂아 봤다.' },
         fail: { effects: { health: -2, rel: { sis2: -2 } }, log: '철사에 손가락만 찔렸다. 완성품은 핀이라기보다 낚싯바늘이었다.' } }
     ] });
   K({ id: 'life_child_pet_stray', age: [6, 12], cond: { flags: ['!has_pet'] },
@@ -72,7 +72,7 @@
       { text: '저금통을 털어 동물병원에 데려간다', effects: { money: -80, rep: 3, smarts: 1 }, log: '눈약을 받아 왔다. 수의사 선생님이 입양할 집을 찾아 주겠다고 했다.' },
       { text: '박스 위에 우산만 씌워 준다', effects: { happy: -1 }, log: '다음 날 박스는 비어 있었다. 우산도 없었다. 누가 데려갔길 바랐다.' }
     ] });
-  K({ id: 'life_child_birthday_party', age: [6, 12], origin: ['rich', 'middle'],
+  K({ id: 'life_child_birthday_party', age: [6, 12], origin: ['rich', 'middle'], cond: { edu: SCHOOL },
     text: '생일 파티를 크게 열어 주겠다고 한다. 반에서 제일 인기 많은 아이도 초대 명단에 넣어야 할지 고민이다.',
     choices: [
       { text: '반 전체에 초대장을 돌린다', check: { stat: 'social', diff: 40 },
@@ -81,7 +81,7 @@
       { text: '친한 친구 셋만 불러 밤새 논다', effects: { happy: 3, social: 1, rel: { friend: 5 } }, log: '이불로 텐트를 치고 무서운 이야기를 했다. 셋은 그 뒤로도 오래 붙어 다녔다.' },
       { text: '선물 대신 저금해 달라고 한다', effects: { money: 100, smarts: 1, happy: -1 }, log: '통장에 찍힌 숫자가 신기했다. 친구들은 "생일인데 그게 뭐야"라고 했다.' }
     ] });
-  K({ id: 'life_child_handmedown_shoes', age: [6, 12], origin: POOR,
+  K({ id: 'life_child_handmedown_shoes', age: [6, 12], origin: POOR, cond: { edu: SCHOOL },
     text: '{bro}에게 물려받은 운동화 밑창이 덜렁거린다. 하필 내일이 체육 대회다.',
     choices: [
       { text: '테이프로 칭칭 감고 나간다', risky: true, check: { odds: 0.55 },
@@ -98,7 +98,7 @@
     text: '{school} 첫날. 짝이 될 아이가 교실 구석에서 엄마를 찾으며 울고 있다. 담임 선생님은 출석부를 들고 있다.',
     choices: [
       { text: '옆에 가서 지우개를 반 잘라 준다', check: { stat: 'social', diff: 30 },
-        success: { effects: { social: 2, fx: ['newFriend'] }, log: '울음이 멎었다. 그 아이는 6년 내내 짝꿍이 됐다.' },
+        success: { effects: { social: 2, fx: ['newFriend'] }, log: '울음이 멎었다. 그 아이와 나란히 앉아 수업을 들었다.' },
         fail: { effects: { happy: -3 }, log: '그 아이가 더 크게 울었다. 둘이 같이 "울보"로 불렸다.' } },
       { text: '맨 앞자리에 앉아 손을 번쩍 든다', check: { stat: 'grit', diff: 35 },
         success: { effects: { smarts: 2, rep: 2 }, log: '선생님이 첫 반장 대리를 맡겼다. 출석부 심부름이 자랑스러웠다.' },
@@ -164,13 +164,13 @@
         success: { effects: { social: 3, rep: 2 }, log: '열 명이 줄을 서자 큰 애들도 끼어들지 못했다. 놀이터에 순서가 생겼다.' },
         fail: { effects: { happy: -3, social: -1 }, log: '모두 흩어지고 나만 남았다. 큰 애들이 등을 떠밀었다.' } }
     ] });
-  K({ id: 'soc_new_kid', once: true, age: [7, 12], cond: { stats: { social: [45, 100] } },
+  K({ id: 'soc_new_kid', once: true, age: [7, 12], cond: { stats: { social: [45, 100] }, edu: SCHOOL },
     text: '전학 온 아이가 쉬는 시간마다 혼자 앉아 있다. 반 아이들은 "저 애 이상한 데서 왔대" 하고 수군댄다.',
     choices: [
       { text: '점심시간에 옆자리에 식판을 놓는다', risky: true, check: { odds: 0.65 },
         success: { effects: { social: 3, happy: 2, fx: ['newFriend'] }, log: '말이 없던 아이가 알고 보니 엄청 웃겼다. 둘은 단짝이 됐다.' },
         fail: { effects: { social: -2, happy: -3 }, log: '그날부터 나까지 "이상한 애 친구"로 불렸다. 그래도 그 아이는 내 이름을 기억했다.' } },
-      { text: '수군대는 애들 편에 선다', effects: { social: 1, rep: -2 }, log: '무리에서는 편했다. 졸업 사진 속 그 아이 얼굴이 오래 마음에 걸렸다.' },
+      { text: '수군대는 애들 편에 선다', effects: { social: 1, rep: -2 }, log: '무리에서는 편했다. 혼자 앉아 있는 그 아이의 얼굴이 마음에 걸렸다.' },
       { text: '담임에게 짝을 바꿔 달라고 쪽지를 쓴다', effects: { rep: 2, social: 1 }, log: '다음 주 그 아이가 내 짝이 됐다. 말을 걸기까지 한 달이 걸렸다.' }
     ] });
   K({ id: 'rl_kid_friend_group', cooldown: 4, age: [8, 12], cond: { edu: SCHOOL },
@@ -190,17 +190,17 @@
       { text: '한 움큼 주머니에 넣는다', risky: true, check: { odds: 0.55 },
         success: { effects: { happy: 2, mischief: 4, flags: ['petty_thief'] }, log: '들키지 않았다. 사탕은 이상하게 맛이 없었다. 그 가게 앞을 지날 때마다 심장이 뛰었다.' },
         fail: { effects: { happy: -5, mischief: 4, rep: -3, rel: { mother: -6 }, flags: ['petty_thief'] }, log: '할머니가 실눈을 뜨고 있었다. 불려 온 {mother}[이/가] 허리를 숙여 사과했다.' } },
-      { text: '"나 먼저 간다" 하고 가게를 나온다', effects: { grit: 2, social: -2 }, log: '친구는 다음 날 반 아이들에게 "쫄보"라고 소문냈다. 그래도 발걸음은 가벼웠다.' },
+      { text: '"나 먼저 간다" 하고 가게를 나온다', effects: { grit: 2, social: -2 }, log: '친구는 다음 날 동네 아이들에게 "쫄보"라고 소문냈다. 그래도 발걸음은 가벼웠다.' },
       { text: '할머니를 깨워 사탕값을 대신 낸다', effects: { money: -5, rep: 3, rel: { friend: -6 } }, log: '할머니가 덤으로 하나를 더 줬다. 친구는 그 뒤로 말을 걸지 않았다.' }
     ] });
   K({ id: 'rl_kid_toy_save', cooldown: 5, age: [6, 12],
-    text: '갖고 싶던 장난감이 나왔다. 저금통에 든 돈은 딱 절반이다. 반 아이들은 벌써 다 샀다.',
+    text: '갖고 싶던 장난감이 나왔다. 저금통만으로는 모자랄 것 같다. 동네 아이들은 벌써 다 샀다.',
     choices: [
       { text: '석 달 더 모은다', effects: { grit: 3, money: 10, happy: -2 }, log: '석 달 뒤 내 돈으로 샀다. 그때쯤엔 다들 질려 했지만 나한텐 제일 소중했다.' },
       { text: '안 쓰는 장난감을 벼룩시장에 내다 판다', check: { stat: 'social', diff: 40 },
         success: { effects: { money: 30, smarts: 2, happy: 3 }, log: '목청껏 외쳐 다 팔았다. 장난감 값을 채우고도 남았다.' },
         fail: { effects: { money: -10, happy: -4 }, log: '중학생 형이 "나중에 줄게" 하고 몽땅 들고 갔다. 다시는 볼 수 없었다.' } },
-      { text: '할머니 댁에 가서 슬쩍 조른다', effects: { happy: 3, rel: { family: -2 } }, log: '할머니가 꼬깃꼬깃한 지폐를 쥐여 줬다. 나중에 {mother}[이/가] 알고 크게 혼냈다.' }
+      { text: '{mother}에게 계속 조른다', effects: { happy: 3, rel: { family: -2 } }, log: '결국 장난감을 얻었다. {mother}[은/는] 이런 식으로 조르면 안 된다고 단단히 말했다.' }
     ] });
   K({ id: 'rl_kid_errand_change', cooldown: 4, age: [6, 10],
     text: '심부름 다녀오는 길에 거스름돈을 잃어버렸다. 주머니에 구멍이 나 있었다.',
@@ -217,12 +217,12 @@
       { text: '파출소에 가져다준다', effects: { rep: 4, social: 1, happy: 2 }, log: '주인 아저씨가 찾아와 {food}[을/를] 사 줬다. 경찰관이 감사장을 써 줬다.' },
       { text: '지폐만 빼고 지갑은 우체통에 넣는다', risky: true, check: { odds: 0.6 },
         success: { effects: { money: 30, happy: 1, mischief: 4 }, log: '아무도 몰랐다. 그 돈으로 산 과자는 끝까지 다 먹지 못했다.' },
-        fail: { effects: { mischief: 4, rep: -6, happy: -4 }, log: '정류장 CCTV에 찍혔다. 학교로 연락이 왔다.' } },
+        fail: { effects: { mischief: 4, rep: -6, happy: -4 }, log: '정류장 CCTV에 찍혔다. 경찰에게 경위를 설명해야 했다.' } },
       { text: '신분증 주소를 보고 직접 찾아간다', check: { stat: 'smarts', diff: 35 },
         success: { effects: { rep: 3, money: 20, fx: ['newFriend'] }, log: '할머니 댁이었다. 사례금과 함께 손자를 소개받았다. 동갑이었다.' },
         fail: { effects: { happy: -3, health: -1 }, log: '버스를 잘못 타 해 질 녘까지 헤맸다. 결국 지갑은 파출소에 맡겼다.' } }
     ] });
-  K({ id: 'rl_kid_game_time', cooldown: 3, age: [7, 12],
+  K({ id: 'rl_kid_game_time', cooldown: 3, age: [7, 12], cond: { edu: SCHOOL },
     text: '친구 형 계정으로 온라인 게임을 하는데 유료 아이템 결제 창이 떴다. 손에 든 건 {mother}의 휴대폰이다.',
     choices: [
       { text: '"확인"을 누른다', risky: true, check: { odds: 0.4 },
@@ -251,7 +251,7 @@
     choices: [
       { text: '{bro}[이/가] 그렸다고 한다', risky: true, check: { odds: 0.5 },
         success: { effects: { happy: 3, mischief: 3, rel: { bro: -3 } }, log: '{bro}[이/가] 대신 혼났다. 웃음을 참느라 볼이 아팠다.' },
-        fail: { effects: { happy: -3, mischief: 3, rep: -2, rel: { mother: -4, bro: -4 } }, log: '"{bro}[은/는] 오늘 학교에 있었잖니?" 들켰다.' } },
+        fail: { effects: { happy: -3, mischief: 3, rep: -2, rel: { mother: -4, bro: -4 } }, log: '"{bro}[은/는] 오늘 밖에 있었잖니?" 들켰다.' } },
       { text: '"제가 그렸어요" 하고 걸레를 든다', effects: { happy: -1, rep: 1, rel: { mother: 3 } }, log: '둘이 같이 벽을 닦았다. 해님 하나만은 남겨 두기로 했다.' },
       { text: '벽 전체를 그림으로 덮어 작품이라고 우긴다', risky: true, check: { odds: 0.35 },
         success: { effects: { happy: 4, rel: { father: 3 } }, log: '{father}[이/가] 웃음을 터뜨리더니 그 벽에 액자 틀을 둘렀다.' },
@@ -306,7 +306,7 @@
         success: { effects: { happy: 6, mischief: 6, money: 20 }, log: '한 달 동안 오락실 VIP였다. 학원비 영수증은 내가 직접 위조했다.' },
         fail: { effects: { rel: { mother: -8, father: -5 }, mischief: 6, rep: -4 }, log: '학원 원장이 "한 달째 안 왔다"고 전화했다. 그날 저녁 식탁은 조용했다.' } }
     ] });
-  K({ id: 'mis_fake_sick', cooldown: 4, age: [6, 12],
+  K({ id: 'mis_fake_sick', cooldown: 4, age: [6, 12], cond: { edu: SCHOOL },
     text: '오늘은 줄넘기 시험이 있는 날. 이불 속에서 배를 움켜쥐어 본다.',
     choices: [
       { text: '꾀병 연기를 펼친다', risky: true, check: { stat: 'looks', diff: 35 },
@@ -323,8 +323,8 @@
       { text: '친구 집에서 몰래 하룻밤 잔다', risky: true, check: { odds: 0.5 },
         success: { effects: { happy: 4, social: 2, mischief: 4, rel: { friend: 5 } }, log: '밤새 수다를 떨었다. 새벽에 슬그머니 돌아오니 아무도 몰랐다.' },
         fail: { effects: { happy: -4, mischief: 4, rel: { mother: -8, father: -4 } }, log: '온 동네가 나를 찾고 있었다. {mother}[이/가] 울면서 껴안았다.' } },
-      { text: '버스를 타고 할머니 댁까지 간다', check: { stat: 'smarts', diff: 40 },
-        success: { effects: { grit: 3, rel: { family: 2 } }, log: '할머니가 아무것도 묻지 않고 밥을 차려 줬다. 다음 날 {mother}[이/가] 데리러 왔다.' },
+      { text: '버스를 타고 동네 복지관으로 간다', check: { stat: 'smarts', diff: 40 },
+        success: { effects: { grit: 3, rel: { family: 2 } }, log: '직원이 이야기를 듣고 밥을 챙겨 줬다. 연락을 받은 {mother}[이/가] 데리러 왔다.' },
         fail: { effects: { happy: -6, flags: ['trauma'] }, log: '종점에서 내려 길을 잃었다. 낯선 동네에서 밤 열한 시에 경찰차를 탔다.' } },
       { text: '놀이터만 한 바퀴 돌고 들어간다', effects: { happy: 1, rel: { mother: 3 } }, log: '식탁에 저녁밥이 차려져 있었다. 가출은 20분 만에 끝났다.' }
     ] });
@@ -391,7 +391,7 @@
         success: { effects: { happy: 3, mischief: 3 }, log: '아무도 몰랐다. "체험해 보니 별로였어"라는 말에 {mother}[은/는] 고개만 끄덕였다.' },
         fail: { effects: { happy: -4, mischief: 3, rep: -2, rel: { mother: -4 } }, log: '학원 원장이 집으로 전화를 걸었다. "체험 수업에 안 왔던데요?"' } }
     ] });
-  K({ id: 'life_any_time_capsule', age: [10, 12],
+  K({ id: 'life_any_time_capsule', age: [10, 12], cond: { edu: SCHOOL },
     text: '반 친구들과 학교 뒷산에 타임캡슐을 묻기로 했다. 20년 뒤에 같이 열기로 했다.',
     choices: [
       { text: '미래의 나에게 꿈을 적은 편지를 넣는다', effects: { happy: 3, smarts: 1, flags: ['time_capsule'] }, schedule: { id: 'life_any_time_capsule_open', years: 20 }, log: '"미래의 나, 꿈은 이뤘니?" 봉투에 침을 발라 붙였다.' },
@@ -406,12 +406,12 @@
     text: '골목 형들이 철길 옆에서 고철을 주워 팔면 하루 용돈은 번다고 한다. 철길엔 화물 열차가 자주 지나간다.',
     choices: [
       { text: '형들을 따라 철길로 간다', risky: true, check: { stat: 'health', diff: 50 },
-        success: { effects: { money: 40, grit: 3, mischief: 2 }, log: '자루 하나를 채워 고물상에 넘겼다. 처음 번 돈을 {mother} 지갑에 몰래 넣었다.' },
+        success: { effects: { money: 40, grit: 3, mischief: 2 }, log: '자루 하나를 채워 고물상에 넘겼다. 번 돈을 {mother} 지갑에 몰래 넣었다.' },
         fail: { effects: { health: -10, flags: ['trauma'] }, log: '열차 경적에 놀라 자갈 위로 굴렀다. 다리를 크게 다쳤고, 그 뒤로 기차 소리만 나면 몸이 굳었다.' } },
       { text: '시장 상인들 짐을 날라 주고 잔돈을 받는다', effects: { money: 15, grit: 2, social: 2 }, log: '하루 종일 상자를 날랐다. 생선 가게 아주머니가 "내일도 와라" 했다.' },
-      { text: '방과 후 공부방에 남는다', effects: { smarts: 3, social: -1 }, log: '봉사자 선생님이 숙제를 봐 줬다. 형들은 "범생이"라고 놀렸다.' }
+      { text: '동네 공부방에 간다', effects: { smarts: 3, social: -1 }, log: '봉사자 선생님과 문제를 풀었다. 형들은 "범생이"라고 놀렸다.' }
     ] });
-  K({ id: 'chd_slum_walk', age: [6, 10], origin: ['slum'],
+  K({ id: 'chd_slum_walk', age: [6, 10], origin: ['slum'], cond: { edu: SCHOOL },
     text: '학교 가는 지름길 모퉁이에 무서운 형들이 진을 치고 있다. 지나가는 꼬마들 주머니를 뒤진다.',
     choices: [
       { text: '숨을 참고 전력으로 뛰어 지나간다', risky: true, check: { stat: 'health', diff: 40 },
@@ -420,7 +420,7 @@
       { text: '30분 돌아가는 큰길로 다닌다', effects: { smarts: -1, health: 1, rep: -1 }, log: '매일 지각해서 교문 앞에 섰다. 그래도 주머니는 무사했다.' },
       { text: '{bro}에게 아침마다 데려다 달라고 한다', effects: { rel: { bro: 5 }, social: 1 }, log: '{bro}[이/가] 투덜대면서도 매일 같이 걸어 줬다. 그 모퉁이 형들은 {bro}[과/와] 아는 사이였다.' }
     ] });
-  K({ id: 'chd_poor_trip_fee', age: [8, 12], origin: POOR,
+  K({ id: 'chd_poor_trip_fee', age: [8, 12], origin: POOR, cond: { edu: SCHOOL },
     text: '다음 주 현장 체험 학습비를 내야 한다. 봉투를 보고 {mother}[이/가] 한참 말이 없다.',
     choices: [
       { text: '"배 아파서 못 간다"고 미리 말해 둔다', effects: { happy: -4, rel: { mother: 5 } }, log: '친구들이 놀이공원 사진을 자랑하는 날, 혼자 교실에서 자습을 했다.' },
@@ -431,15 +431,15 @@
         success: { effects: { grit: 4, money: 10, happy: 3 }, log: '일주일 동안 빈 병 백 개를 모았다. 봉투를 내미는 손이 떨렸다.' },
         fail: { effects: { health: -2, happy: -3 }, log: '깨진 병에 손을 베었다. 돈은 절반밖에 못 모았다.' } }
     ] });
-  K({ id: 'chd_rich_driver', age: [6, 10], origin: ['rich'],
-    text: '하교 시간, 교문 앞에 검은 차와 기사 아저씨가 서 있다. 친구들이 "부잣집 도련님"이라고 놀린다.',
+  K({ id: 'chd_rich_driver', age: [6, 10], origin: ['rich'], cond: { edu: SCHOOL },
+    text: '하교 시간, 교문 앞에 검은 차와 기사 아저씨가 서 있다. 친구들이 "부잣집 애"라고 놀린다.',
     choices: [
       { text: '한 블록 떨어진 곳에 세워 달라고 한다', effects: { social: 2, rel: { father: -2 } }, log: '모퉁이까지 걸어가 차를 탔다. {father}[은/는] "뭐가 부끄러우냐"고 했다.' },
       { text: '친구들을 태워 같이 집에 간다', check: { stat: 'social', diff: 40 },
         success: { effects: { social: 4, fx: ['newFriend'] }, log: '뒷자리에 넷이 끼어 앉아 노래를 불렀다. 놀림은 그날로 끝났다.' },
         fail: { effects: { social: -3, happy: -3 }, log: '"자랑하냐?" 다음 날부터 놀림이 더 심해졌다.' } },
       { text: '기사 아저씨 몰래 친구들과 버스를 탄다', risky: true, check: { odds: 0.5 },
-        success: { effects: { happy: 5, mischief: 2, social: 2 }, log: '처음 탄 버스는 놀이기구 같았다. 집에선 난리가 났지만 그날 친구가 생겼다.' },
+        success: { effects: { happy: 5, mischief: 2, social: 2 }, log: '친구들과 탄 버스는 놀이기구 같았다. 집에선 난리가 났지만 그날 친구가 생겼다.' },
         fail: { effects: { happy: -4, flags: ['trauma'] }, log: '버스를 잘못 타 낯선 동네에 내렸다. 경찰이 집에 데려다줬다. {mother}[이/가] 실신할 뻔했다.' } }
     ] });
   K({ id: 'chd_rich_exam', age: [10, 12], origin: ['rich'], cond: { edu: ['elem'] },
@@ -534,7 +534,7 @@
       { text: '친구들이 있는 {localClub}에 남는다', effects: { happy: 2, rel: { friend: 5 }, flags: ['stayed_local'] }, log: '조금 더 동네의 왕으로 남기로 했다.' }
     ] });
   K({ id: 'canon_regional_late', weight: 30, once: true, age: [12, 14], cond: { fb: ['local'], stats: { football: [30, 100] } },
-    text: '{regionalClub}에서 다시 연락이 왔다. "아직 늦지 않았다. 다만 이번엔 테스트를 봐야 한다."',
+    text: '{regionalClub}에서 연락이 왔다. "아직 늦지 않았다. 테스트를 보러 와라."',
     choices: [
       { text: '테스트에 도전한다', check: { stat: 'football', diff: 40 },
         success: { effects: { fx: ['joinRegionalClub'] }, log: '새 유니폼이 몸에 꼭 맞았다.' },
@@ -556,7 +556,7 @@
       { text: '공중전화로 {mother} 목소리를 듣는다', effects: { money: -5, happy: 3, rel: { mother: 6 } }, log: '전화 카드가 다 닳을 때까지 "괜찮아"만 반복했다.' },
       { text: '이불 속에서 몰래 운다', effects: { happy: -3, grit: 3, flags: ['homesick'] }, log: '아침이 되자 퉁퉁 부은 눈으로 가장 먼저 운동장에 나갔다.' },
       { text: '불 꺼진 체육관에서 혼자 훈련한다', risky: true, check: { stat: 'health', diff: 45 },
-        success: { effects: { football: 2, grit: 2 }, log: '경비 아저씨가 손전등을 비추며 "또 너냐"라고 했다. 다음 날 테스트 1등이었다.' },
+        success: { effects: { football: 2, grit: 2 }, log: '경비 아저씨가 손전등을 비추며 "이 시간에 웬일이냐"라고 했다. 다음 날 테스트 1등이었다.' },
         fail: { effects: { health: -4, happy: -2 }, log: '잠이 모자라 아침 테스트에서 토했다. 코치 수첩에 첫 기록이 꼴찌로 적혔다.' } }
     ] });
   // far from home at the academy: each country has its own trouble, not another phone call home
@@ -579,7 +579,7 @@
       { text: '사물함에 자물쇠를 달고 혼자 먹는다', effects: { happy: 1, social: -2, flags: ['homesick'] }, log: '마지막 하나를 먹던 날 바다 냄새가 그리웠다. 방에는 말이 없었다.' }
     ] });
   K({ id: 'cn_shanghai_winter', flavour: 'football', age: [12, 15], countries: ['cn'], cond: { flags: ['moved_alone'] },
-    text: '{bigcity}의 첫 겨울. 축축한 추위가 뼛속까지 스민다. 겨울이 없는 섬에서 온 {name}에겐 패딩조차 없다.',
+    text: '{bigcity}의 겨울. 축축한 추위가 뼛속까지 스민다. 가져온 옷만으로는 버티기 어렵다.',
     choices: [
       { text: '한 달 식비로 시장에서 패딩을 산다', effects: { health: 2, happy: -1, money: -30 }, log: '한 달 내내 컵라면으로 버텼다. 그래도 밤에는 떨지 않았다.' },
       { text: '옷을 세 겹 껴입고 버틴다', check: { stat: 'health', diff: 50 },
@@ -670,7 +670,7 @@
       { text: '다음 소풍엔 캐릭터 도시락을 싸 달라고 조른다', effects: { money: -20, rel: { mother: -2 }, happy: 2 }, log: '{mother}[이/가] 밤새 김을 오려 고양이 얼굴을 만들었다. 눈이 짝짝이였다.' }
     ] });
   K({ id: 'cn_mid_autumn', age: [5, 12], countries: ['cn'],
-    text: '중추절 밤 옥상. 월병 하나를 여섯 조각으로 나눈다. {mother}[이/가] 제일 큰 조각을 막내에게 밀어 준다.',
+    text: '중추절 밤 옥상. 월병을 나눈다. {mother}[이/가] 제일 큰 조각을 내게 밀어 준다.',
     choices: [
       { text: '큰 조각을 {mother}에게 돌려준다', effects: { rel: { mother: 6 }, happy: 1 }, log: '{mother}[은/는] 웃으며 그 조각을 다시 반으로 나눴다.' },
       { text: '달빛 아래 리프팅 묘기를 보여 준다', alt: { text: '달빛 아래 {hobbyAct} 솜씨를 뽐낸다', log: '박수가 쏟아졌다.',
@@ -768,7 +768,7 @@
       { text: '크리켓으로 갈아탄다', effects: { happy: 2, flags: ['in_cricket'] }, log: '삼촌이 동네방네 자랑을 했다.' }
     ] });
   K({ id: 'pt_flower_festival', age: [5, 11], countries: ['pt'], cond: { rel: { father: 'alive' } },
-    text: '{holiday2} 아침, 공원 정원사인 {father}[이/가] 꽃 수레를 끌고 나간다. "막내야, 같이 가자."',
+    text: '{holiday2} 아침, {father}[이/가] 꽃 수레를 끌고 나간다. "같이 가자."',
     choices: [
       { text: '꽃 수레를 같이 민다', effects: { grit: 2, rel: { father: 6 } }, log: '{father}[이/가] 심은 꽃길을 따라 퍼레이드가 지나갔다. 괜히 어깨가 으쓱했다.' },
       { text: '광장에서 공을 찬다', effects: { football: 2, happy: 2, rel: { father: -1 } }, log: '꽃잎이 흩날리는 광장에서 관광객들이 박수를 쳤다.' },
