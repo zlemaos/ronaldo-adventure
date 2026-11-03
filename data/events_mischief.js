@@ -7,20 +7,20 @@
     // ---------------------------------------------------------------- childhood 5-12
 
     // ---------------------------------------------------------------- teens 13-19
-    { id: 'mis_smoke_try', age: [13, 17], once: true, decision: true,
+    { id: 'mis_smoke_try', age: [13, 17], once: true, decision: true, cond: { edu: ['middle', 'high'] },
       text: '학교 뒤 창고, 선배가 담배를 내민다. "한 번만 펴 봐."',
       choices: [
         { text: '받아서 피운다', risky: true, check: { odds: 0.6 },
           success: { effects: { social: 3, health: -2, mischief: 4, flags: ['smoker'] }, log: '콜록거렸지만 선배들이 어깨를 쳐 줬다. 끊기가 더 어렵다는 건 나중에 알았다.' },
           fail: { effects: { health: -2, happy: -3, mischief: 4, rep: -4, flags: ['smoker'], fx: ['suspend'] }, log: '학생부 선생님이 창고 문을 열었다. 정학이다.' } },
-        { text: '"폐활량은 공 찰 때 써야죠" 거절한다', effects: { health: 1, social: -1 }, log: '선배가 피식 웃었다. 다음 경기에서 혼자 끝까지 뛰었다.' }
+        { text: '"건강은 지켜야죠" 거절한다', effects: { health: 1, social: -1 }, log: '선배가 피식 웃었다. 담배 연기를 피해 밖으로 나왔다.' }
       ] },
     { id: 'mis_teen_drink', age: [15, 18], cooldown: 3,
       text: '{friend}네 부모님이 여행을 갔다. 냉장고에 맥주가 가득하다.',
       choices: [
         { text: '오늘은 어른처럼 마신다', risky: true, check: { odds: 0.55 },
           success: { effects: { happy: 5, social: 3, alcohol: 5, mischief: 4, rel: { friend: 4 } }, log: '다 같이 노래를 부르다 잠들었다. 다음 날 머리가 깨질 것 같았다.' },
-          fail: { effects: { health: -3, happy: -3, alcohol: 5, mischief: 4, rep: -3, rel: { mother: -6 } }, log: '토하고 쓰러진 걸 {friend}[이/가] 집까지 업어다 줬다. 현관에서 엄마와 눈이 마주쳤다.' } },
+          fail: { effects: { health: -3, happy: -3, alcohol: 5, mischief: 4, rep: -3, rel: { mother: -6 } }, log: '토하고 쓰러진 걸 {friend}[이/가] 집까지 업어다 줬다. 정신이 들자 부끄러워 고개를 들 수 없었다.' } },
         { text: '콜라로 건배한다', effects: { social: 1, health: 1 }, log: '맨정신이라 친구들의 흑역사를 전부 기억하게 됐다.' }
       ] },
     { id: 'mis_exam_cheat', age: [13, 18], cooldown: 3, cond: { edu: ['middle', 'high'] }, decision: true,
@@ -60,7 +60,7 @@
       choices: [
         { text: '도전한다', risky: true, check: { odds: 0.6 },
           success: { effects: { happy: 4, social: 3, mischief: 6 }, log: '삼각김밥 세 개. 친구들이 박수를 쳤다. 맛은 이상하게 별로였다.' },
-          fail: { effects: { happy: -5, mischief: 6, rep: -6, record: 1, rel: { mother: -6 } }, log: 'CCTV에 얼굴이 정면으로 찍혔다. 경찰서에서 엄마를 기다렸다.' } },
+          fail: { effects: { happy: -5, mischief: 6, rep: -6, record: 1, rel: { mother: -6 } }, log: 'CCTV에 얼굴이 정면으로 찍혔다. 경찰서에서 무슨 일이 있었는지 설명해야 했다.' } },
         { text: '"난 빠질게" 돌아선다', effects: { rep: 1, social: -1 }, log: '겁쟁이 소리를 들었지만 다리 뻗고 잤다.' }
       ] },
     { id: 'mis_fake_id', age: [17, 19], cooldown: 3,
@@ -103,7 +103,7 @@
           fail: { effects: { happy: -3, mischief: 3, rep: -2, rel: { friend: -6 } }, log: '{friend}[이/가] 돌아와 공책을 낚아챘다. "말을 하지 그랬어."' } },
         { text: '부탁하고 빌린다', effects: { social: 1, rel: { friend: 2 } }, log: '"떡볶이 한 번." 거래가 성사됐다.' }
       ] },
-    { id: 'mis_lie_concert', age: [14, 18], once: true, decision: true,
+    { id: 'mis_lie_concert', age: [14, 18], once: true, decision: true, cond: { rel: { mother: 'alive' } },
       text: '{bigcity}에서 꿈의 콘서트가 열린다. 엄마는 절대 안 된다고 했다.',
       choices: [
         { text: '"독서실에서 밤샐게요" 하고 간다', risky: true, check: { odds: 0.65 },
@@ -111,8 +111,8 @@
           fail: { effects: { happy: -4, mischief: 4, rel: { mother: -8 } }, log: '독서실 사장님이 엄마 친구였다. 터미널에서 붙잡혔다.' } },
         { text: '집에서 생중계를 본다', effects: { happy: 1, rel: { mother: 2 } }, log: '엄마가 치킨을 시켜 줬다. 나쁘지 않았다.' }
       ] },
-    { id: 'mis_lie_found', age: [15, 25], once: true, weight: 1, cond: { flags: ['lie_concert'] },
-      text: '엄마가 휴대폰을 내민다. 2년 전 콘서트 맨 앞줄 사진에 내 얼굴이 크게 찍혀 있다.',
+    { id: 'mis_lie_found', age: [15, 25], once: true, weight: 1, cond: { flags: ['lie_concert'], rel: { mother: 'alive' } },
+      text: '엄마가 휴대폰을 내민다. 몰래 갔던 콘서트 맨 앞줄 사진에 내 얼굴이 크게 찍혀 있다.',
       choices: [
         { text: '"그거… 저 맞아요" 사과한다', effects: { happy: -1, rep: 1, rel: { mother: 3 }, unflags: ['lie_concert'] }, log: '엄마가 한참 웃더니 "재밌었니?" 물었다.' },
         { text: '닮은 사람이라고 끝까지 우긴다', risky: true, check: { stat: 'social', diff: 50 },
@@ -141,7 +141,7 @@
         { text: '첫 심부름을 맡는다', risky: true, check: { odds: 0.5 },
           success: { effects: { money: 3000, happy: 3, mischief: 8, rep: -3 }, log: '봉투 하나 옮기고 두툼한 돈을 받았다. 무엇을 옮겼는지는 묻지 않았다.' },
           fail: { effects: { mischief: 8, rep: -8, fx: ['jail'] }, log: '봉투를 받는 순간 사복 경찰이 다가왔다.' } },
-        { text: '"전 공이나 찰게요" 거절한다', effects: { rep: 2, grit: 1 }, log: '형들이 혀를 찼다. 그 뒤로 그 골목은 돌아서 다녔다.' }
+        { text: '"전 안 할게요" 거절한다', effects: { rep: 2, grit: 1 }, log: '형들이 혀를 찼다. 그 뒤로 그 골목은 돌아서 다녔다.' }
       ] },
 
     // ---------------------------------------------------------------- football
@@ -180,7 +180,7 @@
 
     // ---------------------------------------------------------------- adults 20-59
     { id: 'mis_drunk_drive', age: [20, 70], cooldown: 5, decision: true,
-      text: '회식이 끝났다. 대리기사가 한 시간 뒤에나 온단다. 집까지는 고작 10분.',
+      text: '술자리가 끝났다. 대신 운전해 줄 사람은 한 시간 뒤에나 온단다. 집까지는 고작 10분.',
       choices: [
         { text: '직접 운전한다', risky: true, check: { odds: 0.7 },
           success: { effects: { money: 40, alcohol: 3, mischief: 5 }, log: '무사히 도착했다. 운이었다는 걸 알면서도 다음이 무서웠다.' },
@@ -220,7 +220,7 @@
           fail: { effects: { rep: -8, mischief: 5, record: 1, fx: ['fired'] }, log: '감사팀이 거래처 장부를 열었다. 해고 통보는 짧았다.' } },
         { text: '봉투를 돌려준다', effects: { rep: 3, happy: 1 }, log: '거래처 사람이 머쓱해했다. 계약은 정상 절차대로 진행됐다.' }
       ] },
-    { id: 'mis_bribe_official', age: [25, 64], cooldown: 8, cond: { sector: ['government', 'public', 'military'] }, decision: true,
+    { id: 'mis_bribe_official', age: [25, 64], cooldown: 8, cond: { career: ['civil_servant'] }, decision: true,
       text: '인허가 서류를 든 업자가 "식사나 한번 하시죠"라며 명함 뒤에 숫자를 적어 보인다.',
       choices: [
         { text: '식사 자리에 나간다', risky: true, check: { odds: 0.55 },
@@ -229,7 +229,7 @@
         { text: '감사실에 보고한다', effects: { rep: 4, happy: 1 }, log: '"청렴 공무원" 표창을 받았다. 업자는 다른 동네로 떠났다.' }
       ] },
     { id: 'mis_company_card', age: [22, 60], cooldown: 5, cond: { career: 'any' },
-      text: '법인카드가 손에 있다. 오늘 가족 외식을 "거래처 미팅"으로 처리할 수 있을 것 같다.',
+      text: '법인카드가 손에 있다. 오늘 개인적인 식사를 "거래처 미팅"으로 처리할 수 있을 것 같다.',
       choices: [
         { text: '긁는다', risky: true, check: { odds: 0.6 },
           success: { effects: { money: 300, happy: 3, mischief: 4 }, log: '한우가 맛있었다. 영수증엔 거래처 이름이 적혔다.' },
@@ -237,15 +237,15 @@
         { text: '내 카드로 낸다', effects: { money: -300, happy: 2 }, log: '정직한 한우는 더 맛있었다.' }
       ] },
     { id: 'mis_fake_sick_day', age: [22, 60], cooldown: 4, cond: { career: 'any' },
-      text: '오늘 {league} 빅매치가 낮 경기다. 몸은 멀쩡하다.',
+      text: '오늘 {league} 빅매치가 낮 경기다. 미리 잡아 둔 약속과 시간이 겹친다.',
       choices: [
-        { text: '목소리를 쉬게 해서 병가를 낸다', risky: true, check: { odds: 0.65 },
+        { text: '목소리를 쉬게 해서 아프다고 둘러댄다', risky: true, check: { odds: 0.65 },
           success: { effects: { happy: 6, mischief: 3 }, log: '경기장에서 목이 쉬도록 응원했다. 내일은 진짜 목이 쉬어 있을 것이다.' },
-          fail: { effects: { happy: -3, rep: -3, mischief: 3 }, log: '중계 화면에 내가 잡혔다. 팀장님이 그 장면을 캡처해 보냈다.' } },
-        { text: '점심시간에 하이라이트를 본다', effects: { happy: 1 }, log: '골 장면만 다섯 번 돌려 봤다.' }
+          fail: { effects: { happy: -3, rep: -3, mischief: 3 }, log: '중계 화면에 내가 잡혔다. 약속 상대가 그 장면을 캡처해 보냈다.' } },
+        { text: '약속을 지키고 나중에 하이라이트를 본다', effects: { happy: 1 }, log: '골 장면만 다섯 번 돌려 봤다.' }
       ] },
     { id: 'mis_affair', age: [25, 65], cooldown: 8, cond: { rel: { spouse: 'yes' } }, decision: true,
-      text: '동창회에서 옛 연인과 단둘이 남았다. "2차 갈래?"',
+      text: '모임에서 호감을 보이던 사람과 단둘이 남았다. "2차 갈래?"',
       choices: [
         { text: '따라간다', risky: true, check: { odds: 0.5 },
           success: { effects: { happy: 5, mischief: 6, rel: { spouse: -3 } }, log: '설레는 밤이었다. 집에 돌아와 {spouse}의 얼굴을 똑바로 보지 못했다.' },
@@ -308,7 +308,7 @@
           fail: { effects: { mischief: 8, rep: -8, fx: ['jail'] }, log: '내부에 정보원이 있었다. 문을 여는 순간 손전등이 켜졌다.' } },
         { text: '이번엔 빠진다', effects: { rep: 1, happy: -1 }, log: '보스가 차갑게 웃었다. 그 작업은 실패했다고 들었다.' }
       ] },
-    { id: 'mis_fake_news', age: [24, 60], cooldown: 6, cond: { sector: ['media', 'entertainment'] },
+    { id: 'mis_fake_news', age: [24, 60], cooldown: 6, cond: { career: ['journalist'] },
       text: '조회수가 바닥이다. 확인 안 된 스캔들을 "단독"으로 올리면 터질 것 같다.',
       choices: [
         { text: '올린다', risky: true, check: { odds: 0.55 },
@@ -351,12 +351,12 @@
         { text: '옆 사람과 수다를 떨며 기다린다', effects: { social: 2, happy: 1 }, log: '진료 차례가 왔을 때 새 친구가 생겨 있었다.' }
       ] },
     { id: 'mis_senior_drive', age: [72, 85], once: true, decision: true,
-      text: '가족들이 운전면허를 반납하라고 한다. "아직 눈이 쌩쌩한데!"',
+      text: '진료 중 운전을 그만두는 게 어떻겠느냐는 말을 들었다. "아직 눈이 쌩쌩한데!"',
       choices: [
         { text: '고집대로 계속 운전한다', risky: true, check: { stat: 'health', diff: 50 },
           success: { effects: { happy: 4, mischief: 3 }, log: '시장 가는 길은 여전히 내 차지다. 주차만 조금 오래 걸린다.' },
           fail: { effects: { health: -10, money: -3000, rep: -4, mischief: 3 }, log: '브레이크 대신 가속 페달을 밟았다. 다행히 다친 건 나와 화단뿐이었다.' } },
-        { text: '면허를 반납한다', effects: { happy: -2, health: 1, rep: 2 }, log: '교통카드 충전 혜택을 받았다. 버스 창밖 풍경이 꽤 좋다.' }
+        { text: '면허를 반납한다', effects: { happy: -2, health: 1, rep: 2 }, log: '대중교통을 이용하기로 했다. 버스 창밖 풍경이 꽤 좋다.' }
       ] },
     { id: 'mis_senior_miracle_cure', age: [62, 85], cooldown: 8,
       text: '경로당 친구들에게 "만병통치 약초즙"을 팔자는 제안을 받았다.',
@@ -379,7 +379,7 @@
       choices: [
         { text: '통장이 두둑한 척한다', risky: true, check: { odds: 0.6 },
           success: { effects: { happy: 5, mischief: 4, rel: { children: 8 } }, log: '매주 자식들이 찾아온다. 통장 잔고는 비밀이다.' },
-          fail: { effects: { happy: -4, rep: -3, mischief: 4, rel: { children: -10 } }, log: '손주가 통장을 펼쳐 봤다. 가족 단톡방이 조용해졌다.' } },
+          fail: { effects: { happy: -4, rep: -3, mischief: 4, rel: { children: -10 } }, log: '자식에게 통장 잔고를 들켰다. 대화가 뚝 끊겼다.' } },
         { text: '"보고 싶다"고 솔직하게 말한다', effects: { happy: 3, rel: { children: 5 } }, log: '다음 주말, 자식들이 반찬통을 잔뜩 들고 왔다.' }
       ] },
     { id: 'mis_senior_samples', age: [68, 85], cooldown: 4,
