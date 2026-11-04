@@ -490,9 +490,9 @@
             if (RA.RNG.next(r) < v.risk.p) {
               E.applyEffects(s, v.risk.effects, []);
               s.flags.prenatal_trouble = o.id;
-              out += E.render(s, v.risk.text) + ' ';
+              out += E.narrative(s, v.risk.text) + ' ';
             }
-            return out + E.render(s, '그리고 마침내 {name}[이/가] 태어났다!');
+            return out + E.narrative(s, '그리고 마침내 {name}[이/가] 태어났다!');
           } };
       });
     }
@@ -634,7 +634,7 @@
       ns.stats.smarts = Math.max(ns.stats.smarts, E.rint(ns, 45, 70));
       ns.stats.grit = Math.max(ns.stats.grit, E.rint(ns, 40, 65));
     } else E.updateEducation(ns, true);
-    E.addLog(ns, '부모님 ' + ns.legacy.parentName + '의 뒤를 이어 ' + ns.age + '세의 ' + ns.generation + '대 ' + E.render(ns, '{name}[으로/로] 삶을 이어 간다.') + ' 유산 ' + T.money(estate, c) + '.', 'milestone');
+    E.addLog(ns, '부모님 ' + ns.legacy.parentName + '의 뒤를 이어 ' + ns.age + '세의 ' + ns.generation + '대 ' + E.narrative(ns, '{name}[으로/로] 삶을 이어 간다.') + ' 유산 ' + T.money(estate, c) + '.', 'milestone');
     return ns;
   };
 

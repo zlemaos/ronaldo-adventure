@@ -14,7 +14,7 @@ test('a named life can be renamed, saved and continued with grammatical story te
   assert.match(prenatal.text, /민준을 품은/);
   const born = E.choose(s, prenatal.choices.find(c => c.enabled).i);
   assert.match(born.log, /민준이 태어났다/);
-  E.addCard(s, { id: 'name-card', text: E.render(s, template) });
+  E.addCard(s, { id: 'name-card', text: E.narrative(s, template) });
   const rng = JSON.stringify(s.rng), stats = JSON.stringify(s.stats);
   E.renameHero(s, '  하늘  ');
   assert.equal(E.render(s, template), '하늘이 하늘은 하늘을 하늘과 하늘로 하늘아');
@@ -39,7 +39,7 @@ test('a named life can be renamed, saved and continued with grammatical story te
   assert.equal(next.legacy.parentName, '수아');
   const collision = E.newGame({ given: '나' });
   E.addLog(collision, '나는 나무를 봤다.', 'info');
-  E.addLog(collision, E.render(collision, '{name}[은/는] 나무를 봤다.'), 'info');
+  E.addLog(collision, E.narrative(collision, '{name}[은/는] 나무를 봤다.'), 'info');
   E.renameHero(collision, '민준');
   assert.equal(collision.log.at(-2).t, '나는 나무를 봤다.');
   assert.equal(collision.log.at(-1).t, '민준은 나무를 봤다.');
@@ -48,6 +48,33 @@ test('a named life can be renamed, saved and continued with grammatical story te
   assert.equal(E.summary(next).name, '2대 보람');
   assert.ok(next.log.some(e => /2대 보람으로 삶을/.test(e.t)));
   assert.equal(next.legacy.parentName, '수아');
+});
+
+test('ordinary prose stays literal after an identical named passage was rendered', () => {
+  const { Engine: E } = load(), s = E.newGame({ given: '나' });
+  E.render(s, '{name}[은/는] 나무를 봤다.');
+  E.addLog(s, '나는 나무를 봤다.');
+  E.addCard(s, { id: 'literal', text: '나는 나무를 봤다.' });
+  E.addLog(s, E.narrative(s, '{name}[은/는] 나무를 봤다.'));
+  E.renameHero(s, '민준');
+  assert.equal(s.log.at(-3).t, '나는 나무를 봤다.');
+  assert.equal(s.cards.at(-1).text, '나는 나무를 봤다.');
+  assert.equal(s.log.at(-1).t, '민준은 나무를 봤다.');
+});
+
+test('pronunciation choice persists and rerenders all particles in history', () => {
+  const { Engine: E, Save: S } = load(), store = S.memStorage();
+  let s = E.newGame({ given: 'Jane', nameBatchim: true });
+  const t = '{name}[이/가] {name}[은/는] {name}[을/를] {name}[과/와] {name}[으로/로] {name}[아/야]';
+  E.addLog(s, E.narrative(s, t));
+  assert.equal(s.log.at(-1).t, 'Jane이 Jane은 Jane을 Jane과 Jane으로 Jane아');
+  S.save(1, s, store); s = S.load(1, store);
+  E.renameHero(s, 'Jane', false);
+  assert.equal(s.log.at(-1).t, 'Jane가 Jane는 Jane를 Jane와 Jane로 Jane야');
+  E.renameHero(s, '하늘', true);
+  assert.equal(E.render(s, '{name}[으로/로]'), '하늘로');
+  E.renameHero(s, '7', false);
+  assert.equal(E.render(s, '{name}[은/는] {name}[으로/로]'), '7은 7로');
 });
 
 test('character names trim, limit to 20 characters, and default when blank', () => {

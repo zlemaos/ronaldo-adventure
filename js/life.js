@@ -69,7 +69,7 @@
       if (R.next(R.create(s.seed + '|hobbyrisk|' + id + '|' + s.age)) >= h.risk.p) return false;
       s.flags.hobby_hurt = id;
       var chg = E.applyEffects(s, h.risk.effects, []);
-      E.addLog(s, h.icon + ' ' + E.render(s, h.risk.text), 'bad', { chg: E.compactChanges(chg) });
+      E.addLog(s, h.icon + ' ' + E.narrative(s, h.risk.text), 'bad', { chg: E.compactChanges(chg) });
       return true;
     });
   }

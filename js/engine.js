@@ -57,16 +57,17 @@
   E.fullName = fullName;
   E.normalizeHeroName = function (name) { return Array.from(String(name == null ? '' : name).normalize('NFC').trim()).slice(0, 20).join('') || C.HERO_NAME; };
   E.heroName = function (s) { return E.normalizeHeroName(s.hero.given); };
-  E.renameHero = function (s, name) {
+  E.renameHero = function (s, name, batchim) {
     var before = E.heroName(s), after = E.normalizeHeroName(name);
+    s.hero.nameBatchim = typeof batchim === 'boolean' ? batchim : T.lastInfo(after).batchim;
+    s.hero.given = after; s.hero.nick = after;
     function update(entry, key) {
       if (entry.nameText == null) entry.nameText = T.nameTemplate(entry[key], before);
-      entry[key] = T.fixJosa(T.render(entry.nameText, { name: after, nick: after }));
+      entry[key] = E.render(s, entry.nameText);
     }
     (s.log || []).forEach(function (e) { update(e, 't'); });
     (s.cards || []).forEach(function (card) { update(card, 'text'); });
     s.hero.given = after; s.hero.nick = after;
-    renderedNames.delete(s);
     return after;
   };
   // UI cue for a big triumph (goal, trophy, promotion, big win). Presentation only: never affects outcomes.
@@ -130,6 +131,7 @@
       birthYear: opts.birthYear || BIRTH_YEAR, age: 0, year: 0, alive: true, cause: null,
       hero: {
         given: E.normalizeHeroName(opts.given),
+        nameBatchim: typeof opts.nameBatchim === 'boolean' ? opts.nameBatchim : T.lastInfo(E.normalizeHeroName(opts.given)).batchim,
         surname: opts.surname != null ? opts.surname : (c.hero.surname || ''),
         nick: E.normalizeHeroName(opts.given),
         gender: opts.gender || 'm', hair: 0, skin: 0
@@ -235,30 +237,16 @@
   E.vars = vars;
   // Retain hero tokens while freezing the other names/facts at the time a passage was written.
   // This lets a later rename update history without changing a similarly named relative or ordinary word.
-  var renderedNames = new WeakMap();
   function renderNarrative(s, text, values) {
-    var out = T.fixJosa(T.render(text, values));
-    if (/\{(?:name|nick)\}/.test(text || '')) {
-      if (!renderedNames.has(s)) renderedNames.set(s, new Map());
-      renderedNames.get(s).set(out, T.render(text, values, { name: true, nick: true }));
-    }
-    return out;
+    return T.render(text, values, { name: true, nick: true });
   }
-  function savedNameText(s, text) {
-    var entries = renderedNames.get(s);
-    if (!entries) return text;
-    Array.from(entries.keys()).sort(function (a, b) { return b.length - a.length; }).forEach(function (rendered) {
-      if (rendered) text = text.split(rendered).join(entries.get(rendered));
-    });
-    return text;
-  }
-  E.render = function (s, text) { return renderNarrative(s, text, vars(s)); };
+  E.narrative = function (s, text) { return renderNarrative(s, text, vars(s)); };
+  E.render = function (s, text) { return T.fixJosa(T.render(text, vars(s), null, { name: s.hero.nameBatchim, nick: s.hero.nameBatchim })); };
   E.displayName = displayName;
 
   // ---------------------------------------------------------------- log
   function addLog(s, text, kind, extra) {
-    var e = { age: s.age, year: s.year, t: T.fixJosa(text), k: kind || 'info' };
-    e.nameText = savedNameText(s, e.t);
+    var e = { age: s.age, year: s.year, t: E.render(s, text), k: kind || 'info', nameText: E.narrative(s, text) };
     s.seq = (s.seq || 0) + 1; e.n = s.seq;            // monotonic sequence number (audits)
     if (s.jail > 0) e.j = 1;                           // written while in prison
     if (extra) for (var x in extra) if (extra[x] != null) e[x] = extra[x];
@@ -718,7 +706,8 @@
     if (branch.run) log = branch.run(s, res) || log;
     var sch = branch.schedule || ch.schedule;
     if (sch) s.pending.push({ age: s.age + (sch.years || 1), id: sch.id });
-    res.log = renderEvent(log || '') + betNote;
+    var logTemplate = renderEvent(log || '') + betNote;
+    res.log = E.render(s, logTemplate);
     mem.chg = compactChanges(res.changes);
     var catDef = E.CATEGORIES[catKey];
     res.category = { key: catKey, label: catDef.label, icon: catDef.icon, color: catDef.color, pic: catDef.pic };
@@ -728,7 +717,7 @@
     res.scene = scn;
     res.sound = cat === 'memorial' || scn === 'rain' ? 'sorrow' : res.outcome === 'fail' ? 'bad' : (scn === 'party' || gain >= 8 || (res.outcome === 'success' && /stage|hoops|ballpark|ring|runway|stadium/.test(scn))) ? 'cheer' : 'good';
     res.fx = res.sound === 'sorrow' ? 'dim' : res.outcome === 'fail' ? 'shake' : res.sound === 'cheer' || res.outcome === 'success' ? 'glow' : null;
-    if (res.log) addLog(s, res.log, res.outcome === 'fail' ? 'bad' : res.outcome === 'success' ? 'good' : 'event', mem);
+    if (res.log) addLog(s, logTemplate, res.outcome === 'fail' ? 'bad' : res.outcome === 'success' ? 'good' : 'event', mem);
     res.changes.forEach(function (c) { if (c.k === 'msg') addLog(s, c.t, 'info'); });
     if (E.Routes) E.Routes.sync(s);
     dropJailBlocked(s);
@@ -1301,10 +1290,10 @@
 
   // A milestone card: big picture + one short sentence + stat chips. Also logged.
   E.addCard = function (s, card) {
-    var text = T.fixJosa(card.text);
+    var nameText = E.narrative(s, card.text), text = E.render(s, nameText);
     s.cards = s.cards || [];
-    s.cards.push({ id: card.id, pic: card.pic, props: card.props || null, text: text, nameText: savedNameText(s, text), chg: card.chg || [], age: s.age });
-    addLog(s, text, 'card', { pic: card.pic, chg: compactChanges(card.chg), ev: card.id, mem: card.mem ? 1 : null });
+    s.cards.push({ id: card.id, pic: card.pic, props: card.props || null, text: text, nameText: nameText, chg: card.chg || [], age: s.age });
+    addLog(s, nameText, 'card', { pic: card.pic, chg: compactChanges(card.chg), ev: card.id, mem: card.mem ? 1 : null });
   };
   function compactChanges(chg) {
     var out = [];
@@ -1335,7 +1324,7 @@
       var chg = applyEffects(s, E.footballGate(s, v.effects), []);
       if (v.talent && E.Routes) { E.Routes.addTalent(s, v.talent, 3); chg.push({ k: 'talent_' + v.talent, d: 3 }); }
       // props 'doljabi:art' = the 돌잡이 picture with the item of the art talent in the child's hands
-      E.addCard(s, { id: m.id, pic: m.pic, props: top ? (m.props || '') + ':' + top : m.props, text: E.render(s, v.text), chg: chg });
+      E.addCard(s, { id: m.id, pic: m.pic, props: top ? (m.props || '') + ':' + top : m.props, text: E.narrative(s, v.text), chg: chg });
       ids.push(m.id);
       if (afterBirth && m.id === 'ms_birth') { afterBirth(s); afterBirth = null; }
     });

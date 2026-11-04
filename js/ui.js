@@ -18,6 +18,18 @@
   function country() { return RA.data.countries[app.s ? app.s.country : app.sel.country]; }
   function money(v) { return T.money(v, country()); }
 
+  function bindNameEnding(input, parent, initial) {
+    var box = h('<div class="field"><label>이름의 마지막 소리<select aria-label="이름 받침"><option value="true">받침 있음 (Jane이, Jane은)</option><option value="false">받침 없음 (Jane가, Jane는)</option></select></label><small>실제 발음에 맞게 고르세요.</small></div>');
+    input.parentNode.appendChild(box);
+    var select = $('select', box);
+    function update(value) {
+      box.hidden = /[가-힣0-9]$/.test(E.normalizeHeroName(input.value));
+      select.value = String(typeof value === 'boolean' ? value : RA.Text.lastInfo(input.value).batchim);
+    }
+    input.addEventListener('input', function () { update(); });
+    update(initial);
+    return function () { return select.value === 'true'; };
+  }
   function editHeroName() {
     if (!app.s) return;
     setAuto(false);
@@ -29,11 +41,12 @@
       '<button class="btn" id="cancel-hero-name" type="button">취소</button></div></form>');
     var input = $('#in-hero-name', m);
     input.value = E.heroName(app.s);
+    var ending = bindNameEnding(input, m, app.s.hero.nameBatchim);
     $('#cancel-hero-name', m).onclick = showMenu;
     $('#name-form', m).onsubmit = function (e) {
       e.preventDefault();
       var renamed = S.deserialize(S.serialize(app.s));
-      E.renameHero(renamed, input.value);
+      E.renameHero(renamed, input.value, ending());
       if (!S.save(app.slot, renamed)) { toast('저장 공간을 확인해 주세요. 이름을 저장하지 못했어요.'); return; }
       app.s = renamed;
       closeModal();
@@ -210,6 +223,7 @@
       '<span class="muted">동네 클럽 ' + esc(c.clubs.local) + ' → ' + esc(c.clubs.regional) + ' → ' + esc(c.places.bigcity) + '의 ' + esc(c.clubs.academy) + '</span>';
     $('#in-seed', el).value = app.sel.seed;
     $('#in-name', el).value = app.sel.given;
+    app.nameEnding = bindNameEnding($('#in-name', el), el);
     $('#in-name', el).addEventListener('input', function (e) { app.sel.given = e.target.value; });
     $('#in-seed', el).addEventListener('input', function (e) { app.sel.seed = e.target.value; });
     $('#btn-dice', el).addEventListener('click', function () { app.sel.seed = RA.RNG.randomSeedString(); $('#in-seed').value = app.sel.seed; });
@@ -235,7 +249,7 @@
   function startGame(opts) {
     opts = opts || {};
     var seed = opts.seed || app.sel.seed || RA.RNG.randomSeedString();
-    app.s = E.newGame({ country: opts.country || app.sel.country, seed: seed, gender: opts.gender || app.sel.gender, given: opts.given != null ? opts.given : app.sel.given });
+    app.s = E.newGame({ country: opts.country || app.sel.country, seed: seed, gender: opts.gender || app.sel.gender, given: opts.given != null ? opts.given : app.sel.given, nameBatchim: opts.nameBatchim != null ? opts.nameBatchim : app.nameEnding && app.nameEnding() });
     app.cardsAge = -1; app.cardsShown = 0;
     var list = S.list();
     var empty = list.slots.filter(function (x) { return !x.meta || !x.meta.alive; })[0];

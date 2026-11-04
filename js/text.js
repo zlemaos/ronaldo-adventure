@@ -17,8 +17,9 @@
     return { batchim: false, rieul: false };
   }
 
-  function particle(word, p) {
+  function particle(word, p, batchim) {
     var i = lastInfo(word);
+    if (!/[가-힣0-9][\s\)\]"'’”.!?·]*$/.test(String(word)) && typeof batchim === 'boolean') i = { batchim: batchim, rieul: false };
     switch (p) {
       case '이/가': return i.batchim ? '이' : '가';
       case '은/는': return i.batchim ? '은' : '는';
@@ -33,12 +34,12 @@
   }
 
   // Replace {token}[x/y] patterns. `vars` maps token -> string.
-  function render(text, vars, preserve) {
+  function render(text, vars, preserve, endings) {
     if (!text) return '';
     return String(text).replace(/\{([a-zA-Z0-9]+)\}(\[(이\/가|은\/는|을\/를|과\/와|와\/과|으로\/로|아\/야|이\/)\])?/g, function (m, key, _p, part) {
       if (preserve && preserve[key]) return m;
       var v = vars && vars[key] != null ? String(vars[key]) : key;
-      return part ? v + particle(v, part) : v;
+      return part ? v + particle(v, part, endings && endings[key]) : v;
     });
   }
 
@@ -91,5 +92,5 @@
     return (neg ? '-' : '') + s + ' ' + cur.unit;
   }
 
-  RA.Text = { render: render, particle: particle, nameTemplate: nameTemplate, fixJosa: fixJosa, hasLeftoverJosa: hasLeftoverJosa, joinNames: joinNames, countWord: countWord, money: money, groupDigits: groupDigits };
+  RA.Text = { lastInfo: lastInfo, render: render, particle: particle, nameTemplate: nameTemplate, fixJosa: fixJosa, hasLeftoverJosa: hasLeftoverJosa, joinNames: joinNames, countWord: countWord, money: money, groupDigits: groupDigits };
 })(typeof globalThis !== 'undefined' ? globalThis : this);
