@@ -55,7 +55,20 @@
     return given + ' ' + surname;
   }
   E.fullName = fullName;
-  E.heroName = function (s) { return C.HERO_NAME; };
+  E.normalizeHeroName = function (name) { return Array.from(String(name == null ? '' : name).normalize('NFC').trim()).slice(0, 20).join('') || C.HERO_NAME; };
+  E.heroName = function (s) { return E.normalizeHeroName(s.hero.given); };
+  E.renameHero = function (s, name) {
+    var before = E.heroName(s), after = E.normalizeHeroName(name);
+    function update(entry, key) {
+      if (entry.nameText == null) entry.nameText = T.nameTemplate(entry[key], before);
+      entry[key] = T.fixJosa(T.render(entry.nameText, { name: after, nick: after }));
+    }
+    (s.log || []).forEach(function (e) { update(e, 't'); });
+    (s.cards || []).forEach(function (card) { update(card, 'text'); });
+    s.hero.given = after; s.hero.nick = after;
+    renderedNames.delete(s);
+    return after;
+  };
   // UI cue for a big triumph (goal, trophy, promotion, big win). Presentation only: never affects outcomes.
   E.triumph = function (s, why) { if (s && s.y) s.y.triumph = why || true; };
 
@@ -116,9 +129,9 @@
       country: cid, generation: opts.generation || 1,
       birthYear: opts.birthYear || BIRTH_YEAR, age: 0, year: 0, alive: true, cause: null,
       hero: {
-        given: C.HERO_NAME,                       // always 호날두
+        given: E.normalizeHeroName(opts.given),
         surname: opts.surname != null ? opts.surname : (c.hero.surname || ''),
-        nick: C.HERO_NAME,
+        nick: E.normalizeHeroName(opts.given),
         gender: opts.gender || 'm', hair: 0, skin: 0
       },
       stats: {}, money: 0, flags: {}, cd: {}, fired: {}, log: [], people: [], nextPid: 1,
@@ -171,7 +184,7 @@
   // ---------------------------------------------------------------- template vars
   function vars(s, ev) {
     var c = country(s), v = {};
-    v.name = s.hero.given; v.nick = s.hero.nick;
+    v.name = E.heroName(s); v.nick = v.name;
     v.father = displayName(s, person(s, 'father')) || '아버지'; v.mother = displayName(s, person(s, 'mother')) || '어머니';
     v.bro = displayName(s, person(s, 'bro')) || '형'; v.sis1 = displayName(s, person(s, 'sis1')) || '누나'; v.sis2 = displayName(s, person(s, 'sis2')) || '작은누나';
     v.friend = displayName(s, person(s, 'friend')) || '친구';
@@ -220,12 +233,32 @@
     return parts[0];
   }
   E.vars = vars;
-  E.render = function (s, text) { return T.fixJosa(T.render(text, vars(s))); };
+  // Retain hero tokens while freezing the other names/facts at the time a passage was written.
+  // This lets a later rename update history without changing a similarly named relative or ordinary word.
+  var renderedNames = new WeakMap();
+  function renderNarrative(s, text, values) {
+    var out = T.fixJosa(T.render(text, values));
+    if (/\{(?:name|nick)\}/.test(text || '')) {
+      if (!renderedNames.has(s)) renderedNames.set(s, new Map());
+      renderedNames.get(s).set(out, T.render(text, values, { name: true, nick: true }));
+    }
+    return out;
+  }
+  function savedNameText(s, text) {
+    var entries = renderedNames.get(s);
+    if (!entries) return text;
+    Array.from(entries.keys()).sort(function (a, b) { return b.length - a.length; }).forEach(function (rendered) {
+      if (rendered) text = text.split(rendered).join(entries.get(rendered));
+    });
+    return text;
+  }
+  E.render = function (s, text) { return renderNarrative(s, text, vars(s)); };
   E.displayName = displayName;
 
   // ---------------------------------------------------------------- log
   function addLog(s, text, kind, extra) {
     var e = { age: s.age, year: s.year, t: T.fixJosa(text), k: kind || 'info' };
+    e.nameText = savedNameText(s, e.t);
     s.seq = (s.seq || 0) + 1; e.n = s.seq;            // monotonic sequence number (audits)
     if (s.jail > 0) e.j = 1;                           // written while in prison
     if (extra) for (var x in extra) if (extra[x] != null) e[x] = extra[x];
@@ -638,7 +671,7 @@
     function renderEvent(text) {
       var currentVars = vars(s, ev);
       currentVars.child = eventVars.child;
-      return T.fixJosa(T.render(text, currentVars));
+      return renderNarrative(s, text, currentVars);
     }
     s.queue.shift();
     var mem = E.eventRefs(ev).isMemorial ? { mem: 1, ev: ev.id } : { ev: ev.id };
@@ -711,7 +744,7 @@
     // choiceless: apply now, log it
     var wasJailed = s.jail > 0 ? 1 : 0;
     var eventVars = vars(s, ev);
-    function renderEvent(text) { return T.fixJosa(T.render(text, eventVars)); }
+    function renderEvent(text) { return renderNarrative(s, text, eventVars); }
     var changes = applyEffects(s, ev.effects, []);
     var text = E.eventText(s, ev), evLog = E.eventLog(s, ev);
     var log = ev.run ? ev.run(s) : null;
@@ -1270,7 +1303,7 @@
   E.addCard = function (s, card) {
     var text = T.fixJosa(card.text);
     s.cards = s.cards || [];
-    s.cards.push({ id: card.id, pic: card.pic, props: card.props || null, text: text, chg: card.chg || [], age: s.age });
+    s.cards.push({ id: card.id, pic: card.pic, props: card.props || null, text: text, nameText: savedNameText(s, text), chg: card.chg || [], age: s.age });
     addLog(s, text, 'card', { pic: card.pic, chg: compactChanges(card.chg), ev: card.id, mem: card.mem ? 1 : null });
   };
   function compactChanges(chg) {

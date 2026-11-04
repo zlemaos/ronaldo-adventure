@@ -7,7 +7,7 @@
 
   RA.C = {
     SAVE_VERSION: 7,
-    HERO_NAME: '호날두',          // the hero is always 호날두 (male or female)
+    HERO_NAME: '호날두',          // default protagonist name (male or female)
     STATS: ['health', 'happy', 'smarts', 'looks', 'football', 'grit', 'social', 'fame'],
     STAT_LABELS: {
       health: '건강', happy: '행복', smarts: '지능', looks: '외모',

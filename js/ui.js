@@ -7,7 +7,7 @@
 
   var app = {
     s: null, slot: 1, tab: 'acts', screen: 'start', mood: null, moodUntil: 0,
-    sel: { country: 'pt', gender: 'm', seed: '' },
+    sel: { country: 'pt', gender: 'm', seed: '', given: C.HERO_NAME },
     canvases: [], jobFilter: 'ok',
     auto: false, speed: 1, autoTimer: null, cardsShown: 0, cardsAge: -1, montageOpen: false, busy: false
   };
@@ -18,29 +18,28 @@
   function country() { return RA.data.countries[app.s ? app.s.country : app.sel.country]; }
   function money(v) { return T.money(v, country()); }
 
-  function applyGameName() {
-    var name = S.gameName();
-    doc.title = name;
-    $('#game-name').textContent = name;
-    var title = $('#start-game-name');
-    if (title) title.textContent = name;
-  }
-  function editGameName() {
-    var m = modal('<form id="name-form"><h2>게임 이름 바꾸기</h2>' +
-      '<div class="field"><label for="in-game-name">게임 이름 (최대 20자)</label>' +
-      '<input type="text" id="in-game-name" maxlength="20" autocomplete="off">' +
-      '<p class="muted">비우면 인생게임으로 돌아갑니다. 이 기기에 저장됩니다.</p></div>' +
+  function editHeroName() {
+    if (!app.s) return;
+    setAuto(false);
+    var m = modal('<form id="name-form"><h2>캐릭터 이름 바꾸기</h2>' +
+      '<div class="field"><label for="in-hero-name">캐릭터 이름 (최대 20자)</label>' +
+      '<input type="text" id="in-hero-name" maxlength="20" autocomplete="off">' +
+      '<p class="muted">비우면 호날두가 됩니다. 현재 인생의 기록에도 새 이름이 적용됩니다.</p></div>' +
       '<div class="row"><button class="btn btn-green" type="submit">저장</button>' +
-      '<button class="btn" id="cancel-game-name" type="button">취소</button></div></form>');
-    var input = $('#in-game-name', m);
-    input.value = S.gameName();
-    $('#cancel-game-name', m).onclick = function () { closeModal(); $('#btn-rename').focus(); };
+      '<button class="btn" id="cancel-hero-name" type="button">취소</button></div></form>');
+    var input = $('#in-hero-name', m);
+    input.value = E.heroName(app.s);
+    $('#cancel-hero-name', m).onclick = showMenu;
     $('#name-form', m).onsubmit = function (e) {
       e.preventDefault();
-      if (!S.setGameName(input.value)) { toast('저장 공간을 확인해 주세요. 이름을 저장하지 못했어요.'); return; }
-      applyGameName(); closeModal(); $('#btn-rename').focus();
+      var renamed = S.deserialize(S.serialize(app.s));
+      E.renameHero(renamed, input.value);
+      if (!S.save(app.slot, renamed)) { toast('저장 공간을 확인해 주세요. 이름을 저장하지 못했어요.'); return; }
+      app.s = renamed;
+      closeModal();
+      if (app.screen === 'summary') renderSummary(); else { refresh(true); proceed(); }
     };
-    input.onkeydown = function (e) { if (e.key === 'Escape') { e.preventDefault(); closeModal(); $('#btn-rename').focus(); } };
+    input.onkeydown = function (e) { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); showMenu(); } };
     input.focus(); input.select();
   }
 
@@ -177,7 +176,7 @@
       '<section class="card"><div class="card-h">새 인생 시작</div><div class="card-b">' +
       '<div class="field"><label>태어날 나라를 고르세요</label><div class="countries" id="countries"></div></div>' +
       '<div class="family-preview" id="family"></div>' +
-      '<div class="field"><label>주인공</label><div class="hero-name">' + esc(C.HERO_NAME) + ' <span class="muted">(남녀 모두 이름은 호날두)</span></div></div>' +
+      '<div class="field"><label for="in-name">캐릭터 이름 (최대 20자)</label><input type="text" id="in-name" maxlength="20" autocomplete="off"><p class="muted">비우면 호날두가 됩니다. 나중에 ☰ 메뉴에서 바꿀 수 있어요.</p></div>' +
       '<div class="field"><label>성별</label><div class="seg" id="seg-g"><button data-g="m">남</button><button data-g="f">여</button></div></div>' +
       '<div class="field"><label>시드 (같은 시드 + 같은 선택 = 같은 인생)</label><div class="row"><input type="text" class="grow" id="in-seed" maxlength="24" placeholder="비우면 무작위"><button class="btn btn-sm" id="btn-dice" title="무작위 시드">🎲</button></div></div>' +
       '<div class="field"><button class="btn btn-green" id="btn-start" style="width:100%;font-size:17px;padding:14px">인생 시작하기 ▶</button></div>' +
@@ -188,9 +187,7 @@
       var cc = RA.data.countries[app.sel.country];
       return { age: 24, skin: cc.skin[0], hairColor: cc.hair, hair: 1, outfit: 'kit', gender: app.sel.gender, number: 7, mood: 'celebrate' };
     }, 128));
-    banner.appendChild(h('<div class="title-over"><h1 id="start-game-name"></h1><button class="btn btn-sm" id="btn-rename" type="button">✏️ 이름 바꾸기</button><p>도트 인생 시뮬레이션 · 비공식 팬 패러디</p></div>'));
-    applyGameName();
-    $('#btn-rename', el).onclick = editGameName;
+    banner.appendChild(h('<div class="title-over"><h1>인생게임</h1><p>도트 인생 시뮬레이션 · 비공식 팬 패러디</p></div>'));
     // countries
     var grid = $('#countries', el);
     // the canon route (Portugal) comes first, as a wide card
@@ -212,6 +209,8 @@
       }).join(', ') + '<br>' +
       '<span class="muted">동네 클럽 ' + esc(c.clubs.local) + ' → ' + esc(c.clubs.regional) + ' → ' + esc(c.places.bigcity) + '의 ' + esc(c.clubs.academy) + '</span>';
     $('#in-seed', el).value = app.sel.seed;
+    $('#in-name', el).value = app.sel.given;
+    $('#in-name', el).addEventListener('input', function (e) { app.sel.given = e.target.value; });
     $('#in-seed', el).addEventListener('input', function (e) { app.sel.seed = e.target.value; });
     $('#btn-dice', el).addEventListener('click', function () { app.sel.seed = RA.RNG.randomSeedString(); $('#in-seed').value = app.sel.seed; });
     Array.prototype.forEach.call(el.querySelectorAll('#seg-g button'), function (b) {
@@ -236,7 +235,7 @@
   function startGame(opts) {
     opts = opts || {};
     var seed = opts.seed || app.sel.seed || RA.RNG.randomSeedString();
-    app.s = E.newGame({ country: opts.country || app.sel.country, seed: seed, gender: opts.gender || app.sel.gender });
+    app.s = E.newGame({ country: opts.country || app.sel.country, seed: seed, gender: opts.gender || app.sel.gender, given: opts.given != null ? opts.given : app.sel.given });
     app.cardsAge = -1; app.cardsShown = 0;
     var list = S.list();
     var empty = list.slots.filter(function (x) { return !x.meta || !x.meta.alive; })[0];
@@ -298,7 +297,7 @@
     var ap = ''; for (var i = 0; i < E.AP_PER_YEAR; i++) ap += '<i class="' + (i < s.ap ? '' : 'off') + '"></i>';
     var where = s.jail > 0 ? '수감 중 (' + s.jail + '년 남음)' : (s.flags.abroad ? (s.abroadCity || '해외') : (s.flags.moved_alone && s.age < 40 ? c.places.bigcity : c.places.city));
     $('#who').innerHTML =
-      '<div class="nm"><span class="age">' + s.age + '살</span><span>' + esc(E.genName(s.generation)) + '</span></div>' +
+      '<div class="nm"><span class="age">' + s.age + '살</span><span>' + esc(E.genName(s.generation, E.heroName(s))) + '</span></div>' +
       '<div class="sub">' + esc(c.name) + ' · ' + esc(where) + ' · ' + s.year + '년</div>' +
       '<div class="sub">' + esc(s.job ? E.jobTitle(s) : eduLabel(s)) + '</div>' +
       (s.route && !E.isMontage(s) ? '<div class="sub route-chip">🧭 ' + esc(E.Routes.label(s)) + '</div>' : '') +
@@ -869,9 +868,9 @@
     });
     $('#btn-replay', el).addEventListener('click', function () {
       var cc = RA.data.countries[s.country];
-      if (s.generation > 1) { startGame({ country: s.country, seed: s.seed.split('-G')[0] }); return; }
+      if (s.generation > 1) { startGame({ country: s.country, seed: s.seed.split('-G')[0], given: E.heroName(s) }); return; }
       void cc;
-      startGame({ country: s.country, seed: s.seed, gender: s.hero.gender, slot: app.slot });
+      startGame({ country: s.country, seed: s.seed, gender: s.hero.gender, slot: app.slot, given: E.heroName(s) });
     });
     $('#btn-new', el).addEventListener('click', function () { renderStart(); });
     $('#btn-hall', el).addEventListener('click', showEndings);
@@ -890,10 +889,12 @@
     var m = modal('<div class="card-h">메뉴 <button class="btn btn-sm btn-ghost" id="x">닫기</button></div><div class="card-b">' +
       (app.s ? '<div class="section-title">저장 슬롯 (현재: ' + app.slot + '번 · 매년 자동 저장)</div>' : '<div class="section-title">저장 슬롯</div>') +
       '<div class="slots" id="mslots"></div>' +
+      (app.s ? '<div class="section-title">캐릭터</div><button class="btn" id="btn-rename">✏️ 이름 바꾸기</button>' : '') +
       '<div class="section-title">인생 길잡이</div><div class="row">' + (app.s ? '<button class="btn grow" id="m-path">🧭 진로</button>' : '') + '<button class="btn grow" id="m-endings">📖 엔딩 도감</button></div>' +
       '<div class="section-title">게임</div><div class="row"><button class="btn grow" id="m-new">새 인생</button>' + (app.s ? '<button class="btn grow" id="m-help">도움말</button>' : '') + '</div>' +
       '<p class="hint">비공식 팬 패러디 게임입니다. 실존 인물·구단과 관계가 없으며 등장하는 구단·학교 이름은 모두 가상입니다. 폰트: Galmuri (OFL-1.1).</p></div>', { dismiss: true });
     m.querySelector('#x').addEventListener('click', closeModal);
+    var rename = m.querySelector('#btn-rename'); if (rename) rename.addEventListener('click', editHeroName);
     m.querySelector('#m-new').addEventListener('click', function () { closeModal(); renderStart(); });
     var hb = m.querySelector('#m-help'); if (hb) hb.addEventListener('click', showHelp);
     var pb = m.querySelector('#m-path'); if (pb) pb.addEventListener('click', showPaths);
@@ -965,6 +966,8 @@
 
   // ---------------------------------------------------------------- boot
   function boot() {
+    // The old title preference is obsolete; the game itself is always 인생게임.
+    try { G.localStorage.removeItem('ronaldo-adventure.name'); } catch (e) { /* blocked storage */ }
     $('#btn-mute').textContent = A.isMuted() ? '🔇' : '🔊';
     $('#btn-mute').addEventListener('click', function () { var mu = A.toggle(); $('#btn-mute').textContent = mu ? '🔇' : '🔊'; if (!mu) A.play('click'); });
     $('#btn-menu').addEventListener('click', showMenu);

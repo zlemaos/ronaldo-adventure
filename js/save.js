@@ -86,6 +86,9 @@
       s = m(s);
     }
     // defaults for any newly-optional fields (forward-compatible)
+    s.hero = s.hero || {};
+    s.hero.given = RA.Engine.normalizeHeroName(s.hero.given);
+    s.hero.nick = s.hero.given;
     s.achievements = s.achievements || {};
     s.flags = s.flags || {};
     s.jobHistory = s.jobHistory || [];
@@ -141,19 +144,11 @@
   }
 
   RA.Save = {
-    gameName: function (store) {
-      try { return (getStore(store).getItem('ronaldo-adventure.name') || '').trim().slice(0, 20) || '인생게임'; }
-      catch (e) { return '인생게임'; }
-    },
-    setGameName: function (name, store) {
-      try { getStore(store).setItem('ronaldo-adventure.name', String(name).trim().slice(0, 20) || '인생게임'); return true; }
-      catch (e) { return false; }
-    },
     KEY: KEY, SLOTS: SLOTS, MIGRATIONS: MIGRATIONS,
     migrate: migrate, serialize: serialize, deserialize: deserialize, memStorage: memStorage,
     save: function (slot, s, store) {
       var all = readAll(store);
-      all.slots[slot] = { savedAt: Date.now(), data: serialize(s), meta: { name: s.hero.given, age: s.age, country: s.country, alive: s.alive, gen: s.generation } };
+      all.slots[slot] = { savedAt: Date.now(), data: serialize(s), meta: { name: RA.Engine.heroName(s), age: s.age, country: s.country, alive: s.alive, gen: s.generation } };
       all.last = slot;
       return writeAll(all, store);
     },
@@ -164,7 +159,11 @@
     },
     list: function (store) {
       var all = readAll(store), out = [];
-      for (var i = 1; i <= SLOTS; i++) out.push({ slot: i, meta: all.slots[i] ? all.slots[i].meta : null, savedAt: all.slots[i] ? all.slots[i].savedAt : null });
+      for (var i = 1; i <= SLOTS; i++) {
+        var entry = all.slots[i], meta = entry ? Object.assign({}, entry.meta) : null;
+        if (meta) meta.name = RA.Engine.normalizeHeroName(meta.name);
+        out.push({ slot: i, meta: meta, savedAt: entry ? entry.savedAt : null });
+      }
       return { slots: out, last: all.last || null };
     },
     remove: function (slot, store) { var all = readAll(store); delete all.slots[slot]; return writeAll(all, store); }

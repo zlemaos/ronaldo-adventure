@@ -1,5 +1,5 @@
 'use strict';
-/* Round 3: fixed hero name, prenatal pick, early-childhood montage, early-education focus,
+/* Round 3: default hero name, prenatal pick, early-childhood montage, early-education focus,
  * auto-play stepping, event categories, 공감 stat and triumph cues. */
 const test = require('node:test');
 const assert = require('node:assert');
@@ -11,9 +11,9 @@ const COUNTRIES = ['pt', 'kr', 'jp', 'cn', 'us', 'br', 'ar', 'za', 'in'];
 // (a queued storylet can stop applying after an earlier choice that year, e.g. a route change; then nothing is shown)
 function pickFirst(s) { const ev = E.currentEvent(s); return ev ? E.choose(s, ev.choices.findIndex(c => c.enabled)) : null; }
 
-test('the hero is always 호날두 (male or female) and particles fit the name', () => {
+test('the default hero is 호날두 (male or female) and particles fit the name', () => {
   for (const g of ['m', 'f']) {
-    const s = E.newGame({ country: 'br', seed: 'name', gender: g, given: '다른이름' });
+    const s = E.newGame({ country: 'br', seed: 'name', gender: g });
     assert.strictEqual(s.hero.given, '호날두');
     assert.strictEqual(E.heroName(s), '호날두');
     assert.strictEqual(E.render(s, '{name}[이/가] {name}[을/를] 봤다. {name}[은/는] {name}[과/와] {name}[으로/로]'), '호날두가 호날두를 봤다. 호날두는 호날두와 호날두로');

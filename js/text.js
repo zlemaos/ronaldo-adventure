@@ -23,6 +23,7 @@
       case '이/가': return i.batchim ? '이' : '가';
       case '은/는': return i.batchim ? '은' : '는';
       case '을/를': return i.batchim ? '을' : '를';
+      case '와/과':
       case '과/와': return i.batchim ? '과' : '와';
       case '으로/로': return (i.batchim && !i.rieul) ? '으로' : '로';
       case '아/야': return i.batchim ? '아' : '야';
@@ -32,9 +33,10 @@
   }
 
   // Replace {token}[x/y] patterns. `vars` maps token -> string.
-  function render(text, vars) {
+  function render(text, vars, preserve) {
     if (!text) return '';
-    return String(text).replace(/\{([a-zA-Z0-9]+)\}(\[(이\/가|은\/는|을\/를|과\/와|으로\/로|아\/야|이\/)\])?/g, function (m, key, _p, part) {
+    return String(text).replace(/\{([a-zA-Z0-9]+)\}(\[(이\/가|은\/는|을\/를|과\/와|와\/과|으로\/로|아\/야|이\/)\])?/g, function (m, key, _p, part) {
+      if (preserve && preserve[key]) return m;
       var v = vars && vars[key] != null ? String(vars[key]) : key;
       return part ? v + particle(v, part) : v;
     });
@@ -52,6 +54,21 @@
   // Leftover particle markers that should never reach the player
   var LEFTOVER_RE = /\(으\)로|\(이\)가|와\(과\)|과\(와\)|을\(를\)|를\(을\)|은\(는\)|는\(은\)/;
   function hasLeftoverJosa(text) { return LEFTOVER_RE.test(String(text || '')); }
+
+  // Pre-naming saves have only resolved text, not name tokens. Recover the old hero references once.
+  function nameTemplate(text, before) {
+    var parts = {};
+    var quoted = { '이/가': '(이)가', '은/는': '은(는)', '을/를': '을(를)', '과/와': '과(와)', '으로/로': '(으)로', '아/야': '(아)야' };
+    ['이/가', '은/는', '을/를', '과/와', '으로/로', '아/야'].forEach(function (pair) {
+      parts[particle(before, pair)] = pair;
+    });
+    var literal = before.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    var suffix = Object.keys(parts).sort(function (a, b) { return b.length - a.length; }).join('|');
+    var re = new RegExp(literal + '(["\'”’」』》〉)\\]]*)(' + suffix + ')?(?=$|[^가-힣A-Za-z0-9]|의|에게|한테|께|보다|처럼|만큼|조차|마저|부터|까지|도|만|는|라|서|써|고|며)', 'g');
+    return String(text).replace(re, function (m, close, p) {
+      return '{name}' + (close ? close + (p ? quoted[parts[p]] : '') : (p ? '[' + parts[p] + ']' : ''));
+    });
+  }
 
   function joinNames(list) { return list.join(', '); }
   function countWord(n) { return ['아무도', '혼자', '둘', '셋', '넷', '다섯', '여섯', '일곱'][n] || String(n) + '명'; }
@@ -74,5 +91,5 @@
     return (neg ? '-' : '') + s + ' ' + cur.unit;
   }
 
-  RA.Text = { render: render, particle: particle, fixJosa: fixJosa, hasLeftoverJosa: hasLeftoverJosa, joinNames: joinNames, countWord: countWord, money: money, groupDigits: groupDigits };
+  RA.Text = { render: render, particle: particle, nameTemplate: nameTemplate, fixJosa: fixJosa, hasLeftoverJosa: hasLeftoverJosa, joinNames: joinNames, countWord: countWord, money: money, groupDigits: groupDigits };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

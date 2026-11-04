@@ -492,7 +492,7 @@
               s.flags.prenatal_trouble = o.id;
               out += E.render(s, v.risk.text) + ' ';
             }
-            return out + '그리고 마침내 ' + C.HERO_NAME + '(이)가 태어났다!';
+            return out + E.render(s, '그리고 마침내 {name}[이/가] 태어났다!');
           } };
       });
     }
@@ -604,8 +604,7 @@
   }
 
   // ---------------------------------------------------------------- generations
-  // Every generation's hero is 호날두; later generations are told apart as "2대 호날두", "3대 호날두"…
-  E.genName = function (gen) { return gen > 1 ? gen + '대 ' + C.HERO_NAME : C.HERO_NAME; };
+  E.genName = function (gen, name) { name = name || C.HERO_NAME; return gen > 1 ? gen + '대 ' + name : name; };
 
   E.heirs = function (s) {
     return s.people.filter(function (p) { return p.role === 'child' && p.alive; });
@@ -615,17 +614,14 @@
     var kid = s.people.filter(function (p) { return p.id === pid; })[0];
     if (!kid) throw new Error('no such child');
     var c = E.country(s);
-    var given = kid.name;
-    if (c.nameOrder === 'surname-first') given = kid.name.indexOf(' ') > 0 ? kid.name.split(' ').slice(1).join(' ') : (s.hero.surname && kid.name.indexOf(s.hero.surname) === 0 ? kid.name.slice(s.hero.surname.length) : kid.name);
-    else given = kid.name.split(' ')[0];
     var heirs = E.heirs(s).length || 1;
     var estate = Math.max(0, Math.round(s.money * 0.85 / heirs));
     var ns = E.newGame({
       country: s.country, seed: s.seed + '-G' + (s.generation + 1), generation: s.generation + 1,
-      given: given, surname: s.hero.surname, nick: given, gender: kid.gender,
+      surname: s.hero.surname, gender: kid.gender,
       birthYear: s.birthYear + kid.bornAt, startAge: Math.max(1, kid.age), inheritMoney: estate,
       parentState: s, kid: kid,
-      legacy: { parentName: E.genName(s.generation), parentAge: s.age, parentTitle: E.lifeTitles(s)[0].name, estate: estate, generation: s.generation }
+      legacy: { parentName: E.genName(s.generation, E.heroName(s)), parentAge: s.age, parentTitle: E.lifeTitles(s)[0].name, estate: estate, generation: s.generation }
     });
     ns.flags.heir = 1;
     // an heir who is already grown up has a plausible education and adult stats
@@ -638,14 +634,14 @@
       ns.stats.smarts = Math.max(ns.stats.smarts, E.rint(ns, 45, 70));
       ns.stats.grit = Math.max(ns.stats.grit, E.rint(ns, 40, 65));
     } else E.updateEducation(ns, true);
-    E.addLog(ns, '부모님 ' + ns.legacy.parentName + '의 뒤를 이어 ' + ns.age + '세의 ' + E.genName(ns.generation) + '(으)로 삶을 이어 간다. 유산 ' + T.money(estate, c) + '.', 'milestone');
+    E.addLog(ns, '부모님 ' + ns.legacy.parentName + '의 뒤를 이어 ' + ns.age + '세의 ' + ns.generation + '대 ' + E.render(ns, '{name}[으로/로] 삶을 이어 간다.') + ' 유산 ' + T.money(estate, c) + '.', 'milestone');
     return ns;
   };
 
   E.buildHeirFamily = function (s, opts) {
     var ps = opts.parentState, kid = opts.kid;
     var off = kid.bornAt; // parent's age when kid was born
-    E.addPerson(s, { role: ps.hero.gender === 'm' ? 'father' : 'mother', key: ps.hero.gender === 'm' ? 'father' : 'mother', name: E.genName(ps.generation), gender: ps.hero.gender, bornAt: -off, alive: false, rel: 80, diedAt: kid.age });
+    E.addPerson(s, { role: ps.hero.gender === 'm' ? 'father' : 'mother', key: ps.hero.gender === 'm' ? 'father' : 'mother', name: E.genName(ps.generation, E.heroName(ps)), gender: ps.hero.gender, bornAt: -off, alive: false, rel: 80, diedAt: kid.age });
     var sp = ps.people.filter(function (p) { return p.role === 'spouse'; })[0];
     if (sp) E.addPerson(s, { role: ps.hero.gender === 'm' ? 'mother' : 'father', key: ps.hero.gender === 'm' ? 'mother' : 'father', name: sp.name, gender: sp.gender, bornAt: -(sp.age - kid.age), alive: sp.alive, rel: 75 });
     ps.people.filter(function (p) { return p.role === 'child' && p.id !== kid.id && p.alive; }).forEach(function (sib) {
@@ -683,7 +679,7 @@
     var kids = s.people.filter(function (p) { return p.role === 'child'; });
     var spouseEver = s.people.filter(function (p) { return p.role === 'spouse' || (p.role === 'ex' && s.marriedAt); }).length;
     return {
-      name: E.genName(s.generation), country: c.name, age: s.age, cause: s.cause,
+      name: E.genName(s.generation, E.heroName(s)), country: c.name, age: s.age, cause: s.cause,
       born: s.birthYear, died: s.year, money: s.money, moneyText: T.money(s.money, c), fame: s.stats.fame,
       titles: titles, achievements: ach,
       football: fb.seasons ? { apps: fb.apps, goals: fb.goals, caps: fb.caps, natGoals: fb.natGoals, trophies: fb.trophies, clubs: fb.clubs } : null,
@@ -696,7 +692,7 @@
 
   E.lifeStory = function (s, titles, ach) {
     var c = E.country(s), v = E.vars(s), fb = s.fb, out = [];
-    var nm = E.genName(s.generation);
+    var nm = E.genName(s.generation, E.heroName(s));
     out.push('【' + nm + ' (' + s.birthYear + '–' + s.year + ')】 ' + titles[0].name);
     if (s.generation > 1 && s.legacy) out.push(s.legacy.parentName + '의 자녀로, ' + s.generation + '대째 이어진 이야기.');
     else out.push(c.places.hometown + '에서 ' + v.fatherJob + '인 아버지와 ' + v.motherJob + '인 어머니 사이에서 사남매의 막내로 태어났다.');
@@ -725,7 +721,7 @@
     out.push(s.age + '세에 ' + s.cause + '(으)로 눈을 감았다. 남긴 재산 ' + T.money(s.money, c) + '.');
     var en = E.endingById(s.ending) || E.ending(s);
     if (en) out.push('엔딩: ' + en.icon + ' ' + en.name + ' — ' + en.desc);
-    out.push('#호날두의모험 시드 ' + s.seed);
+    out.push('#인생게임 시드 ' + s.seed);
     return out.map(T.fixJosa).join('\n');
   };
 })(typeof globalThis !== 'undefined' ? globalThis : this);
