@@ -1,6 +1,16 @@
 /* Fictional family vocabulary; levels describe behaviour, not diagnoses. */
 (function (G) {
   var RA = G.RA = G.RA || {}; RA.data = RA.data || {};
+  // Model parameters are not measurements; keeping their provenance beside values prevents false precision.
+  function model(value,definition,reason){return {value:value,definition:definition,year:2026,source:'existing game model',status:'보정 필요',reason:reason};}
+  RA.data.economy = {
+    parentAnnual:model(12000,'reference units per job tier per year','tier income is not an official wage estimate'),
+    livingAnnual:model(1800,'reference units per household member per year','local consumption costs not calibrated'),
+    housingAnnual:model(2400,'reference units per household per year','local housing costs not calibrated'),
+    effectiveTax:model(0.15,'effective fraction of gross hero employment income','simplified tax, not a statutory or measured rate'),
+    firstContractMonthly:model(1200,'reference units, net monthly football pay','first-contract model choice, not a country median'),
+    countries:{}
+  };
   RA.data.parents = {
     combos: ['edu_pressure', 'warm_unreliable', 'debt', 'cold_strict'],
     jobs: [

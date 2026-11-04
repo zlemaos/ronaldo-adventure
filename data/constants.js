@@ -77,7 +77,7 @@
     GAMBLE_STAGES: [[0, '없음'], [1, '재미 삼아'], [20, '1단계 · 습관'], [45, '2단계 · 중독'], [75, '3단계 · 심각']],
     BET_STAKES: ['tiny', 'small', 'medium', 'big', 'all'],
     // Text tokens available in any event/career text: {token}
-    TOKENS: ['name', 'nick', 'father', 'mother', 'bro', 'sis1', 'sis2', 'friend', 'partner',
+    TOKENS: ['name', 'nick', 'father', 'mother', 'bro', 'sis1', 'sis2', 'friend', 'peer', 'partner',
       'spouse', 'child', 'coach', 'city', 'hometown', 'region', 'bigcity', 'capital', 'house',
       'localClub', 'regionalClub', 'academy', 'bigClub', 'rivalClub', 'league', 'nationalTeam',
       'abroadClub', 'food', 'food2', 'holiday', 'holiday2', 'school', 'exam', 'univ', 'job',

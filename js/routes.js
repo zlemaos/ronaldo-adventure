@@ -207,6 +207,8 @@
   RT.quickOk = function (s) { var id = s.route.id; return id === 'none' || id === 'parttime' || id === 'school' || id === 'retired' || RT.groupHas(s, 'employee'); };
   RT.eventOk = function (s, ev) {
     if (!ev) return false;
+    // Academy entrants decide their contract in acad_contract, not the legacy auto-signing scene.
+    if (ev.id === 'canon_pro_debut' && s.household && s.memories && s.memories.acad_entered) return false;
     var own = ev.own || 'life', bits = own.split(':');
     if (/^boots_open_/.test(ev.id) && s.household && ev.id !== RA.Family.bootsOpening(s)) return false;
     if (bits[0] === 'family' || bits[0] === 'chain') return E.condMatches(s, ev.cond);

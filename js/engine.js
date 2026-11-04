@@ -99,6 +99,7 @@
     p.id = s.nextPid++;
     if (p.alive == null) p.alive = true;
     if (p.rel == null) p.rel = 60;
+    if (RA.Family) RA.Family.relationship(s,p);
     s.people.push(p);
     return p;
   }
@@ -250,6 +251,7 @@
     var sibs = peopleByRel(s, 'siblings');
     v.siblings = sibs.length ? T.joinNames(sibs.map(function (p) { return displayName(s, p); })) : '형제들';
     v.siblingsAll = T.countWord(sibs.length + 1);
+    var peer=s.people.find(function(p){return p.role==='peer' && p.alive && Math.abs(p.age-s.age)<=1;});v.peer=peer ? displayName(s,peer) : '';
     v.localClub = c.clubs.local; v.regionalClub = c.clubs.regional; v.academy = c.clubs.academy; v.bigClub = c.clubs.big;
     v.rivalClub = c.clubs.rival; v.league = c.clubs.league; v.nationalTeam = c.nationalTeam;
     v.abroadClub = s.fb.abroadClub;
@@ -322,7 +324,7 @@
   E.CAP_NOTE_FROM = 80; // gains shrink as a stat gets high; from here on the UI says so
 
   function changeRel(s, key, d) {
-    peopleByRel(s, key).forEach(function (p) { p.rel = clamp(Math.round(p.rel + d), 0, 100); });
+    peopleByRel(s, key).forEach(function (p) { p.rel = clamp(Math.round(p.rel + d), 0, 100); if(p.closeness != null)p.closeness=p.rel; });
   }
 
   // Apply a declarative effects object. Returns a list of human-readable changes.
@@ -354,10 +356,10 @@
     }
     if (eff.rel) Object.keys(eff.rel).forEach(function (r) {
       changeRel(s, r, eff.rel[r]);
-      peopleByRel(s, r).forEach(function (p) { p.lastContactAt = s.age; });
+      peopleByRel(s, r).forEach(function (p) { p.lastContactAt = s.age; p.lastContact = s.age; });
       out.push({ k: 'rel', who: r, d: eff.rel[r] });
     });
-    (eff.flags || []).forEach(function (f) { if (!/^adult_/.test(f)) s.flags[f] = s.age || 1; });
+    (eff.flags || []).forEach(function (f) { if (!/^!?adult_/.test(f)) {if(f[0]==='!')delete s.flags[f.slice(1)];else s.flags[f] = s.age || 1;} });
     (eff.unflags || []).forEach(function (f) { if (!/^adult_/.test(f)) delete s.flags[f]; });
     var fx = eff.fx ? (Array.isArray(eff.fx) ? eff.fx : [eff.fx]) : [];
     fx.forEach(function (name) {
@@ -1061,7 +1063,8 @@
       s.traits.gamble = clamp((s.traits.gamble || 0) + 2, 0, 100);
       addLog(s, '🎲 ' + E.jobTitle(s) + '의 한 해: ' + (swing >= 0 ? '+' : '') + T.money(swing, country(s)) + (swing > sal * 0.8 ? ' 대박이 났다!' : swing < -sal * 0.5 ? ' 테이블에서 크게 잃었다.' : swing < 0 ? ' 조금씩 잃었다.' : ''), swing >= 0 ? 'good' : 'bad');
       if (swing > sal * 0.9) E.triumph(s, 'jackpot');
-    } else s.money += Math.round(sal * 0.78);
+    } else if(s.household)RA.Family.payHero(s,sal,false);
+    else s.money += Math.round(sal * 0.78);
     s.y.income = (s.y.income || 0) + Math.max(0, sal);
     addStat(s, 'happy', -(k.stress - 2) + (j.perf > 70 ? 1 : 0));
     if (k.stress >= 4) addStat(s, 'health', -1);
@@ -1184,6 +1187,7 @@
   }
 
   function yearlyMoney(s) {
+    if(s.household){RA.Family.householdYear(s);return;}
     if (s.age < 18 || s.jail > 0) return;
     if ((s.edu.stage === 'univ' || s.edu.stage === 'grad') && s.age < 26) { s.money -= Math.round(2000 * wage(s)); return; }
     var cost = s.job || s.pension ? 9000 : 5000; // without income people live leaner (family, benefits)
@@ -1214,6 +1218,9 @@
 
   function yearlyPeople(s) {
     var c = country(s);
+    if(s.household && s.flags.acad_active && s.age>=12 && s.age<=16 && !s.pending.some(function(p){return p.id==='acad_review'&&p.age===s.age;}))s.pending.push({id:'acad_review',age:s.age});
+    if(s.household && s.age===13 && RA.Family)RA.Family.ensurePeer(s);
+    if (s.household && RA.Family) RA.Family.relationshipYear(s);
     if (RA.Family) RA.Family.adultYear(s);
     s.people.forEach(function (p) {
       if (!p.alive) return;
@@ -1294,7 +1301,9 @@
       s.y.bereaved = true;
       if (s.queue.indexOf('sys_grief') < 0) s.queue.unshift('sys_grief');
     }
-    if ((p.role === 'father' || p.role === 'mother') && s.age >= 18) {
+    if ((p.role === 'father' || p.role === 'mother') && s.household) {
+      RA.Family.inherit(s,p);
+    } else if ((p.role === 'father' || p.role === 'mother') && s.age >= 18) {
       var inh = Math.round(rint(s, 2000, 12000) * wage(s));
       s.money += inh;
     }

@@ -598,7 +598,7 @@
     if (s.household && s.age >= 5 && s.age < 19 && s.household.allowanceAge !== s.age) {
       var amount = Math.max(0, (s.household.tier - 1) * 5);
       s.wallet = (s.wallet || 0) + amount;
-      s.household.cash = (s.household.cash || 0) - amount;
+      RA.Family.post(s,'spend','child',amount,'annual allowance transfer to wallet');
       s.household.allowanceAge = s.age;
       E.addLog(s, '부모님의 가계 현금에서 용돈 ' + amount + '을 내 지갑으로 옮겼다.', 'info');
     }

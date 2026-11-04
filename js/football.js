@@ -63,7 +63,8 @@
     }
     // salary & fame
     var sal = E.salaryOf(s, E.careerIndex().footballer, j.level);
-    s.money += Math.round(sal * 0.6);
+    if(s.household)RA.Family.payHero(s,s.fb.contract?s.fb.contract.netMonthly*12:sal,true);
+    else s.money += Math.round(sal * 0.6);
     s.y.income = (s.y.income || 0) + sal * 0.5;
     if (j.level >= 3) s.money += Math.round(sal * 0.15 * (st.fame / 100)); // sponsorships
     E.addStat(s, 'fame', 1 + j.level * 2 + (anim ? 3 : 0));

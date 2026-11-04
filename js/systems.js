@@ -39,6 +39,7 @@
     s.fb.stage = 'pro'; s.fb.club = c.clubs.big; if (s.fb.clubs.indexOf(s.fb.club) < 0) s.fb.clubs.push(s.fb.club);
     E.startJob(s, 'footballer', 0);
     s.fb.proSince = s.age;
+    if (s.household) RA.Family.academy(s, { action: 'contract' });
     E.unlock(s, 'pro');
     E.triumph(s, 'pro');
     return c.clubs.big + '와(과) 첫 프로 계약서에 사인했다!';

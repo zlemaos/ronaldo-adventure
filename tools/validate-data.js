@@ -111,7 +111,7 @@ function validate(RA) {
       else if (key === 'flags' || key === 'unflags') { if (!Array.isArray(e[key])) err(w + ': ' + key + ' must be array'); }
       else if (key === 'fx') { (Array.isArray(e.fx) ? e.fx : [e.fx]).forEach(f => { if (!fxSet.has(f)) err(w + ': bad fx ' + f); }); }
       else if (key === 'achieve') { /* free id */ }
-      else if (['moment', 'memory', 'household', 'wallet'].includes(key)) { /* v2 engine effects */ }
+      else if (['moment', 'memory', 'household', 'wallet', 'relationship', 'academy'].includes(key)) { /* v2 engine effects */ }
       else err(w + ': unknown effect key ' + key);
     }
   };
@@ -132,8 +132,8 @@ function validate(RA) {
     if (ev.age && !(Array.isArray(ev.age) && ev.age[0] <= ev.age[1])) err(w + ': age');
     (ev.countries || []).forEach(c => { if (!COUNTRIES.includes(c)) err(w + ': bad country ' + c); });
     const cd = ev.cond || {};
-    const allowed = ['parent', 'household', 'combo', 'memory', 'stats', 'money', 'flags', 'fb', 'edu', 'degree', 'career', 'sector', 'level', 'rel', 'gender', 'recent', 'family', 'traits', 'jailed', 'childAge'];
-    Object.keys(cd).forEach(k => { if (!allowed.includes(k)) err(w + ': unknown cond ' + k); });
+    const allowed = ['relationship', 'parent', 'household', 'combo', 'memory', 'stats', 'money', 'flags', 'fb', 'edu', 'degree', 'career', 'sector', 'level', 'rel', 'gender', 'recent', 'family', 'traits', 'jailed', 'childAge'];
+    Object.keys(cd).forEach(k => { if (!allowed.includes(k) && k!=='peer') err(w + ': unknown cond ' + k); });
     if (cd.family && cd.family !== 'all') err(w + ': cond.family must be "all"');
     if (ev.memorial && ev.memorial !== true && !Array.isArray(ev.memorial)) err(w + ': memorial must be true or a list');
 
@@ -203,6 +203,7 @@ function validate(RA) {
 
   if (D.routes && RA.Engine && RA.Engine.Routes) validateRoutes(RA, err);
   if (D.hobbies && RA.Engine && RA.Engine.Life) validateLife(RA, err);
+  require('./audit-choice-contract').audit(RA).forEach(f=>err('event '+f.id+' choice'+f.choice+': '+f.issue));
 
   const byPrefix = {};
   events.forEach(e => { const p = e.id.split('_')[0]; byPrefix[p] = (byPrefix[p] || 0) + 1; });

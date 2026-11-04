@@ -10,7 +10,8 @@ const E = RA.Engine, RT = E.Routes, L = E.Life, D = RA.data;
 
 // V2 family support and optional invitations intentionally include safe, reusable dialogue.
 // The old risk/unique-copy contract remains scoped to the original childhood pack.
-const CHILD = D.events.filter(e => !/^(family:|chain:)/.test(e.own || '') && e.age && e.age[0] <= 11 && (e.choices || []).length);
+// Academy setbacks and friend contact intentionally need not inflict a negative stat.
+const CHILD = D.events.filter(e => !/^(acad_|friends_)/.test(e.id) && !/^(family:|chain:)/.test(e.own || '') && e.age && e.age[0] <= 11 && (e.choices || []).length);
 // a risk that can actually happen: a bet, or a check that can fail into a worse outcome (a label is not enough)
 const hurts = fx => !!fx && (Object.keys(fx).some(k => k !== 'mischief' && typeof fx[k] === 'number' && fx[k] < 0)
   || (fx.rel && Object.values(fx.rel).some(v => v < 0)) || [].concat(fx.fx || []).length > 0);

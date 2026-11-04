@@ -3,6 +3,125 @@
   var RA = G.RA = G.RA || {}, F = RA.Family = {};
   function copy(x) { return JSON.parse(JSON.stringify(x)); }
   function data() { return RA.data.parents; }
+  F.economy=function(s){
+    var d=RA.data.economy,c=RA.Engine.country(s);
+    if(!d.countries[s.country])d.countries[s.country]={
+      wage:{value:c.wage,definition:'reference-unit to bank-balance wage factor',year:2026,source:'existing country game constant',status:'보정 필요',reason:['ar','za'].includes(s.country)?'official-origin gaps; one ILOSTAT attempt returned 404':'not a harmonized official wage series'},
+      price:{value:1,definition:'reference-price factor used for ledger living/housing model',year:2026,source:'existing reference-unit cost model',status:'보정 필요',reason:s.country==='ar'?'official Argentina price origin did not open':'country price calibration pending'},
+      tax:Object.assign({},d.effectiveTax)
+    };
+    return d.countries[s.country];
+  };
+  F.inherit=function(s,p){
+    if(p.estateSettled)return;
+    var assets=Math.max(0,p.assets||0),debt=Math.max(0,p.debts||0),net=Math.max(0,assets-debt);
+    p.estateSettled={assets:assets,debts:debt,net:net,year:s.year};p.assets=0;p.debts=0;
+    if(net)F.post(s,'income','other',net,'estate '+p.id+': actual assets minus debts');
+  };
+  // Reference-unit household account; hero bank balances remain in balance units.
+  F.ledger = function(s) {
+    if(!s.household)return null;
+    var h=s.household;
+    F.economy(s);
+    if(h.cash==null)h.cash=0;
+    if(h.ledger && h.ledger.year===s.year)return h.ledger;
+    if(h.ledger){F.checkLedger(s);(h.ledgerHistory=h.ledgerHistory||[]).push(copy(h.ledger));}
+    h.ledger={year:s.year,opening:h.cash||0,cash:h.cash||0,income:{father:0,mother:0,hero:0,other:0},spend:{living:0,housing:0,child:0,club:0,debt:0,other:0},debt:h.debt||0,assets:h.assets||0,entries:[]};
+    return h.ledger;
+  };
+  F.checkLedger=function(s){
+    var l=s.household.ledger, sum=function(o){return Object.values(o).reduce(function(a,b){return a+b;},0);};
+    if(l.cash!==l.opening+sum(l.income)-sum(l.spend) || l.cash!==s.household.cash)throw new Error('household ledger identity '+s.year);
+    return true;
+  };
+  F.post=function(s,kind,source,amount,note){
+    var l=F.ledger(s);if(!l)return;
+    if(!Number.isFinite(amount)||amount<0||!Object.prototype.hasOwnProperty.call(l[kind],source))throw new Error('invalid ledger posting');
+    l[kind][source]+=amount;
+    s.household.cash+=(kind==='income'?amount:-amount);l.cash=s.household.cash;
+    l.entries.push({kind:kind,source:source,amount:amount,note:note||source,age:s.age});
+    F.checkLedger(s);
+  };
+  F.householdYear=function(s){
+    F.ledger(s);
+    var w=RA.Engine.country(s).wage;
+    ['father','mother'].forEach(function(role){
+      var p=RA.Engine.person(s,role);if(!p||!p.alive||!p.v2)return;
+      var job=data().jobs.find(function(j){return j.id===p.v2.jobId;});
+      if(job && job.time!=='home')F.post(s,'income',role,Math.round(RA.data.economy.parentAnnual.value*job.tier),'parent job tier model; 보정 필요');
+    });
+    var size=1+s.people.filter(function(p){return p.alive&&['father','mother','sibling'].includes(p.role);}).length;
+    F.post(s,'spend','living',Math.round(RA.data.economy.livingAnnual.value*size*F.economy(s).price.value),'living model; 보정 필요');
+    F.post(s,'spend','housing',Math.round(RA.data.economy.housingAnnual.value*F.economy(s).price.value),'housing model; 보정 필요');
+    void w;
+  };
+  F.payHero=function(s,amount,net){
+    var gross=Math.round(amount/RA.Engine.country(s).wage);
+    F.post(s,'income','hero',gross,net?'net contract pay':'gross employment pay');
+    var tax=net?0:Math.round(gross*F.economy(s).tax.value);
+    if(tax)F.post(s,'spend','other',tax,'effective tax model 15%; 보정 필요');
+    F.post(s,'spend','child',gross-tax,'transfer to hero bank, not duplicate income');
+    s.money+=Math.round((gross-tax)*RA.Engine.country(s).wage);
+  };
+  F.academy=function(s,q){
+    if(q.action==='release'){
+      delete s.flags.acad_active;s.fb.stage='regional';
+      s.fb.academy={status:'released',age:s.age,alternatives:['trial','school','amateur']};
+    }else if(q.action==='contract'){
+      var duration=q.duration==null?2:q.duration, pay=q.netMonthly==null?Math.round(RA.data.economy.firstContractMonthly.value*RA.Engine.country(s).wage):q.netMonthly;
+      if(!Number.isInteger(duration)||duration<1||duration>3||!Number.isFinite(pay)||pay<0)throw new Error('invalid first contract');
+      s.fb.contract={start:s.year,end:s.year+duration,duration:duration,netMonthly:pay,payUnit:'balance',definition:'net monthly; model choice'};
+    }else if(['keep','warning'].includes(q.action)){
+      s.fb.academy={status:q.action,age:s.age};s.flags.acad_active=s.age||1;
+    }
+  };
+  F.ensurePeer = function (s) {
+    var existing=s.people.find(function(p){return p.role==='peer' && p.alive && Math.abs(p.age-s.age)<=1;});
+    if(existing)return existing;
+    var gender=s.hero.gender==='m'?'f':'m';
+    return RA.Engine.addPerson(s,{role:'peer',name:RA.Engine.freshName(s,gender),gender:gender,age:s.age,rel:50,place:s.country,romance:'none'});
+  };
+  // Additive defaults keep old person ids, memories and legacy relationship scores intact.
+  F.relationship = function (s, p) {
+    if (p.closeness == null) p.closeness = p.rel == null ? 50 : p.rel;
+    if (p.trust == null) p.trust = p.closeness;
+    if (p.conflict == null) p.conflict = 0;
+    if (p.romance == null) p.romance = p.role === 'partner' ? 'dating' : 'none';
+    if (p.lastContact == null) p.lastContact = p.lastContactAt == null ? s.age : p.lastContactAt;
+    if (!p.memories) p.memories = [];
+    return p;
+  };
+  F.relationshipMatches = function (s, q) {
+    return s.people.some(function (p) {
+      p=F.relationship(s,Object.assign({},p));
+      return (q.id == null || p.id === q.id) && (!q.role || p.role === q.role) &&
+        (q.alive == null || p.alive === q.alive) &&
+        ['closeness','trust','conflict'].every(function(k){return !q[k] || p[k]>=q[k][0] && p[k]<=q[k][1];}) &&
+        (!q.romance || q.romance.includes(p.romance)) &&
+        (!q.absent || s.age-p.lastContact>=q.absent[0] && s.age-p.lastContact<=q.absent[1]) &&
+        (!q.memories || q.memories.every(function(tag){return p.memories.some(function(m){return m.tag===tag;});}));
+    });
+  };
+  F.relationshipEffect = function (s, q) {
+    s.people.filter(function(p){return (q.id == null || p.id===q.id) && (!q.role || p.role===q.role) && p.alive;}).forEach(function(p){
+      F.relationship(s,p);
+      ['closeness','trust','conflict'].forEach(function(k){if(typeof q[k]==='number')p[k]=Math.max(0,Math.min(100,p[k]+q[k]));});
+      if(q.romance && ['none','crush','dating'].includes(q.romance) &&
+        (p.role!=='peer' || q.romance==='none' || s.age>=13 && p.age>=13 && Math.abs(s.age-p.age)<=1))p.romance=q.romance;
+      if(q.contact){p.lastContact=s.age;p.lastContactAt=s.age;}
+      if(q.place != null)p.place=q.place;
+      if(q.memory)p.memories.push({tag:q.memory.tag,text:RA.Engine.render(s,q.memory.text||''),age:s.age,year:s.year});
+      p.rel=p.closeness;
+    });
+  };
+  F.relationshipYear = function (s) {
+    s.people.forEach(function(p){
+      F.relationship(s,p);
+      if(!p.alive)return;
+      var distant=p.place && p.place!==s.country;
+      if(s.age-p.lastContact>1){p.closeness=Math.max(0,p.closeness-(distant?3:1));p.rel=p.closeness;}
+    });
+  };
   F.bootsOpening = function (s) {
     if (F.matches(s,{parent:{role:'any',exposure:['football','sports'],alive:true}})) return 'boots_open_job';
     if (F.matches(s,{parent:{role:'any',talent:{sports:[2,3]},alive:true}})) return 'boots_open_talent';
@@ -87,6 +206,8 @@
     return candidates[0]||null;
   };
   F.matches = function (s, cond) {
+    if(cond.peer && !s.people.some(function(p){return p.role==='peer' && p.alive && Math.abs(p.age-s.age)<=1 && (!cond.peer.romance || s.age>=13 && p.age>=13 && p.romance===cond.peer.romance);}))return false;
+    if (cond.relationship && !F.relationshipMatches(s,cond.relationship)) return false;
     function range(v, r) { return v >= r[0] && v <= r[1]; }
     var parents = (s.people || []).filter(function (p) { return p.v2 && (!cond.parent || cond.parent.role === 'any' || cond.parent.role === 'both' || p.role === cond.parent.role); });
     if (cond.parent) {
@@ -112,6 +233,10 @@
   };
   F.effects = function (s, eff, out, ev) {
     var E = RA.Engine;
+    if(eff.academy)F.academy(s,eff.academy);
+    if(eff.memory && ['acad_kept','acad_warning','acad_released','acad_contract_release','acad_contract_referral'].includes(eff.memory.tag))
+      F.academy(s,{action:eff.memory.tag==='acad_kept'?'keep':eff.memory.tag==='acad_warning'?'warning':'release'});
+    if(eff.relationship)F.relationshipEffect(s,eff.relationship);
     if (eff.memory && eff.memory.who === 'friend' && !E.person(s,'friend')) E.FX.newFriend(s);
     if (eff.moment) {
       var m = copy(eff.moment); ['title', 'sub'].forEach(function (k) { if (m[k]) m[k] = E.render(s, m[k], ev); }); E.emitMoment(s, m);
@@ -129,7 +254,8 @@
       (s.chronicle = s.chronicle || []).push({ id: 'memory_' + mem.tag + '_' + s.age, kind: 'memory', tier: 'A', tone: 'tender', title: mem.text, age: s.age, year: s.year, people: who ? [who.id] : [], seen: true });
     }
     if (eff.household && s.household) {
-      s.household.cash = (s.household.cash || 0) + (eff.household.cash || 0);
+      var cash=eff.household.cash||0;
+      F.post(s,cash>=0?'income':'spend',cash>=0?'other':eff.household.category||'other',Math.abs(cash),'event '+(ev&&ev.id||'effect'));
       var payer = eff.household.payer || 'both';
       out.push({ k: 'msg', t: (payer === 'father' ? '아버지' : payer === 'mother' ? '어머니' : '부모님') + '의 가계 현금 ' + (eff.household.cash || 0) });
     }

@@ -9,8 +9,7 @@ function scriptOrder() {
   const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   const re = /<script src="([^"]+)"/g; const out = []; let m;
   while ((m = re.exec(html))) if (!/^(js\/(ui|pixel|audio|fx|opening|parents_ui|moments_ui)\.js)$/.test(m[1])) out.push(m[1]);
-  // Engine contracts are loadable before the screen worker adds its script tags.
-  return [...new Set(['data/parents.js', ...out.filter(f => f !== 'js/family.js'), 'js/family.js'])];
+  return out;
 }
 
 function load() {
