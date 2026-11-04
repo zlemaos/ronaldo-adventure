@@ -57,9 +57,10 @@
   E.fullName = fullName;
   E.normalizeHeroName = function (name) { return Array.from(String(name == null ? '' : name).normalize('NFC').trim()).slice(0, 20).join('') || C.HERO_NAME; };
   E.heroName = function (s) { return E.normalizeHeroName(s.hero.given); };
-  E.renameHero = function (s, name, batchim) {
+  E.renameHero = function (s, name, ending) {
     var before = E.heroName(s), after = E.normalizeHeroName(name);
-    s.hero.nameBatchim = typeof batchim === 'boolean' ? batchim : T.lastInfo(after).batchim;
+    s.hero.nameEnding = T.nameEnding(after, ending);
+    delete s.hero.nameBatchim;
     s.hero.given = after; s.hero.nick = after;
     function update(entry, key) {
       if (entry.nameText == null) entry.nameText = T.nameTemplate(entry[key], before);
@@ -131,7 +132,7 @@
       birthYear: opts.birthYear || BIRTH_YEAR, age: 0, year: 0, alive: true, cause: null,
       hero: {
         given: E.normalizeHeroName(opts.given),
-        nameBatchim: typeof opts.nameBatchim === 'boolean' ? opts.nameBatchim : T.lastInfo(E.normalizeHeroName(opts.given)).batchim,
+        nameEnding: T.nameEnding(E.normalizeHeroName(opts.given), opts.nameEnding != null ? opts.nameEnding : opts.nameBatchim),
         surname: opts.surname != null ? opts.surname : (c.hero.surname || ''),
         nick: E.normalizeHeroName(opts.given),
         gender: opts.gender || 'm', hair: 0, skin: 0
@@ -241,7 +242,7 @@
     return T.render(text, values, { name: true, nick: true });
   }
   E.narrative = function (s, text) { return renderNarrative(s, text, vars(s)); };
-  E.render = function (s, text) { return T.fixJosa(T.render(text, vars(s), null, { name: s.hero.nameBatchim, nick: s.hero.nameBatchim })); };
+  E.render = function (s, text) { var ending = s.hero.nameEnding != null ? s.hero.nameEnding : s.hero.nameBatchim; return T.fixJosa(T.render(text, vars(s), null, { name: ending, nick: ending })); };
   E.displayName = displayName;
 
   // ---------------------------------------------------------------- log

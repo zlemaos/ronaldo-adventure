@@ -89,6 +89,9 @@
     s.hero = s.hero || {};
     s.hero.given = RA.Engine.normalizeHeroName(s.hero.given);
     s.hero.nick = s.hero.given;
+    var migrateEnding = s.hero.nameEnding == null;
+    s.hero.nameEnding = RA.Text.nameEnding(s.hero.given, s.hero.nameEnding != null ? s.hero.nameEnding : s.hero.nameBatchim);
+    delete s.hero.nameBatchim;
     s.achievements = s.achievements || {};
     s.flags = s.flags || {};
     s.jobHistory = s.jobHistory || [];
@@ -120,6 +123,10 @@
         p.unpaidDebtUnit = 'balance';
       }
     });
+    if (migrateEnding) {
+      (s.log || []).forEach(function (e) { if (e.nameText != null) e.t = RA.Engine.render(s, e.nameText); });
+      (s.cards || []).forEach(function (e) { if (e.nameText != null) e.text = RA.Engine.render(s, e.nameText); });
+    }
     return s;
   }
 

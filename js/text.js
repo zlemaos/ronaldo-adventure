@@ -17,9 +17,19 @@
     return { batchim: false, rieul: false };
   }
 
-  function particle(word, p, batchim) {
+  function nameEnding(word, value) {
+    if (value === 'none' || value === 'rieul' || value === 'other') return value;
     var i = lastInfo(word);
-    if (!/[가-힣0-9][\s\)\]"'’”.!?·]*$/.test(String(word)) && typeof batchim === 'boolean') i = { batchim: batchim, rieul: false };
+    if (value === false) return 'none';
+    if (value === true) return i.rieul ? 'rieul' : 'other';
+    return i.rieul ? 'rieul' : i.batchim ? 'other' : 'none';
+  }
+  function particle(word, p, ending) {
+    var i = lastInfo(word);
+    if (!/[가-힣0-9][\s\)\]"'’”.!?·]*$/.test(String(word))) {
+      var selected = nameEnding(word, ending);
+      i = { batchim: selected !== 'none', rieul: selected === 'rieul' };
+    }
     switch (p) {
       case '이/가': return i.batchim ? '이' : '가';
       case '은/는': return i.batchim ? '은' : '는';
@@ -92,5 +102,5 @@
     return (neg ? '-' : '') + s + ' ' + cur.unit;
   }
 
-  RA.Text = { lastInfo: lastInfo, render: render, particle: particle, nameTemplate: nameTemplate, fixJosa: fixJosa, hasLeftoverJosa: hasLeftoverJosa, joinNames: joinNames, countWord: countWord, money: money, groupDigits: groupDigits };
+  RA.Text = { nameEnding: nameEnding, lastInfo: lastInfo, render: render, particle: particle, nameTemplate: nameTemplate, fixJosa: fixJosa, hasLeftoverJosa: hasLeftoverJosa, joinNames: joinNames, countWord: countWord, money: money, groupDigits: groupDigits };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

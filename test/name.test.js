@@ -77,6 +77,34 @@ test('pronunciation choice persists and rerenders all particles in history', () 
   assert.equal(E.render(s, '{name}[은/는] {name}[으로/로]'), '7은 7로');
 });
 
+test('Paul keeps its rieul ending through history, saves and legacy pronunciation migration', () => {
+  const { Engine: E, Save: S } = load(), store = S.memStorage();
+  const t = '{name}[이/가] {name}[은/는] {name}[을/를] {name}[과/와] {name}[으로/로] {name}[아/야]';
+  let s = E.newGame({ given: 'Jane', nameEnding: 'other' });
+  E.addLog(s, E.narrative(s, t));
+  E.addCard(s, { id: 'pronunciation', text: E.narrative(s, t) });
+  E.renameHero(s, 'Paul', 'rieul');
+  const expected = 'Paul이 Paul은 Paul을 Paul과 Paul로 Paul아';
+  assert.equal(s.log.at(-1).t, expected);
+  assert.equal(s.cards.at(-1).text, expected);
+  S.save(1, s, store); s = S.load(1, store);
+  assert.equal(s.hero.nameEnding, 'rieul');
+  assert.equal(E.render(s, t), expected);
+  E.renameHero(s, 'Paul', 'other');
+  assert.match(s.log.at(-1).t, /Paul으로/);
+  E.renameHero(s, 'Paul', 'none');
+  assert.equal(s.cards.at(-1).text, 'Paul가 Paul는 Paul를 Paul와 Paul로 Paul야');
+  for (const [name, legacy, ending] of [['Paul', true, 'rieul'], ['Jane', true, 'other'], ['Paul', false, 'none'], ['Paul', undefined, 'rieul']]) {
+    const old = E.newGame({ given: name });
+    delete old.hero.nameEnding; old.hero.nameBatchim = legacy;
+    old.log.push({ t: name + '으로', nameText: '{name}[으로/로]' });
+    const loaded = S.deserialize(S.serialize(old));
+    assert.equal(loaded.hero.nameEnding, ending);
+    assert.equal(E.render(loaded, '{name}[으로/로]'), ending === 'other' ? name + '으로' : name + '로');
+    assert.equal(loaded.log.at(-1).t, ending === 'other' ? name + '으로' : name + '로');
+  }
+});
+
 test('character names trim, limit to 20 characters, and default when blank', () => {
   const E = load().Engine;
   assert.equal(E.heroName(E.newGame({ given: '   ' })), '호날두');
