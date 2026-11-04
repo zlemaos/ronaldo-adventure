@@ -73,6 +73,21 @@
       if (RA.Engine && RA.Engine.Life) return RA.Engine.Life.migrate(s);
       s.saveVersion = 7;
       return s;
+    },
+    7: function (s) {
+      var canon = RA.Family.preset('canon'), ids = [];
+      ['father', 'mother'].forEach(function (role, i) {
+        var p = (s.people || []).find(function (x) { return x.role === role; });
+        if (!p) return;
+        p.v2 = RA.Family.normalize(Object.assign({}, canon.parents[i], { nationality: s.country }));
+        p.v2.occupation = RA.data.countries[s.country].family[role].job;
+        ids.push(p.id);
+      });
+      s.household = { parentIds: ids, residence: s.country, preset: s.country === 'pt' && !(s.flags || {}).heir ? 'canon' : 'custom', siblings: (s.people || []).filter(function (p) { return p.role === 'sibling'; }).length, tier: 2 };
+      s.moments = []; s.chronicle = []; s.momentSeq = 0;
+      if (s.age > 0 || s.prenatal) s.born = true;
+      if (s.y) delete s.y.triumph;
+      s.saveVersion = 8; return s;
     }
   };
 
@@ -150,10 +165,12 @@
     try { getStore(store).setItem(KEY, JSON.stringify(all)); return true; } catch (e) { return false; }
   }
 
+  var bindings = new WeakMap();
   RA.Save = {
     KEY: KEY, SLOTS: SLOTS, MIGRATIONS: MIGRATIONS,
     migrate: migrate, serialize: serialize, deserialize: deserialize, memStorage: memStorage,
     save: function (slot, s, store) {
+      bindings.set(s, { slot: slot, store: store });
       var all = readAll(store);
       all.slots[slot] = { savedAt: Date.now(), data: serialize(s), meta: { name: RA.Engine.heroName(s), age: s.age, country: s.country, alive: s.alive, gen: s.generation } };
       all.last = slot;
@@ -162,7 +179,11 @@
     load: function (slot, store) {
       var all = readAll(store), e = all.slots[slot];
       if (!e) return null;
-      return deserialize(e.data);
+      var s = deserialize(e.data); bindings.set(s, { slot: slot, store: store }); return s;
+    },
+    persistMoment: function (s) {
+      var b = bindings.get(s);
+      return RA.Save.save(b ? b.slot : (readAll().last || 1), s, b && b.store);
     },
     list: function (store) {
       var all = readAll(store), out = [];

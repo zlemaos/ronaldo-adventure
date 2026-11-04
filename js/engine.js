@@ -72,7 +72,27 @@
     return after;
   };
   // UI cue for a big triumph (goal, trophy, promotion, big win). Presentation only: never affects outcomes.
-  E.triumph = function (s, why) { if (s && s.y) s.y.triumph = why || true; };
+  E.emitMoment = function (s, spec) {
+    s.moments = s.moments || []; s.chronicle = s.chronicle || [];
+    s.momentSeq = (s.momentSeq || 0) + 1;
+    var m = Object.assign({ id: 'm' + s.age + '_' + s.momentSeq, kind: 'milestone', tier: 'S', tone: 'joy', title: '새로운 순간', sub: '', people: [], scene: 'home', sfx: null, age: s.age, year: s.year, seen: false }, spec);
+    s.moments.push(m); return m;
+  };
+  E.pendingMoments = function (s) { return (s.moments || []).filter(function (m) { return !m.seen; }).map(function (m) { return JSON.parse(JSON.stringify(m)); }); };
+  E.ackMoment = function (s, id) {
+    var at = (s.moments || []).findIndex(function (m) { return m.id === id; });
+    if (at < 0) return false;
+    var m = s.moments.splice(at, 1)[0]; m.seen = true;
+    s.chronicle = s.chronicle || [];
+    if (m.tier !== 'B' && !s.chronicle.some(function (x) { return x.id === id; })) s.chronicle.push(m);
+    if (RA.Save && RA.Save.persistMoment) RA.Save.persistMoment(s);
+    return true;
+  };
+  E.triumph = function (s, why) {
+    if (!s) return;
+    var titles = { pro: '프로 데뷔', transfer: '해외 이적', national: '첫 국가대표', goal: '골! SIUUU!', promote: '새로운 단계', jackpot: '뜻밖의 큰 행운', nobel: '세계가 인정한 연구', leader: '새로운 책임', lottery: '복권 당첨' };
+    E.emitMoment(s, { kind: why || 'triumph', tier: why === 'promote' ? 'A' : 'S', tone: 'triumph', title: titles[why] || '큰 성취', scene: why === 'goal' || why === 'pro' ? 'pitch' : 'home' });
+  };
 
   // ---------------------------------------------------------------- people
   function addPerson(s, p) {
@@ -121,7 +141,7 @@
   // ---------------------------------------------------------------- new game
   E.newGame = function (opts) {
     opts = opts || {};
-    var cid = opts.country || 'pt';
+    var cid = opts.parents ? (opts.residence || (opts.parents[0].nationality === opts.parents[1].nationality ? opts.parents[0].nationality : opts.country) || 'pt') : opts.country || 'pt';
     var c = RA.data.countries[cid];
     if (!c) throw new Error('unknown country ' + cid);
     var seed = opts.seed != null && String(opts.seed).trim() ? String(opts.seed).trim() : R.randomSeedString();
@@ -148,6 +168,7 @@
       },
       achievements: {}, pending: [], queue: [], ap: AP_PER_YEAR, jail: 0, sick: null,
       y: {}, hist: [], legacy: opts.legacy || null,
+      moments: [], chronicle: [], momentSeq: 0,
       prenatal: null, eduFocus: null, eduFocusChanged: false, cards: [],
       traits: { mischief: 0, rep: 50, gamble: 0, alcohol: 0, record: 0 }, dec: {}, gambleLog: { plays: 0, wins: 0, net: 0 }
     };
@@ -162,7 +183,25 @@
     s.fb.abroadClub = pick(s, E.ABROAD_CLUBS);
     s.money = opts.inheritMoney || 0;
 
-    if (opts.parentState) E.buildHeirFamily(s, opts);
+    if (opts.parents) {
+      var familyRng = s.rng;
+      s.rng = R.create(seed + '|family');
+      var specs = opts.parents.map(RA.Family.normalize);
+      specs.forEach(function (spec, i) {
+        var role = i ? 'mother' : 'father', pc = RA.data.countries[spec.nationality];
+        if (!pc) throw new Error('unknown parent nationality');
+        var p = addPerson(s, { role: role, key: role, name: pc.family[role].name, gender: i ? 'f' : 'm', bornAt: -rint(s, 27, 36), rel: rint(s, 65, 90), recovery: 0, liver: 70, v2: spec });
+      });
+      var siblings = clamp(Math.round(opts.siblings == null ? 0 : opts.siblings), 0, 3);
+      for (var si = 0; si < siblings; si++) {
+        var sb = c.family.siblings[si % c.family.siblings.length];
+        addPerson(s, { role: 'sibling', key: ['bro', 'sis1', 'sis2'][si], name: sb.name, gender: sb.gender, bornAt: -rint(s, 1, 9), rel: rint(s, 55, 85) });
+      }
+      s.household = { parentIds: s.people.filter(function (p) { return p.v2; }).map(function (p) { return p.id; }), residence: cid, preset: opts.preset || 'custom', siblings: siblings, tier: RA.Family.tier({ parents: specs }), heritage: specs.map(function (p) { return p.nationality; }) };
+      s.household.cash = s.household.tier * 100;
+      s.wallet = 0;
+      s.rng = familyRng;
+    } else if (opts.parentState) E.buildHeirFamily(s, opts);
     else buildCanonFamily(s, c);
     s.age = opts.parentState ? Math.max(1, opts.startAge || 1) : 0;
     s.year = s.birthYear + s.age;
@@ -194,6 +233,10 @@
     v.partner = displayName(s, person(s, 'partner')) || '연인';
     v.spouse = displayName(s, person(s, 'spouse')) || '배우자';
     ev = ev || (s.queue && E.eventIndex()[s.queue[0]]);
+    if (ev && RA.Family) {
+      var matched = RA.Family.parentForEvent(s,ev);
+      v.parent = matched && matched.role === 'father' ? '아버지' : matched && matched.role === 'mother' ? '어머니' : '부모님';
+    } else v.parent = '부모님';
     var childAge = ev && ev.cond && ev.cond.childAge;
     var child = childAge ? peopleByRel(s, 'children').filter(function (p) {
       return p.age >= childAge[0] && p.age <= childAge[1];
@@ -219,6 +262,10 @@
     v.univ = s.edu.univ || c.school.univMid;
     v.job = s.job ? E.jobTitle(s) : '백수';
     v.fatherJob = c.family.father.job; v.fatherJob2 = c.family.father.job2; v.motherJob = c.family.mother.job;
+    ['father', 'mother'].forEach(function (role) {
+      var p = person(s, role);
+      if (p && p.v2) { var j = RA.data.parents.jobs.find(function (job) { return job.id === p.v2.jobId; }); v[role + 'Job'] = p.v2.occupation || (j && j.name) || v[role + 'Job']; }
+    });
     v.currency = c.currency.unit; v.leader = c.leader; v.country = c.name; v.sportsClub = c.school.sportsClub;
     if (E.varsHook) E.varsHook(s, v); // js/life.js: {hobby}, and the home by birth origin
     return v;
@@ -239,10 +286,10 @@
   // Retain hero tokens while freezing the other names/facts at the time a passage was written.
   // This lets a later rename update history without changing a similarly named relative or ordinary word.
   function renderNarrative(s, text, values) {
-    return T.render(text, values, { name: true, nick: true });
+    return T.render(text, values, { name: true, nick: true }, null, country(s));
   }
   E.narrative = function (s, text) { return renderNarrative(s, text, vars(s)); };
-  E.render = function (s, text) { var ending = s.hero.nameEnding != null ? s.hero.nameEnding : s.hero.nameBatchim; return T.fixJosa(T.render(text, vars(s), null, { name: ending, nick: ending })); };
+  E.render = function (s, text, ev) { var ending = s.hero.nameEnding != null ? s.hero.nameEnding : s.hero.nameBatchim; return T.fixJosa(T.render(text, vars(s, ev), null, { name: ending, nick: ending }, country(s))); };
   E.displayName = displayName;
 
   // ---------------------------------------------------------------- log
@@ -279,7 +326,7 @@
   }
 
   // Apply a declarative effects object. Returns a list of human-readable changes.
-  function applyEffects(s, eff, out) {
+  function applyEffects(s, eff, out, ev) {
     out = out || [];
     if (!eff) return out;
     C.STATS.forEach(function (k) {
@@ -310,8 +357,8 @@
       peopleByRel(s, r).forEach(function (p) { p.lastContactAt = s.age; });
       out.push({ k: 'rel', who: r, d: eff.rel[r] });
     });
-    (eff.flags || []).forEach(function (f) { s.flags[f] = s.age || 1; });
-    (eff.unflags || []).forEach(function (f) { delete s.flags[f]; });
+    (eff.flags || []).forEach(function (f) { if (!/^adult_/.test(f)) s.flags[f] = s.age || 1; });
+    (eff.unflags || []).forEach(function (f) { if (!/^adult_/.test(f)) delete s.flags[f]; });
     var fx = eff.fx ? (Array.isArray(eff.fx) ? eff.fx : [eff.fx]) : [];
     fx.forEach(function (name) {
       var fn = E.FX[name];
@@ -320,6 +367,7 @@
       if (msg) out.push({ k: 'msg', t: T.fixJosa(msg) });
     });
     if (eff.achieve) E.unlock(s, eff.achieve);
+    if (RA.Family) RA.Family.effects(s, eff, out, ev);
     return out;
   }
   E.applyEffects = applyEffects;
@@ -345,6 +393,7 @@
 
   E.condMatches = function (s, cond) {
     if (!cond) return true;
+    if (RA.Family && !RA.Family.matches(s, cond)) return false;
     var k;
     if (cond.stats) for (k in cond.stats) if (!inRange(s.stats[k], cond.stats[k])) return false;
     if (cond.money && !inRange(s.money / wage(s), cond.money)) return false;
@@ -557,6 +606,8 @@
     if (!ch.req) return true;
     if (ch.req.stats) for (var k in ch.req.stats) if ((s.stats[k] || 0) < ch.req.stats[k]) return false;
     if (ch.req.money != null && s.money / wage(s) < ch.req.money) return false;
+    if (ch.req.household && (!s.household || (s.household.cash || 0) < ch.req.household.cash)) return false;
+    if (ch.req.wallet != null && (s.wallet || 0) < ch.req.wallet) return false;
     if (ch.req.flags && !hasFlags(s, ch.req.flags)) return false;
     return true;
   };
@@ -569,7 +620,7 @@
     var ev = E.eventIndex()[s.queue[0]];
     // `live`: a queued system prompt whose premise may lapse before it is shown (e.g. the job ended)
     if (!ev || !E.careerStoryOk(s, ev) || (s.jail > 0 && !E.jailOk(ev)) || (ev.live && !ev.live(s)) ||
-        (!ev.manual && (!E.personsOk(s, ev) || !E.condMatches(s, ev.cond) || (ev.when && !ev.when(s))))) { s.queue.shift(); return E.currentEvent(s); }
+        !E.condMatches(s, ev.cond) || (!ev.manual && (!E.personsOk(s, ev) || (ev.when && !ev.when(s))))) { s.queue.shift(); return E.currentEvent(s); }
     var text = E.eventText(s, ev);
     var catKey = E.eventCategoryKey(ev, s), cat = E.CATEGORIES[catKey];
     return {
@@ -578,6 +629,10 @@
       choices: eventChoices(s, ev).map(function (ch, i) {
         var chance = ch.bet ? E.betWinChance(ch.bet) : ch.check ? E.checkChance(s, ch.check) : null;
         return { i: i, text: E.render(s, ch.text), enabled: E.choiceAvailable(s, ch), chance: chance,
+          successChance: chance,
+          probabilities: ch.check ? {success:chance,partial:ch.partial ? Math.min(ch.check.partial || 0,1-chance) : 0,fail:Math.max(0,1-chance-(ch.partial ? ch.check.partial || 0 : 0))} : null,
+          partialChance: ch.partial && ch.check ? Math.min(ch.check.partial || 0, 1 - chance) : 0,
+          failChance: ch.check ? Math.max(0, 1 - chance - (ch.partial ? ch.check.partial || 0 : 0)) : null, retry: ch.retry || null,
           desc: ch.desc ? E.render(s, ch.desc) : null, preview: ch.preview || E.autoPreview(ch), risky: E.isRisky(ch),
           bet: ch.bet ? { odds: E.betWinChance(ch.bet), mult: ch.bet.mult, stake: E.betStake(s, ch.bet), addict: ch.bet.addict != null ? ch.bet.addict : 3 } : null,
           career: ch.career ? (E.careerIndex()[ch.career] || {}).name : null };
@@ -641,6 +696,7 @@
     // talent checks (0-100 like stats); 'hobby' = the talent of the hero's main hobby (js/life.js)
     var tk = chk.talent === 'hobby' ? (E.hobbyTalent ? E.hobbyTalent(s) : null) : chk.talent;
     var v = chk.talent ? (tk && s.talent ? s.talent[tk] || 0 : 0) : (s.stats[chk.stat] || 0);
+    if (chk.talent && chk.stat) v = (v + (s.stats[chk.stat] || 0)) / 2;
     return clamp(0.5 + (v - chk.diff) / 40, chk.min != null ? chk.min : 0.05, chk.max != null ? chk.max : 0.95);
   };
 
@@ -649,7 +705,7 @@
     var ev = E.eventIndex()[s.queue[0]];
     if (!ev) return null;
     if ((E.Routes && !E.Routes.eventOk(s, ev)) ||
-        (!ev.manual && !E.condMatches(s, ev.cond))) {
+        !E.condMatches(s, ev.cond)) {
       s.queue.shift();
       return null;
     }
@@ -689,11 +745,12 @@
       if (jackpot || (won && ch.bet.mult >= 3)) E.triumph(s, 'jackpot');
       betNote = delta ? ' (' + (jackpot ? '🎰 잭팟! 걸었던 돈의 ' + Math.round(ch.bet.mult * JACKPOT_X) + '배 · ' : '') + (delta > 0 ? '+' : '') + T.money(delta, country(s)) + ')' : '';
     } else if (ch.check) {
-      var ok = rnd(s) < E.checkChance(s, ch.check);
-      branch = ok ? ch.success : ch.fail;
-      res.outcome = ok ? 'success' : 'fail';
+      var roll = rnd(s), successChance = E.checkChance(s, ch.check);
+      var ok = roll < successChance, partial = !ok && ch.partial && roll < Math.min(1, successChance + (ch.check.partial || 0));
+      branch = ok ? ch.success : partial ? ch.partial : ch.fail;
+      res.outcome = ok ? 'success' : partial ? 'partial' : 'fail';
     }
-    applyEffects(s, branch.effects, res.changes);
+    applyEffects(s, branch.effects, res.changes, ev);
     if (ch.career && E.careerIndex()[ch.career] && s.jail === 0) {
       var kc = E.careerIndex()[ch.career];
       if ((!s.job || s.job.id !== ch.career) && E.startJob(s, ch.career, 0) !== false) {
@@ -706,7 +763,10 @@
     var log = variant(s, ev, branch.logVariants, branch.log);
     if (branch.run) log = branch.run(s, res) || log;
     var sch = branch.schedule || ch.schedule;
-    if (sch) s.pending.push({ age: s.age + (sch.years || 1), id: sch.id });
+    if (sch) {
+      if (sch.years === 0) { var next = E.eventIndex()[sch.id]; if (next && E.careerStoryOk(s,next) && E.condMatches(s,next.cond)) fireEvent(s,next); }
+      else s.pending.push({ age: s.age + (sch.years == null ? 1 : sch.years), id: sch.id });
+    }
     var logTemplate = renderEvent(log || '') + betNote;
     res.log = E.render(s, logTemplate);
     mem.chg = compactChanges(res.changes);
@@ -735,7 +795,7 @@
     var wasJailed = s.jail > 0 ? 1 : 0;
     var eventVars = vars(s, ev);
     function renderEvent(text) { return renderNarrative(s, text, eventVars); }
-    var changes = applyEffects(s, ev.effects, []);
+    var changes = applyEffects(s, ev.effects, [], ev);
     var text = E.eventText(s, ev), evLog = E.eventLog(s, ev);
     var log = ev.run ? ev.run(s) : null;
     addLog(s, renderEvent(text) + (evLog ? ' ' + renderEvent(evLog) : '') + (log ? ' ' + log : ''), ev.kind || 'event', { mem: E.eventRefs(ev).isMemorial ? 1 : null, ev: ev.id, j: wasJailed, chg: compactChanges(changes) });
@@ -762,10 +822,11 @@
       var ev = idx[p.id];
       if (ev && !used[ev.id] && s.alive) {
         var ageOk = true; // scheduled follow-ups ignore age windows/cooldowns but respect cond
-        if (ev.once && s.fired[ev.id]) return;                                  // once-per-life holds for follow-ups too
+        if (ev.once && s.fired[ev.id] && ev.own !== 'chain:first_boots') return;
         if (ev.maxTimes && (s.fired[ev.id] || 0) >= ev.maxTimes) return;
         if (s.jail > 0 && !E.jailOk(ev)) { s.pending.push({ age: s.age + s.jail + 1, id: p.id }); return; } // wait until release
-        if (E.condMatches(s, ev.cond) && E.personsOk(s, ev) && (!ev.when || ev.when(s)) && ageOk) { chosen.push(ev); used[ev.id] = 1; }
+        if (E.careerStoryOk(s, ev) && E.condMatches(s, ev.cond) && E.personsOk(s, ev) && (!ev.when || ev.when(s)) && ageOk) { chosen.push(ev); used[ev.id] = 1; }
+        else if (ev.own === 'chain:first_boots') s.pending.push({age:s.age+1,id:p.id});
       }
     });
     var all = E.allEvents();
@@ -924,13 +985,16 @@
   };
 
   function startJob(s, id, level) {
+    var first = !s.job && !(s.jobHistory || []).length;
     if (s.job) endJob(s, '이직');
     s.job = { id: id, level: level || 0, years: 0, atLevel: 0, perf: 50, since: s.age };
     var k = careerById(id);
     if (k.special === 'religion') s.flags.monk = s.age;
+    if (first) E.emitMoment(s, {kind:'first_job',tier:'S',tone:'joy',title:'첫 직장',sub:k.name});
   }
   function endJob(s, why) {
     if (!s.job) return;
+    if (why === '은퇴') E.emitMoment(s, {kind:'retirement',tier:'S',tone:'tender',title:'일터를 떠나는 날'});
     var k = careerById(s.job.id);
     s.jobHistory.push({ id: s.job.id, title: E.rankTitle(s), name: k.name, from: s.job.since, to: s.age, why: why, level: s.job.level, top: s.job.level === k.ladder.length - 1 });
     s.lastSalary = E.salaryOf(s, k, s.job.level);
@@ -1150,6 +1214,7 @@
 
   function yearlyPeople(s) {
     var c = country(s);
+    if (RA.Family) RA.Family.adultYear(s);
     s.people.forEach(function (p) {
       if (!p.alive) return;
       p.age = (p.age || 0) + 1;
@@ -1163,7 +1228,11 @@
     // father's drinking arc
     var dad = person(s, 'father');
     if (dad && dad.alive && s.flags.father_drinking && !s.flags.father_sober) {
-      dad.recovery = clamp((dad.recovery || 0) - 3, 0, 100);
+      if (!dad.v2) {
+        var adultRng = R.create(s.seed + '|adult-recovery|' + dad.id + '|' + s.age);
+        dad.recovery = clamp((dad.recovery || 0) + (R.chance(adultRng, 0.25) ? 16 : -2), 0, 100);
+        if (dad.recovery >= 100) E.FX.fatherRecover(s);
+      }
       dad.liver = (dad.liver || 70) - Math.max(1, rint(s, 3, 6) - Math.floor(dad.recovery / 30));
       if (dad.liver < 30 && !s.flags.father_ill) { s.flags.father_ill = s.age; E.queueSys(s, 'canon_father_hospital'); }
       if (dad.liver <= 0) personDies(s, dad, '간 질환');
@@ -1201,6 +1270,7 @@
 
   function personDies(s, p, cause) {
     p.alive = false; p.diedAt = s.age; p.diedSeq = (s.seq || 0) + 1;
+    if (['father', 'mother', 'spouse'].indexOf(p.role) >= 0) E.emitMoment(s, { kind: 'farewell', tone: 'sad', title: E.relWord(s, p) + '와의 이별', sub: displayName(s, p), people: [p.id] });
     var nm = displayName(s, p), word = E.relWord(s, p);
     var mem = { mem: 1 };
     if (p.role === 'father') {
@@ -1208,7 +1278,7 @@
       var played = s.fb.seasons > 0 || ['local', 'regional', 'academy', 'youth', 'pro'].indexOf(s.fb.stage) >= 0;
       addLog(s, '아버지 ' + nm + '께서 ' + cause + '(으)로 세상을 떠나셨다. ' + (played ? '마지막까지 막내의 경기를 이야기하셨다고 한다.' : '마지막까지 막내 걱정을 하셨다고 한다.'), 'death', mem);
       addStat(s, 'happy', -18);
-      E.queueSys(s, 'canon_father_farewell');
+      if (!s.household || s.household.preset === 'canon') E.queueSys(s, 'canon_father_farewell');
       s.y.bereaved = true;
     } else if (p.role === 'mother') {
       s.flags.mother_dead = s.age;
@@ -1275,7 +1345,7 @@
     if (E.Routes) E.Routes.yearly(s);
     if (E.checkDeath(s)) return { events: [] };
     E.applyEduFocus(s);
-    if (s.age === 1 && !s.eduFocus) E.queueSys(s, 'sys_edu_focus');
+    if (s.age === (s.household ? 4 : 1) && !s.eduFocus) E.queueSys(s, 'sys_edu_focus');
     if (s.age === E.MONTAGE_UNTIL && s.eduFocus && !s.eduFocusChanged && !s.fired.sys_edu_change) E.queueSys(s, 'sys_edu_change');
     var ids;
     if (E.isMontage(s)) ids = E.selectMilestones(s);   // ages 0-4: a montage of milestone cards, no storylets
@@ -1310,7 +1380,8 @@
   E.selectMilestones = function (s, afterBirth) {
     var ids = [];
     if (afterBirth && s.flags.heir) { afterBirth(s); afterBirth = null; }
-    (RA.data.milestones || []).forEach(function (m) {
+    var scenes = s.household && RA.data.infancy ? RA.Family.infancyScenes(s) : RA.data.milestones || [];
+    scenes.forEach(function (m) {
       if (m.age !== s.age && !(Array.isArray(m.age) && s.age >= m.age[0] && s.age <= m.age[1])) return;
       if (s.fired[m.id]) return;
       if (m.countries && m.countries.indexOf(s.country) < 0) return;
@@ -1322,12 +1393,12 @@
       // byTalent: the picture follows the child's strongest talent (돌잡이, first word…)
       // byOrigin: the version told for the home the child was born into
       var top = m.byTalent ? E.topTalent(s) : null, v = top ? m.byTalent[top] : (m.byOrigin && m.byOrigin[s.origin]) || m;
-      var chg = applyEffects(s, E.footballGate(s, v.effects), []);
+      var chg = applyEffects(s, E.footballGate(s, v.effects), [], m);
       if (v.talent && E.Routes) { E.Routes.addTalent(s, v.talent, 3); chg.push({ k: 'talent_' + v.talent, d: 3 }); }
       // props 'doljabi:art' = the 돌잡이 picture with the item of the art talent in the child's hands
       E.addCard(s, { id: m.id, pic: m.pic, props: top ? (m.props || '') + ':' + top : m.props, text: E.narrative(s, v.text), chg: chg });
       ids.push(m.id);
-      if (afterBirth && m.id === 'ms_birth') { afterBirth(s); afterBirth = null; }
+      if (afterBirth && (m.id === 'ms_birth' || m.id === 'inf_birth')) { afterBirth(s); afterBirth = null; }
     });
     if (afterBirth) afterBirth(s);
     return ids;
@@ -1351,6 +1422,7 @@
   // Birth happens right after the prenatal pick; E.birthExtras (the body card) comes right after the birth card
   E.birth = function (s) {
     s.born = true;
+    if (!s.household) E.emitMoment(s, {kind:'birth',tier:'S',tone:'tender',title:'태어난 날'});
     addLog(s, T.render('{hometown}에서 태어났다. 집은 {houseLong}[이/]다.', vars(s)), 'milestone'); // "사남매의 막내" is told once, on the birth card
     E.selectMilestones(s, E.birthExtras);
   };

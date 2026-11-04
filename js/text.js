@@ -44,11 +44,15 @@
   }
 
   // Replace {token}[x/y] patterns. `vars` maps token -> string.
-  function render(text, vars, preserve, endings) {
+  function render(text, vars, preserve, endings, moneyCountry) {
     if (!text) return '';
-    return String(text).replace(/\{([a-zA-Z0-9]+)\}(\[(이\/가|은\/는|을\/를|과\/와|와\/과|으로\/로|아\/야|이\/)\])?/g, function (m, key, _p, part) {
+    return String(text).replace(/\{(money:-?\d+(?:\.\d+)?|[a-zA-Z0-9]+)\}(\[(이\/가|은\/는|을\/를|과\/와|와\/과|으로\/로|아\/야|이\/)\])?/g, function (m, key, _p, part) {
       if (preserve && preserve[key]) return m;
-      var v = vars && vars[key] != null ? String(vars[key]) : key;
+      var v;
+      if (key.indexOf('money:') === 0) {
+        if (!moneyCountry) throw new Error('money token needs a country context');
+        v = money(Number(key.slice(6)) * moneyCountry.wage, moneyCountry);
+      } else v = vars && vars[key] != null ? String(vars[key]) : key;
       return part ? v + particle(v, part, endings && endings[key]) : v;
     });
   }

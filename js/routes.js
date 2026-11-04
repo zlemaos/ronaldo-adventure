@@ -171,9 +171,13 @@
   // ---------------------------------------------------------------- event routing
   var FB_CANON = /^canon_(join|regional|academy|first_night|accent|warning|homesick|work_ethic|youth|pro|late|kitroom)/;
   var ACTIVE_FB = ['local', 'regional', 'academy', 'youth', 'pro'];
+  var eventRouteCache = new WeakMap();
   // which routes an event belongs to (null = route-neutral life event)
   RT.eventRoutes = function (ev) {
-    if (ev._rt !== undefined) return ev._rt;
+    var dep = ev.cond || {};
+    var cacheKey = JSON.stringify([ev.own,ev.routes,dep.fb,dep.career,dep.sector,dep.level,D().routeTags[ev.id]]);
+    var cached = eventRouteCache.get(ev);
+    if(cached && cached.key === cacheKey)return cached.value;
     var out = null, c = ev.cond || {};
     if (ev.routes) out = ev.routes;
     else if (D().routeTags[ev.id]) out = D().routeTags[ev.id];
@@ -185,7 +189,7 @@
     } else if (c.sector) {
       out = []; D().careers.forEach(function (k) { if (c.sector.indexOf(k.sector) >= 0) { var r = RT.ofCareer(k.id); if (r && out.indexOf(r) < 0) out.push(r); } });
     } else if (c.career === 'any' || c.level) out = ['employee'];
-    ev._rt = out;
+    eventRouteCache.set(ev,{key:cacheKey,value:out});
     return out;
   };
   var CHANGE_FX = { quickJob: 'quick', quitJob: 'quit', fired: 'quit', becomeMonk: 'monk', leaveMonastery: 'quit', joinLocalClub: 'club', quitFootball: 'quitfb', careerEndingInjury: 'quit', dropOut: 'quit' };
@@ -202,9 +206,19 @@
   };
   RT.quickOk = function (s) { var id = s.route.id; return id === 'none' || id === 'parttime' || id === 'school' || id === 'retired' || RT.groupHas(s, 'employee'); };
   RT.eventOk = function (s, ev) {
-    if (!ev || /^sys_/.test(ev.id)) return true;
+    if (!ev) return false;
+    var own = ev.own || 'life', bits = own.split(':');
+    if (/^boots_open_/.test(ev.id) && s.household && ev.id !== RA.Family.bootsOpening(s)) return false;
+    if (bits[0] === 'family' || bits[0] === 'chain') return E.condMatches(s, ev.cond);
+    if (bits[0] === 'side' && !(s.hobbies || []).includes(bits[1])) return false;
+    if (bits[0] === 'route' && (!RT.groupHas(s, bits[1]) || (bits[2] && bits[2] !== (RT.stage(s) || {}).id))) return false;
+    if (/^(canon_father|canon_heart|pt_father)/.test(ev.id) && s.household) {
+      var dad = E.person(s, 'father');
+      if (s.household.preset !== 'canon' || !dad || !dad.v2 || !dad.v2.dark.alcohol) return false;
+    }
+    if (/^sys_/.test(ev.id) && bits[0] !== 'route') return true;
     if (!s.route) RT.sync(s, true);
-    var allow = RT.eventRoutes(ev);
+    var allow = bits[0] === 'route' ? [bits[1]] : RT.eventRoutes(ev);
     if (allow && !allow.some(function (g) { return RT.groupHas(s, g); })) return false;
     if (ev.stages && ev.stages.indexOf((RT.stage(s) || {}).id) < 0) return false;
     var tg = RT.eventTargets(ev), cur = s.route.id;
@@ -733,6 +747,13 @@
     opts = opts || {};
     s.body = RT.rollBody(s, opts.parentState);
     s.talent = RT.rollTalent(s);
+    if (s.household) {
+      var talentMap = { sport: 'sports', music: 'music', art: 'art', logic: 'logic', lang: 'language', taste: 'cooking', stage: 'stage' };
+      Object.keys(talentMap).forEach(function (k) {
+        var total = s.people.filter(function (p) { return p.v2; }).reduce(function (n, p) { return n + (p.v2.talents[talentMap[k]] || 0); }, 0);
+        s.talent[k] = clamp(Math.round(s.talent[k] + total * 1.5), 0, 100);
+      });
+    }
     if (opts.parentState && opts.parentState.talent) Object.keys(s.talent).forEach(function (k) { s.talent[k] = Math.round((s.talent[k] * 2 + (opts.parentState.talent[k] || 0)) / 3); });
     s.track = null;
     s.routeLog = [];
@@ -889,4 +910,5 @@
     return _outfit(s);
   };
   void T;
+  RA.ownEvents(E.SYS_EVENTS);
 })(typeof globalThis !== 'undefined' ? globalThis : this);

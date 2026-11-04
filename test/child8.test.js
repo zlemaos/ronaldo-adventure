@@ -8,7 +8,9 @@ const { load } = require('../tools/sim-helpers.js');
 const RA = load();
 const E = RA.Engine, RT = E.Routes, L = E.Life, D = RA.data;
 
-const CHILD = D.events.filter(e => e.age && e.age[0] <= 11 && (e.choices || []).length);
+// V2 family support and optional invitations intentionally include safe, reusable dialogue.
+// The old risk/unique-copy contract remains scoped to the original childhood pack.
+const CHILD = D.events.filter(e => !/^(family:|chain:)/.test(e.own || '') && e.age && e.age[0] <= 11 && (e.choices || []).length);
 // a risk that can actually happen: a bet, or a check that can fail into a worse outcome (a label is not enough)
 const hurts = fx => !!fx && (Object.keys(fx).some(k => k !== 'mischief' && typeof fx[k] === 'number' && fx[k] < 0)
   || (fx.rel && Object.values(fx.rel).some(v => v < 0)) || [].concat(fx.fx || []).length > 0);
@@ -133,7 +135,8 @@ test('hobby cards and childhood play never show a raw particle marker', () => {
       while (k.queue.length) {
         shown(k).forEach(t => assert.ok(!leftover(t), c + n + ' age ' + k.age + ': ' + t));
         const ev = E.currentEvent(k); if (!ev) break;
-        E.choose(k, (guard + n) % ev.choices.length);
+        const enabled = ev.choices.filter(c => c.enabled);
+        E.choose(k, enabled[(guard + n) % enabled.length].i);
       }
       E.ageUp(k);
     }
@@ -170,13 +173,13 @@ test('a result reads its category from the hero: football cheers, memorial griev
   const p = fresh('pt', 'goal-cue'); assert.ok(L.knows(p, 'football'));
   const rp = play(p, goal.id, idx);
   assert.strictEqual(rp.category.key, 'football');
-  assert.strictEqual(p.y.triumph, 'goal');
+  assert.ok(E.pendingMoments(p).some(m => m.kind === 'goal'), 'v2 retains goal moments in the queue');
   // a child who never chose football: same card, relabelled, no goal cheer
   const k = fresh('kr', '4242'); k.hobbies = ['draw', 'cook']; k.hobbyEver = { draw: 1, cook: 1 }; k.fb.stage = 'none'; k.fb.seasons = 0;
   assert.ok(!L.knows(k, 'football'));
   const rk = play(k, goal.id, idx);
   assert.notStrictEqual(rk.category.key, 'football');
-  assert.ok(!k.y.triumph, 'no goal cheer for a relabelled card');
+  assert.ok(!E.pendingMoments(k).some(m => m.kind === 'goal'), 'no queued goal cheer for a relabelled card');
   // a memorial card plays the grief sound
   const mem = E.allEvents().find(ev => E.eventCategory(ev) === E.CATEGORIES.memorial && (ev.choices || []).some(c => !c.check && !c.bet));
   assert.ok(mem, 'a memorial card');

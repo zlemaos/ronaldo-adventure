@@ -63,6 +63,7 @@
   FX.seriousInjury = function (s) {
     E.addStat(s, 'health', -E.rint(s, 12, 22)); E.addStat(s, 'football', -E.rint(s, 3, 8));
     s.fb.injury = 2;
+    E.emitMoment(s, {kind:'major_injury',tier:'S',tone:'shock',title:'멈춰 선 시간'});
     return '심각한 부상이다. 의사는 "다시 뛸 수 있을지는 본인 의지에 달렸다"고 했다.';
   };
   FX.transferAbroad = function (s) {
@@ -85,15 +86,11 @@
   FX.heartIgnore = function (s) { s.flags.heart_hidden = s.age; return '아무에게도 말하지 않았다. 가슴이 가끔 쿵쾅거린다.'; };
   FX.fatherSeekHelp = function (s) {
     var d = E.person(s, 'father'); if (!d || !d.alive) return null;
-    d.recovery = Math.min(100, (d.recovery || 0) + E.rint(s, 18, 30));
-    if (d.recovery >= 100) return FX.fatherRecover(s);
-    return '아버지가 치료 이야기를 진지하게 듣기 시작했다. (회복 의지 ' + d.recovery + '%)';
+    return '마음을 전했다. 치료와 회복은 아버지와 곁의 어른들이 함께 결정할 일이다.';
   };
   FX.fatherRelapse = function (s) {
     var d = E.person(s, 'father'); if (!d || !d.alive) return null;
-    d.recovery = Math.max(0, (d.recovery || 0) - 25); delete s.flags.father_sober;
-    s.flags.father_drinking = s.flags.father_drinking || s.age;
-    return '아버지가 다시 술잔을 들었다. 회복은 한 번에 오지 않는다.';
+    return '복잡한 마음이 남았다. 아이의 반응이 어른의 회복을 결정하지는 않는다.';
   };
   FX.fatherRecover = function (s) {
     var d = E.person(s, 'father'); if (!d || !d.alive) return null;
@@ -165,6 +162,7 @@
     if (!p) { FX.newPartner(s); p = E.person(s, 'partner'); }
     if (!p) return null;
     p.role = 'spouse'; p.rel = Math.min(100, p.rel + 10);
+    E.emitMoment(s, {kind:'marriage',tier:'S',tone:'tender',title:'함께하는 삶',people:[p.id]});
     s.flags.married = s.age; s.marriedAt = s.age;
     E.addStat(s, 'happy', 8);
     return dn(s, p) + '와(과) 결혼했다! 하객들이 ' + E.vars(s).food + '을(를) 원 없이 먹었다.';
@@ -183,6 +181,7 @@
     var given = E.pick(s, pool.length ? pool : c.names[g]);
     var nm = E.fullName(c, s.hero.surname, given);
     E.addPerson(s, { role: 'child', name: nm, gender: g, age: 0, rel: 85, bornAt: s.age });
+    E.emitMoment(s, {kind:'childbirth',tier:'S',tone:'tender',title:'가족이 늘어난 날',sub:nm,people:[s.nextPid-1]});
     E.addStat(s, 'happy', 8);
     return (g === 'm' ? '아들' : '딸') + ' ' + given + '(이)가 태어났다!';
   };
@@ -287,7 +286,7 @@
     s.money -= loss; E.addStat(s, 'happy', -8);
     return '사기를 당해 ' + T.money(loss, E.country(s)) + '을(를) 잃었다.';
   };
-  FX.moveAbroad = function (s) { s.flags.abroad = s.age; s.abroadCity = s.abroadCity || E.pick(s, ['런던', '파리', '시드니', '토론토', '베를린', '두바이']); return s.abroadCity + '(으)로 이민을 떠났다.'; };
+  FX.moveAbroad = function (s) { s.flags.abroad = s.age; s.abroadCity = s.abroadCity || E.pick(s, ['런던', '파리', '시드니', '토론토', '베를린', '두바이']); E.emitMoment(s,{kind:'move',tier:'A',tone:'joy',title:'새로운 터전',sub:s.abroadCity}); return s.abroadCity + '(으)로 이민을 떠났다.'; };
   // ---- round 5: failure routes and life decisions
   function inSchool(s) { return ['elem', 'middle', 'high', 'univ', 'grad'].indexOf(s.edu.stage) >= 0; }
   FX.suspend = function (s) {
@@ -724,4 +723,5 @@
     out.push('#인생게임 시드 ' + s.seed);
     return out.map(T.fixJosa).join('\n');
   };
+  RA.ownEvents(E.SYS_EVENTS);
 })(typeof globalThis !== 'undefined' ? globalThis : this);

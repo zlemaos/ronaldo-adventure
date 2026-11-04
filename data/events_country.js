@@ -1324,4 +1324,5 @@
     effects: { happy: 4, health: 2 },
     log: '해변 축구를 하던 아이들이 공을 차 달라며 손을 흔들었다.'
   });
+  RA.ownEvents(RA.data.events);
 })(typeof globalThis !== 'undefined' ? globalThis : this);

@@ -228,7 +228,7 @@
   // for the validator; the engine reads ev.choicesFn first)
   function gateChoices() {
     D().events.forEach(function (ev) {
-      if (!ev.choices || ev.choicesFn || ev._gated) return;
+      if (!ev.choices || ev.choicesFn || ev._gated || ev.own === 'chain:first_boots') return;
       ev._gated = true;
       var all = ev.choices;
       if (!all.some(function (ch) { return L.choiceFlavours(ch).length || ch.hobbyReq; })) return;
@@ -246,6 +246,7 @@
   var _matches = E.eventMatches;
   E.eventMatches = function (s, ev) {
     if (!_matches(s, ev)) return false;
+    if (ev.own === 'chain:first_boots') return /^boots_open_/.test(ev.id);
     if (ev.hobby && !L.has(s, ev.hobby)) return false;
     if (ev.flavour && !L.knows(s, ev.flavour)) return false; // a scene that only makes sense to a player of that game
     if (ev.origin && ev.origin.indexOf(s.origin) < 0) return false;
@@ -582,10 +583,10 @@
   E.newGame = function (opts) {
     var s = _newGame(opts);
     opts = opts || {};
-    s.origin = L.rollOrigin(s, opts.parentState);
+    s.origin = s.household ? ['slum', 'poor', 'middle', 'middle', 'rich'][s.household.tier - 1] : L.rollOrigin(s, opts.parentState);
     originStart(s);
     s.hobbies = []; s.hobbyEver = {};
-    if (s.country === 'pt' && !opts.parentState) L.add(s, 'football'); // canon: the father's ball from the club storeroom
+    if (s.country === 'pt' && !opts.parentState && (!s.household || s.household.preset === 'canon')) L.add(s, 'football'); // legacy/canon only
     if (opts.parentState && s.age >= 5) L.autoPick(s);
     s.spon = null;
     return s;
@@ -594,6 +595,13 @@
   E.ageUp = function (s) {
     var res = _ageUp(s);
     if (!s.alive || !res) return res;
+    if (s.household && s.age >= 5 && s.age < 19 && s.household.allowanceAge !== s.age) {
+      var amount = Math.max(0, (s.household.tier - 1) * 5);
+      s.wallet = (s.wallet || 0) + amount;
+      s.household.cash = (s.household.cash || 0) - amount;
+      s.household.allowanceAge = s.age;
+      E.addLog(s, '부모님의 가계 현금에서 용돈 ' + amount + '을 내 지갑으로 옮겼다.', 'info');
+    }
     yearlyHobbies(s); yearlyChild(s); yearlyDrink(s); yearlyDark(s); yearlySponsor(s);
     // the hobby pick comes first in the year it is due (right after the age-5 early-education review)
     if (s.age >= 5 && (s.hobbies || []).length < 2 && !s.fired.sys_hobby && E.queueSys(s, 'sys_hobby')) {
@@ -733,4 +741,78 @@
   E.SYS_EVENTS = E.SYS_EVENTS.concat(HOBBY_EVENTS);
   E.resetCaches();
   void C;
+  RA.ownEvents(E.SYS_EVENTS);
+  function snapshot(s) {
+    return JSON.parse(JSON.stringify({ degree: s.edu.degree, school: s.edu.stage, job: s.job, retired: s.retiredFromWork, alive: s.alive, children: s.people.filter(function (p) { return p.role === 'child'; }).length, spouse: !!E.person(s, 'spouse'), partner: !!E.person(s, 'partner'), fb: s.fb, born: s.born }));
+  }
+  function record(s, b) {
+    function emit(kind, title, tone, tier) { E.emitMoment(s, {kind: kind, title: title, tone: tone || 'joy', tier: tier || 'S'}); }
+    if (!b.partner && E.person(s, 'partner')) emit('first_love', '마음을 나눈 날', 'tender', 'A');
+    if (s.edu.degree !== b.degree) emit('graduation', '졸업');
+    if (s.edu.stage !== b.school && ['elem', 'middle', 'high', 'univ', 'grad'].includes(s.edu.stage)) emit('enrollment', '새로운 학교', 'joy', 'A');
+    Object.keys(s.fb.trophies).forEach(function (k) { if (s.fb.trophies[k] > b.fb.trophies[k]) emit('trophy_' + k, k === 'ballon' ? '발롱도르' : k === 'wc' ? '월드컵 우승! SIUUU!' : '우승! SIUUU!', 'triumph'); });
+    if (b.alive && !s.alive) emit('death', '한 인생의 마지막', 'sad');
+  }
+  ['choose', 'ageUp', 'doActivity', 'applyJob'].forEach(function (method) {
+    var original = E[method];
+    E[method] = function (s) {
+      var before = snapshot(s), appliedBefore = E.changeSnapshot(s), result = original.apply(E, arguments);
+      record(s, before);
+      s.appliedChanges = E.diffChanges(appliedBefore, E.changeSnapshot(s));
+      if (result && typeof result === 'object') { result.appliedChanges = s.appliedChanges; result.changes = s.appliedChanges; }
+      return result;
+    };
+  });
+  E.changeSnapshot = function (s) {
+    var out = {};
+    Object.keys(s).forEach(function (k) {
+      if (!['rng','log','hist','cards','appliedChanges','seq','momentSeq','cd','fired','queue','nextPid'].includes(k)) out[k] = s[k];
+    });
+    return JSON.parse(JSON.stringify(out));
+  };
+  E.diffChanges = function (before, after) {
+    var out = [];
+    var moneyCountry = RA.data.countries[after.country];
+    var labels = {stats:'능력',money:'잔고',wallet:'내 지갑',household:'가계',cash:'현금',people:'사람들',rel:'관계',flags:'기억하는 일',moments:'큰 순간',chronicle:'연대기',memories:'기억',job:'직업',route:'진로',fb:'축구',edu:'학교',ap:'남은 행동'};
+    function walk(a,b,path) {
+      if (a === b || (Array.isArray(a) && Array.isArray(b) && JSON.stringify(a) === JSON.stringify(b))) return;
+      if(path.length===1 && path[0]==='people'){
+        var oldPeople=new Map((a||[]).map(function(p){return [p.id,p];}));
+        (b||[]).forEach(function(p){
+          var old=oldPeople.get(p.id), person={id:p.id,name:p.name,role:p.role};
+          if(!old){out.push({kind:'person',k:'msg',path:'people.'+p.id,person:person,action:'added',before:null,after:p,t:p.name+'을(를) 만났다.'});return;}
+          Object.keys(p).forEach(function(field){
+            if(old[field]===p[field] || JSON.stringify(old[field])===JSON.stringify(p[field]))return;
+            var delta=typeof p[field]==='number'&&typeof old[field]==='number'?p[field]-old[field]:null;
+            var label={rel:'관계',alive:'생존',role:'관계 역할',age:'나이',recovery:'회복',sober:'금주',memories:'기억'}[field]||field;
+            out.push({kind:field==='rel'?'relationship':'person',k:field==='rel'?'rel':'msg',path:'people.'+p.id+'.'+field,person:person,who:p.role,field:field,label:label,before:old[field]==null?null:old[field],after:p[field],d:delta,t:p.name+' · '+label+(delta==null?' 기록': ' '+(delta>0?'+':'')+delta)});
+          });oldPeople.delete(p.id);
+        });
+        oldPeople.forEach(function(p){out.push({kind:'person',k:'msg',path:'people.'+p.id,person:{id:p.id,name:p.name,role:p.role},action:'removed',before:p,after:null,t:p.name+'의 관계 기록이 바뀌었다.'});});
+        return;
+      }
+      if(path.length===1&&['memories','chronicle','moments'].includes(path[0])){
+        var array=Array.isArray(b),oldEntries=array?new Map((a||[]).map(function(e){return[e.id,e];})):new Map(Object.entries(a||{}));
+        (array?(b||[]).map(function(e){return[e.id,e];}):Object.entries(b||{})).forEach(function(pair){
+          var id=pair[0],entry=pair[1],old=oldEntries.get(id);
+          if(JSON.stringify(old)!==JSON.stringify(entry))out.push({kind:path[0]==='memories'?'memory':path[0]==='chronicle'?'chronicle':'moment',k:'msg',path:path[0]+'.'+id,action:old?'updated':'added',before:old||null,after:entry,text:entry.text||null,title:entry.title||null,personId:entry.personId||null,entry:entry,t:entry.text||entry.title});
+          oldEntries.delete(id);
+        });
+        oldEntries.forEach(function(entry,id){out.push({kind:path[0]==='moments'?'moment':path[0]==='chronicle'?'chronicle':'memory',k:'msg',path:path[0]+'.'+id,action:'removed',before:entry,after:null,entry:entry,text:entry.text||null,title:entry.title||null,t:entry.text||entry.title});});
+        return;
+      }
+      if (a && b && typeof a === 'object' && typeof b === 'object' && !Array.isArray(a) && !Array.isArray(b)) {
+        Array.from(new Set(Object.keys(a).concat(Object.keys(b)))).forEach(function (k) { walk(a[k],b[k],path.concat(k)); }); return;
+      }
+      var stat = path[0] === 'stats' && path.length === 2;
+      var label = stat ? C.STAT_LABELS[path[1]] : path[0] === 'traits' ? '생활 습관 · '+path[1] : labels[path[path.length-1]] || labels[path[0]] || path.join('.');
+      var delta = typeof a === 'number' && typeof b === 'number' ? b-a : null;
+      var moneyPath = path.join('.'), displayAmount = null;
+      if (delta != null && ['money','wallet','household.cash'].includes(moneyPath)) displayAmount = T.money(delta * (moneyPath === 'money' ? 1 : moneyCountry.wage), moneyCountry);
+      out.push({kind:stat?'stat':'state',stat:stat?path[1]:null,label:label,k:stat ? path[1] : path.length === 1 && path[0] === 'money' ? 'money' : 'msg',path:moneyPath,before:a == null ? null : a,after:b == null ? null : b,d:delta,displayAmount:displayAmount,t:label + (displayAmount ? ' ' + displayAmount : delta == null ? ' 기록' : ' ' + (delta>0?'+':'') + delta)});
+    }
+    walk(before,after,[]);
+    return out;
+  };
+  E.lastChanges = function (s) { return JSON.parse(JSON.stringify(s.appliedChanges || [])); };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

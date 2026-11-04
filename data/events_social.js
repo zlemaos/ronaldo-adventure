@@ -60,4 +60,5 @@
         { text: '이번엔 쉰다', effects: { health: 1 }, log: '푹 잤다. 다음엔 꼭 가 보기로 했다.' }
       ] }
   );
+  RA.ownEvents(RA.data.events);
 })(typeof globalThis !== 'undefined' ? globalThis : this);

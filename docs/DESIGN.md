@@ -569,6 +569,62 @@ hobbies 2–3 and changing later; the rapper route reached; four origins; the st
 street death and flight endings; drinking risk and recovery; sponsor arcs; ending order and reachability through real
 events; no stall for an office worker or an unsuited hero; childhood crises; v6 saves play on legally.
 
+## 2h. v2 slice 1 — persistent families and connected consequences
+
+Implemented engine/data foundation; the binding additions are in
+[v2 design §2.1–2.2, §3, §6 and §8](../research/50_design_v2.md).
+Earlier [Round 6 routes](#2f-round-6-routes-진로-루트--every-life-follows-one-coherent-path)
+and [Round 8 hobbies/origin](#2g-round-8-hobbies-origin-the-rapper-route-the-dark-side-childhood-crises)
+remain the baseline, except where this slice explicitly replaces them.
+
+- **Family state and creation.** Existing father/mother records in `s.people` carry
+  `person.v2 = {nationality, jobId, talents, bright, dark}`; `s.household` references their
+  ids and holds residence, preset, siblings, tier and cash. There is no second parent array.
+  `Engine.newGame` retains `given`, `nameEnding`/`nameBatchim`, `gender`, `seed`, `country`,
+  adding `parents:[fatherSpec,motherSpec]`, `residence`, `preset`, `siblings`.
+  Residence precedence: explicit `residence` → shared parent nationality → `country`;
+  the result becomes `s.country`. Without `parents`, the legacy creation/RNG path remains.
+  Parent/sibling generation uses a separate seeded stream. Household tier replaces the
+  origin roll without duplicate bonuses; automatic Portugal football interest is canon-only.
+- **Parent data.** `data/parents.js` defines seven talents, seven bright and seven dark
+  traits (Korean descriptions at levels 0–3), 21 jobs with tier/time/exposure, and presets.
+  Canon is labelled fiction inspired by public accounts. The four combinations are
+  `edu_pressure`, `warm_unreliable`, `debt`, `cold_strict`; only living parents contribute.
+- **Content keys (§2.1b).** `cond.parent`, `cond.household`, `cond.combo`, `cond.memory`
+  work for yearly events and infancy selection. Effects add `moment`, `memory`, `household`,
+  `wallet`; affordability uses `req.household.cash` and `req.wallet`. Checks support
+  `check.partial`, `choice.partial`, `choice.retry` and computed outcome probabilities.
+  Annual allowance transfers household resources to the child's wallet.
+  `{fatherJob}`/`{motherJob}` supply job wording; `{parent}` supplies the qualifying parent's
+  kinship title. `who:'parent'` memories persist that person's id for subsequent scenes.
+- **Ownership.** One evaluator gates normal, scheduled and queued events, including legacy
+  tags, route/common/side-interest ownership and the family names `family:<traitId>`,
+  `family:combo:<id>`, `family:job:<jobId>`, `family:talent:<id>`, `family:infancy`,
+  `chain:first_boots`. Family/chain events can cross routes only when their conditions match.
+  The validator checks ownership; side-interest invitations allow a real decline.
+- **Moments, adults and money.** `pendingMoments(s)` / `ackMoment(s,id)` expose and
+  acknowledge saved `s.moments`, with `s.chronicle` retaining the record; the old triumph slot
+  is not authoritative. In v2, `inf_birth` alone owns the birth moment.
+  Mutually exclusive `adult_<father|mother>_<alcohol|gambling|temper>_<support|stable|relapse|protected>`
+  flags come from the adult process, not child choices. `{money:N}` converts reference units
+  by country wage through `RA.Text.money`, including following Korean particles.
+- **Compatibility and checks.** Save v8 migrates old lives without reopening creation;
+  `test/fixtures/v7-saves.json` was generated with historical `1dacf6e` code and preserves
+  original occupation wording. Test command: `node --test "test/*.test.js"` (PowerShell:
+  `npm.cmd test`). Latest engine checkpoint: validator PASS, **160/160 tests PASS**.
+
+Measurement tools and recorded results:
+
+| Tool | Latest recorded measurement |
+|---|---|
+| `tools/measure-slice1.js` | 2,000 lives: 1,997 coarse consequence signatures; top shares 0.15%, 0.10%, eight tied at 0.05%. Paired childhood comparison: 49/50 changed event sets. Talent seeds `v2-talent-0..1999`: pooled Pearson **0.34114258** across 14,000 pairs. |
+| `tools/measure-boots-tryout.js` | After calibration, success / partial / failure: canon **27.53% / 59.66% / 12.81%** (999 eligible); random parents **18.2% / 57.5% / 24.3%** (1,000). Before: **5.51% / 25.23% / 69.27%** and **5.4% / 24.7% / 69.9%**. |
+
+Signature/paired measurements predate the final tryout and living-combo changes; they
+are not a fresh final-build cohort. Tryout measurements are age-five offered-test fixtures,
+not natural encounter rates. Full API shapes, methods and remaining UI/semantic-review
+limits: [engine integration status](../research/slice1-engine-status.md).
+
 ## 3. Architecture
 
 ```

@@ -375,13 +375,14 @@
       ]
     },
     {
-      id: 'life_teen_band', age: [14, 19], once: true,
+      id: 'life_teen_band', own: 'side:music', age: [14, 19], once: true,
       text: '친구들이 밴드를 만든다며 {name}[을/를] 영입하려 한다.',
       choices: [
         { text: '보컬을 맡는다', check: { stat: 'looks', diff: 45 },
           success: { effects: { happy: 5, fame: 2 }, log: '동네 축제 무대에서 떼창이 나왔다.' },
           fail: { effects: { happy: -2 }, log: '음 이탈 영상이 지인들 사이에 돌았다.' } },
-        { text: '탬버린 담당', effects: { happy: 3 }, log: '가장 열정적인 탬버린 연주자로 기억됐다.' }
+        { text: '탬버린 담당', effects: { happy: 3 }, log: '가장 열정적인 탬버린 연주자로 기억됐다.' },
+        { text: '이번에는 참여하지 않는다', decline: true, log: '응원은 하되 밴드에는 들어가지 않았다.' }
       ]
     },
     {
@@ -1603,4 +1604,5 @@
       log: '{house} 시절 이불 쟁탈전 이야기에 {siblingsAll} 다 눈물이 나도록 웃었다.'
     }
   ]);
+  RA.ownEvents(RA.data.events);
 })(typeof globalThis !== 'undefined' ? globalThis : this);

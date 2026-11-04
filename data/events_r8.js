@@ -670,4 +670,5 @@
       fail: { effects: { rel: { family: -6 }, happy: -3 }, log: '{mother}[이/가] 그 노래를 듣고 한참 전화를 받지 않았다.' } },
     { text: '이름과 장소를 바꿔 쓴다', effects: { fx: ['rtSkill'] }, log: '덜 날카로웠지만 모두가 들을 수 있는 노래가 됐다.' }
   ], { stages: ['mixtape', 'debut', 'chart', 'legend', 'oldschool'] });
+  RA.ownEvents(RA.data.events);
 })(typeof globalThis !== 'undefined' ? globalThis : this);

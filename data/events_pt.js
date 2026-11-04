@@ -155,4 +155,5 @@
       { text: '쉬엄쉬엄 천천히 걷는다', effects: { happy: 4, health: 1 }, log: '물소리에 귀를 기울이며 한 걸음씩 걷는다.' }
     ]
   });
+  RA.ownEvents(RA.data.events);
 })(typeof globalThis !== 'undefined' ? globalThis : this);

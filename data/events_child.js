@@ -802,4 +802,5 @@
         success: { effects: { happy: 3, social: 2 }, log: '앞뒤 좌석 사람들까지 한 입씩 얻어 갔다. 섬 냄새가 기내에 퍼졌다.' },
         fail: { effects: { happy: -3 }, log: '승무원이 기내 음식 반입이라며 통째로 가져갔다. 빈 주머니만 만지작거렸다.' } }
     ] });
+  RA.ownEvents(RA.data.events);
 })(typeof globalThis !== 'undefined' ? globalThis : this);

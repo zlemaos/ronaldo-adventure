@@ -399,4 +399,5 @@
         { text: '싱겁게 조금만 먹는다', effects: { health: 2, happy: -1 }, log: '맛은 심심했지만 아침 산책이 가벼웠다.' }
       ] }
   );
+  RA.ownEvents(RA.data.events);
 })(typeof globalThis !== 'undefined' ? globalThis : this);

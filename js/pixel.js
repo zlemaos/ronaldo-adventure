@@ -246,7 +246,6 @@
       R(ctx, 92, 16, 10, 10, '#dfe7d8'); R(ctx, 93, 17, 8, 8, '#1f5135'); R(ctx, 96, 20, 2, 2, '#dfe7d8');
       R(ctx, 0, 70, P.W, 26, '#7a6a55');
       for (var i = 0; i < 4; i++) { B(ctx, 8 + i * 40, 66, 24, 4, '#a07a52'); R(ctx, 10 + i * 40, 70, 2, 10, '#5a3c28'); R(ctx, 28 + i * 40, 70, 2, 10, '#5a3c28'); }
-      R(ctx, 140, 4, 12, 12, PAL.white); R(ctx, 145, 6, 1, 5, PAL.ink); R(ctx, 145, 10, 4, 1, PAL.ink);
     },
     pitch: function (ctx, t, c) {
       sky(ctx, '#4f9dff', '#86c3ff', 40); clouds(ctx, t, 6);

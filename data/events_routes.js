@@ -268,4 +268,5 @@
       success: { effects: { money: 5000, mischief: 3 }, log: '처방전에 그 회사 약 이름이 늘었다.' },
       fail: { effects: { record: 1, fx: ['rtScandal'] }, log: '리베이트 수사가 시작됐다.' } }
   ], { stages: ['specialist', 'chief', 'elder'], cond: { career: ['doctor', 'surgeon', 'dentist'] } });
+  RA.ownEvents(RA.data.events);
 })(typeof globalThis !== 'undefined' ? globalThis : this);

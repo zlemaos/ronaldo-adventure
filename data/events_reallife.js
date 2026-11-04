@@ -655,4 +655,5 @@
         { text: '따뜻한 집에서 TV를 본다', effects: { happy: 2, health: -2 }, log: '드라마 한 편이 두 편이 됐다.' }
       ] }
   );
+  RA.ownEvents(RA.data.events);
 })(typeof globalThis !== 'undefined' ? globalThis : this);

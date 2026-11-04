@@ -372,4 +372,5 @@
         { text: '늦잠을 잔다', effects: { health: 1 }, log: '일요일 아침의 이불 속은 우승 트로피보다 소중하다.' }
       ] }
   );
+  RA.ownEvents(RA.data.events);
 })(typeof globalThis !== 'undefined' ? globalThis : this);

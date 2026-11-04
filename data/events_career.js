@@ -1740,4 +1740,5 @@
       { text: '"나도 몰라. 일단 풀자"', effects: { happy: 2 }, log: '솔직함에 학생이 웃었다. 그날따라 문제를 잘 풀었다.' }
     ]
   });
+  RA.ownEvents(RA.data.events);
 })(typeof globalThis !== 'undefined' ? globalThis : this);

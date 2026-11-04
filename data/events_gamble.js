@@ -232,4 +232,5 @@
         { text: '은퇴할 때라고 느낀다', effects: { gamble: -10, happy: 3, fx: ['quitJob'] }, log: '칩을 내려놓고 일을 그만뒀다.' }
       ] }
   );
+  RA.ownEvents(RA.data.events);
 })(typeof globalThis !== 'undefined' ? globalThis : this);

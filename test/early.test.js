@@ -159,10 +159,10 @@ test('triumph cues fire on big wins only', () => {
   pickFirst(s);
   s.age = 18; s.y = {};
   E.FX.turnPro(s);
-  assert.ok(s.y.triumph, 'turning pro is a triumph');
+  assert.ok(E.pendingMoments(s).some(m => m.kind === 'pro'), 'v2 queues professional debut rather than overwriting an annual cue');
   s.y = {};
   E.personDies(s, E.person(s, 'sis2'), '병');
-  assert.ok(!s.y.triumph, 'no SIUU on sad events');
+  assert.ok(!s.y.triumph, 'legacy audio cue remains unused');
 });
 
 test('the whole life still plays end to end with the new early years', () => {

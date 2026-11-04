@@ -24,11 +24,12 @@ function validate(RA) {
   const C = RA.C, D = RA.data;
   const errors = [], warns = [];
   const err = (m) => errors.push(m);
-  const tokenRe = /\{([a-zA-Z0-9]+)\}/g;
+  const tokenRe = /\{([^{}]+)\}/g;
   const checkText = (where, t) => {
     if (typeof t !== 'string' || !t.trim()) { err(where + ': empty text'); return; }
     let m; tokenRe.lastIndex = 0;
-    while ((m = tokenRe.exec(t))) if (!C.TOKENS.includes(m[1])) err(where + ': unknown token {' + m[1] + '}');
+    while ((m = tokenRe.exec(t))) if (!C.TOKENS.includes(m[1]) && !/^money:-?\d+(?:\.\d+)?$/.test(m[1])) err(where + ': unknown token {' + m[1] + '}');
+    if (/\b(?:fam_|boots_|inf_)/.test(where) && /\d{2,}/.test(t.replace(/\{money:-?\d+(?:\.\d+)?\}/g,''))) warns.push(where + ': bare multi-digit number; use a money token for reference amounts');
     const bad = t.match(/\[[^\]/]*\/[^\]]*\]/g) || [];
     bad.forEach(b => { if (!['[이/가]', '[은/는]', '[을/를]', '[과/와]', '[으로/로]', '[아/야]', '[이/]'].includes(b)) err(where + ': unknown particle ' + b); });
   };
@@ -110,11 +111,18 @@ function validate(RA) {
       else if (key === 'flags' || key === 'unflags') { if (!Array.isArray(e[key])) err(w + ': ' + key + ' must be array'); }
       else if (key === 'fx') { (Array.isArray(e.fx) ? e.fx : [e.fx]).forEach(f => { if (!fxSet.has(f)) err(w + ': bad fx ' + f); }); }
       else if (key === 'achieve') { /* free id */ }
+      else if (['moment', 'memory', 'household', 'wallet'].includes(key)) { /* v2 engine effects */ }
       else err(w + ': unknown effect key ' + key);
     }
   };
   for (const ev of events) {
     const w = 'event ' + ev.id;
+    if (!/^(life|route:[\w-]+(?::[\w-]+)?|shared:[\w-]+|side:[\w-]+|family:[\w-]+(?::[\w-]+)?|chain:first_boots)$/.test(ev.own || '')) err(w + ': missing/invalid ownership');
+    if ((ev.own || '').startsWith('side:') && !(ev.choices || []).some(c => c.decline)) err(w + ': side event needs a decline');
+    for (const choice of ev.choices || []) {
+      if (choice.retry && !['final', 'later', 'improve'].includes(choice.retry)) err(w + ': invalid retry');
+      if (choice.partial) { checkEffects(w + ' partial', choice.partial.effects); checkText(w + ' partial', choice.partial.log); }
+    }
     if (!ev.id || eids.has(ev.id)) err(w + ': missing/duplicate id');
     eids.add(ev.id);
     checkText(w, ev.text);
@@ -124,7 +132,7 @@ function validate(RA) {
     if (ev.age && !(Array.isArray(ev.age) && ev.age[0] <= ev.age[1])) err(w + ': age');
     (ev.countries || []).forEach(c => { if (!COUNTRIES.includes(c)) err(w + ': bad country ' + c); });
     const cd = ev.cond || {};
-    const allowed = ['stats', 'money', 'flags', 'fb', 'edu', 'degree', 'career', 'sector', 'level', 'rel', 'gender', 'recent', 'family', 'traits', 'jailed', 'childAge'];
+    const allowed = ['parent', 'household', 'combo', 'memory', 'stats', 'money', 'flags', 'fb', 'edu', 'degree', 'career', 'sector', 'level', 'rel', 'gender', 'recent', 'family', 'traits', 'jailed', 'childAge'];
     Object.keys(cd).forEach(k => { if (!allowed.includes(k)) err(w + ': unknown cond ' + k); });
     if (cd.family && cd.family !== 'all') err(w + ': cond.family must be "all"');
     if (ev.memorial && ev.memorial !== true && !Array.isArray(ev.memorial)) err(w + ': memorial must be true or a list');
@@ -171,7 +179,7 @@ function validate(RA) {
   }
   // schedule targets must exist
   for (const ev of events) (ev.choices || []).forEach(ch => {
-    [ch, ch.success, ch.fail].forEach(o => { if (o && o.schedule && !eids.has(o.schedule.id)) err('event ' + ev.id + ': schedule target missing ' + o.schedule.id); });
+    [ch, ch.success, ch.partial, ch.fail].forEach(o => { if (o && o.schedule && !eids.has(o.schedule.id)) err('event ' + ev.id + ': schedule target missing ' + o.schedule.id); });
   });
 
   // Milestones (ages 0-4 montage)
@@ -188,7 +196,7 @@ function validate(RA) {
     (m.countries || []).forEach(c => { if (!COUNTRIES.includes(c)) err(w + ': bad country ' + c); });
     checkText(w, m.text);
     checkEffects(w, m.effects);
-    if (m.text && m.text.length > 60) err(w + ': keep milestone sentences short (<= 60 chars)');
+    if (m.own !== 'family:infancy' && m.text && m.text.length > 60) err(w + ': keep milestone sentences short (<= 60 chars)');
   }
   if (Object.keys(cs).length && ms.length < 10) err('need at least 10 milestones');
   for (const c of COUNTRIES) if (!ms.some(m => (m.countries || []).includes(c))) err('milestones: no country-specific milestone for ' + c);
@@ -228,7 +236,7 @@ function validateLife(RA, err) {
     if (ADULT_ONLY.test(ev.id) && !ev.manual && (!ev.age || ev.age[0] < 19 || !(ev.routes || []).length)) err(w + ': sponsor arcs need age 19+ and ev.routes');
     // a football choice inside a route-neutral event must leave at least one choice for everyone else
     // (events for football players only — cond.fb without 'none', or ev.flavour — are skipped: nobody else meets them)
-    const fbOnly = ev.flavour || (ev.cond && ev.cond.fb && !ev.cond.fb.includes('none'));
+    const fbOnly = ev.own === 'chain:first_boots' || ev.flavour || (ev.cond && ev.cond.fb && !ev.cond.fb.includes('none'));
     if (ev.flavour && !D.flavours[ev.flavour]) err(w + ': unknown flavour ' + ev.flavour);
     if (ev.choices && !ev.routes && !ev.hobby && !fbOnly && !/^fb_|^pt_/.test(ev.id) && L.eventFlavours(ev).length === 0) {
       const plain = ev.choices.filter(ch => !L.choiceFlavours(ch).length || ch.alt);
@@ -351,6 +359,7 @@ module.exports = { loadAll, validate };
 if (require.main === module) {
   const res = validate(require('./sim-helpers.js').load());
   console.log(JSON.stringify(res.counts));
+  res.warns.forEach(w => console.warn('WARNING: ' + w));
   if (res.errors.length) { console.log(res.errors.slice(0, 80).join('\n')); console.log(res.errors.length + ' error(s)'); process.exit(1); }
   console.log('OK');
 }

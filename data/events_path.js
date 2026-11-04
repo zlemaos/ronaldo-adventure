@@ -453,4 +453,5 @@
         { text: '추억으로 간직한다', effects: { happy: 1 }, log: '명함은 지갑 속에 오래 남았다.' }
       ] }
   ]);
+  RA.ownEvents(RA.data.events);
 })(typeof globalThis !== 'undefined' ? globalThis : this);

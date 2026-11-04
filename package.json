@@ -4,6 +4,6 @@
   "private": true,
   "description": "호날두의 모험 — pixel-art life simulation (unofficial fan parody). No build step, no dependencies.",
   "scripts": {
-    "test": "node --test"
+    "test": "node --test \"test/*.test.js\""
   }
 }

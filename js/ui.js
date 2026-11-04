@@ -6,7 +6,7 @@
   var $ = function (sel, root) { return (root || doc).querySelector(sel); };
 
   var app = {
-    s: null, slot: 1, tab: 'acts', screen: 'start', mood: null, moodUntil: 0,
+    s: null, slot: 1, tab: 'year', screen: 'start', mood: null, moodUntil: 0,
     sel: { country: 'pt', gender: 'm', seed: '', given: C.HERO_NAME },
     canvases: [], jobFilter: 'ok',
     auto: false, speed: 1, autoTimer: null, cardsShown: 0, cardsAge: -1, montageOpen: false, busy: false
@@ -89,6 +89,7 @@
     var cv = doc.createElement('canvas'); cv.width = P.W; cv.height = P.H; cv.className = 'px ' + (cls || '');
     addCanvas(cv, function (t) {
       var ctx = cv.getContext('2d'); ctx.imageSmoothingEnabled = false;
+      if (RA.V2.reduced()) t = 0;
       var sc = sceneFn(); P.drawScene(ctx, sc, t, country());
       var lk = lookFn && lookFn(); if (lk && !lk.hidden && sc !== 'grave') P.drawHero(ctx, heroX || 80, 88, Object.assign({ t: t }, lk));
     });
@@ -131,36 +132,16 @@
       var icon = trait ? C.TRAIT_ICONS[k] : (STAT_ICONS[k] || '');
       var label = trait ? C.TRAIT_LABELS[k] : (C.STAT_LABELS[k] || k);
       if (trait && preview) txt = (v > 0 ? '+' : '−');
-      return '<span class="chip ' + (good ? 'up' : 'down') + (trait ? ' trait' : '') + '" title="' + esc(label) + '">' + icon + (trait ? ' ' + esc(label.replace(/ .*/, '')) : '') + ' ' + esc(txt) + '</span>';
+      return '<span class="chip ' + (good ? 'up' : 'down') + (trait ? ' trait' : '') + '" title="' + esc(label) + '">' + esc(label) + ' ' + esc(txt) + '</span>';
     });
     return out.length ? '<div class="chips">' + out.join('') + '</div>' : '';
   }
   function ageFlash(age) {
+    if (RA.V2.reduced() || E.pendingMoments(app.s).length) return;
     var el = h('<div class="age-flash"><div class="big">' + age + '살<small>' + (app.s.year) + '년</small></div></div>');
     doc.body.appendChild(el);
     setTimeout(function () { el.remove(); }, 1000);
   }
-  function celebrate(kind, siuuPlayed) {
-    var label = { trophy: '우승!', ballon: '발롱도르!', worldcup: '월드컵 우승!', goal: '골!!', achieve: '업적 달성!', peak: '정상에 올랐다!', jackpot: '잭팟!', nobel: '노벨상 수상!' }[kind] || '축하해요!';
-    if (!siuuPlayed) A.play(kind === 'achieve' ? 'achieve' : kind === 'peak' ? 'cheer' : kind === 'jackpot' ? 'jackpot' : 'trophy');
-    app.mood = 'celebrate'; app.moodUntil = performance.now() + 3000;
-    var root = $('#fx-root');
-    var conf = doc.createElement('canvas'); conf.width = 160; conf.height = 96; conf.className = 'px';
-    conf.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;';
-    var box = h('<div class="celebrate"><div class="box"><canvas class="px tro" width="16" height="16"></canvas><div class="t">' + esc(label) + '</div></div></div>');
-    P.drawTrophy(box.querySelector('canvas').getContext('2d'), kind === 'ballon' ? 'ballon' : kind === 'worldcup' ? 'worldcup' : 'cup', 0, 0, 1);
-    root.appendChild(conf); root.appendChild(box);
-    // purely visual particles (Math.random is fine here: not outcome-affecting)
-    var parts = [], cols = ['#f5c518', '#2fd171', '#ff5470', '#60a5fa', '#ffffff'];
-    for (var i = 0; i < 90; i++) parts.push({ x: Math.random() * 160, y: -Math.random() * 60, vx: (Math.random() - .5) * .8, vy: .6 + Math.random() * 1.2, c: cols[i % cols.length] });
-    var start = performance.now();
-    (function step(t) {
-      var ctx = conf.getContext('2d'); ctx.clearRect(0, 0, 160, 96);
-      parts.forEach(function (p) { p.x += p.vx; p.y += p.vy; ctx.fillStyle = p.c; ctx.fillRect(Math.round(p.x), Math.round(p.y), 2, 2); });
-      if (t - start < 2600) G.requestAnimationFrame(step); else { conf.remove(); box.remove(); }
-    })(start);
-  }
-
   // ---------------------------------------------------------------- modal
   function closeModal() { $('#modal-root').innerHTML = ''; }
   function closeModalAndGo() { closeModal(); proceed(); }
@@ -177,84 +158,35 @@
 
   // ---------------------------------------------------------------- start screen
   function renderStart() {
-    app.screen = 'start'; app.s = null;
+    return renderTitleV2();
+  }
+  function renderTitleV2() {
+    app.screen = 'start'; app.s = null; app.auto = false; clearTimeout(app.autoTimer);
     $('#seed-chip').hidden = true;
-    var scr = $('#screen'); scr.innerHTML = '';
-    var c = RA.data.countries[app.sel.country];
-    var list = S.list();
-    var el = h('<div class="start">' +
-      '<section class="card"><div class="hero-banner"></div>' +
-      '<div class="card-b"><p class="pitch-text">사남매의 막내로 태어난 가난한 소년. 열두 살에 혼자 떠난 축구 아카데미, 열다섯의 심장 수술, 아버지의 아픔… 이 이야기의 끝은 발롱도르일까, 노벨상일까, 감옥일까? 1살부터 생을 마칠 때까지 한 해 한 해 선택하며 살아 보세요.</p>' +
-      '<div class="section-title">이어하기</div><div class="slots" id="slots"></div></div></section>' +
-      '<section class="card"><div class="card-h">새 인생 시작</div><div class="card-b">' +
-      '<div class="field"><label>태어날 나라를 고르세요</label><div class="countries" id="countries"></div></div>' +
-      '<div class="family-preview" id="family"></div>' +
-      '<div class="field"><label for="in-name">캐릭터 이름 (최대 20자)</label><input type="text" id="in-name" maxlength="20" autocomplete="off"><p class="muted">비우면 호날두가 됩니다. 나중에 ☰ 메뉴에서 바꿀 수 있어요.</p></div>' +
-      '<div class="field"><label>성별</label><div class="seg" id="seg-g"><button data-g="m">남</button><button data-g="f">여</button></div></div>' +
-      '<div class="field"><label>시드 (같은 시드 + 같은 선택 = 같은 인생)</label><div class="row"><input type="text" class="grow" id="in-seed" maxlength="24" placeholder="비우면 무작위"><button class="btn btn-sm" id="btn-dice" title="무작위 시드">🎲</button></div></div>' +
-      '<div class="field"><button class="btn btn-green" id="btn-start" style="width:100%;font-size:17px;padding:14px">인생 시작하기 ▶</button></div>' +
-      '</div></section></div>');
-    scr.appendChild(el);
-    var banner = $('.hero-banner', el);
-    banner.appendChild(portraitCanvas('', function () { return 'stadium'; }, function () {
-      var cc = RA.data.countries[app.sel.country];
-      return { age: 24, skin: cc.skin[0], hairColor: cc.hair, hair: 1, outfit: 'kit', gender: app.sel.gender, number: 7, mood: 'celebrate' };
-    }, 128));
-    banner.appendChild(h('<div class="title-over"><h1>인생게임</h1><p>도트 인생 시뮬레이션 · 비공식 팬 패러디</p></div>'));
-    // countries
-    var grid = $('#countries', el);
-    // the canon route (Portugal) comes first, as a wide card
-    var ids = Object.keys(RA.data.countries).sort(function (a, b) { return (RA.data.countries[b].canon ? 1 : 0) - (RA.data.countries[a].canon ? 1 : 0); });
-    ids.forEach(function (id) {
-      var cc = RA.data.countries[id];
-      var b = h('<button class="country' + (cc.canon ? ' canon' : '') + (id === app.sel.country ? ' sel' : '') + '" data-id="' + id + '"><canvas class="px" width="24" height="16"></canvas><span>' + esc(cc.name) + (cc.canon ? ' <em class="canon-badge">원작 루트</em>' : '') + '</span>' + (cc.canon ? '<small class="canon-note">실제 이야기와 가장 가까운 길 · 마데이라섬 → 리스본</small>' : '') + '</button>');
-      P.drawFlag(b.querySelector('canvas').getContext('2d'), id, 0, 0, 1);
-      b.addEventListener('click', function () { A.play('click'); app.sel.country = id; renderStart(); });
-      grid.appendChild(b);
-    });
-    var f = c.family;
-    $('#family', el).innerHTML = '<b>' + esc(c.places.hometown) + '</b>에서 태어납니다.<br>' +
-      '아버지 <b>' + esc(f.father.name) + '</b> — ' + esc(f.father.job) + ', ' + esc(f.father.job2) + '<br>' +
-      '어머니 <b>' + esc(f.mother.name) + '</b> — ' + esc(f.mother.job) + '<br>' +
-      '형제자매: ' + f.siblings.map(function (x) {
-        var word = E.relWord({ hero: { gender: app.sel.gender } }, { role: 'sibling', gender: x.gender, bornAt: -x.gap });
-        return word + ' <b>' + esc(x.name) + '</b>';
-      }).join(', ') + '<br>' +
-      '<span class="muted">동네 클럽 ' + esc(c.clubs.local) + ' → ' + esc(c.clubs.regional) + ' → ' + esc(c.places.bigcity) + '의 ' + esc(c.clubs.academy) + '</span>';
-    $('#in-seed', el).value = app.sel.seed;
-    $('#in-name', el).value = app.sel.given;
-    app.nameEnding = bindNameEnding($('#in-name', el), el);
-    $('#in-name', el).addEventListener('input', function (e) { app.sel.given = e.target.value; });
-    $('#in-seed', el).addEventListener('input', function (e) { app.sel.seed = e.target.value; });
-    $('#btn-dice', el).addEventListener('click', function () { app.sel.seed = RA.RNG.randomSeedString(); $('#in-seed').value = app.sel.seed; });
-    Array.prototype.forEach.call(el.querySelectorAll('#seg-g button'), function (b) {
-      if (b.dataset.g === app.sel.gender) b.classList.add('on');
-      b.addEventListener('click', function () { app.sel.gender = b.dataset.g; renderStart(); });
-    });
-    $('#btn-start', el).addEventListener('click', function () { A.unlock(); A.siuu(); startGame(); });
-    // slots
-    var sl = $('#slots', el);
+    var scr = $('#screen'), list = S.list();
+    scr.innerHTML = '<section class="v2-title"><p class="gold">한 사람의 인생, 수많은 갈림길</p><h1>인생게임</h1><p>이번 생은, 어떻게 살아 볼까?</p><div class="v2-title-art"></div><button class="btn btn-gold" id="btn-start">새 인생 시작</button><div id="v2-continue"></div><h2>저장된 인생</h2><div id="slots"></div></section>';
+    $('.v2-title-art', scr).appendChild(portraitCanvas('', function () { return 'home'; }, function () { return { age: 6, outfit: 'kit', hair: 1 }; }));
+    $('#btn-start').onclick = function () {
+      A.unlock(); app.screen = 'opening';
+      RA.V2.opening(scr, function () { app.screen = 'parents'; RA.ParentsUI.open(scr, { esc: esc, birth: startGame, notify: toast }); });
+    };
+    var filled = list.slots.filter(function (x) { return x.meta; }).sort(function (a, b) { return b.savedAt - a.savedAt; });
+    if (filled.length) { var next = h('<button class="btn" style="width:100%">이어하기 · ' + esc(filled[0].meta.name) + '</button>'); next.onclick = function () { loadSlot(filled[0].slot); }; $('#v2-continue').appendChild(next); }
     list.slots.forEach(function (x) {
-      var meta = x.meta;
-      var row = h('<div class="slot"><span class="grow">' + (meta ? '슬롯 ' + x.slot + ' · ' + esc(meta.name) + ' ' + meta.age + '세 · ' + esc((RA.data.countries[meta.country] || {}).name || '') + (meta.alive ? '' : ' · 사망') + (meta.gen > 1 ? ' · ' + meta.gen + '대' : '') : '슬롯 ' + x.slot + ' · 비어 있음') + '</span></div>');
-      if (meta) {
-        var lb = h('<button class="btn btn-sm btn-gold">불러오기</button>');
-        lb.addEventListener('click', function () { loadSlot(x.slot); });
-        row.appendChild(lb);
-      }
-      sl.appendChild(row);
+      if (!x.meta) { if (!filled.length && x.slot === list.slots[0].slot) $('#slots').appendChild(h('<p class="muted">저장된 인생 — 아직 없음</p>')); return; }
+      var b = h('<button class="btn v2-save">' + esc(x.meta.name) + ' · ' + x.meta.age + '살 · 열기</button>');
+      b.disabled = !x.meta; b.onclick = function () { loadSlot(x.slot); }; $('#slots').appendChild(b);
     });
   }
-
   function startGame(opts) {
     opts = opts || {};
     var seed = opts.seed || app.sel.seed || RA.RNG.randomSeedString();
-    app.s = E.newGame({ country: opts.country || app.sel.country, seed: seed, gender: opts.gender || app.sel.gender, given: opts.given != null ? opts.given : app.sel.given, nameEnding: opts.nameEnding != null ? opts.nameEnding : app.nameEnding && app.nameEnding() });
+    app.s = E.newGame(Object.assign({}, opts, { country: opts.residence || opts.country || app.sel.country, seed: seed, gender: opts.gender || app.sel.gender, given: opts.given != null ? opts.given : app.sel.given, nameEnding: opts.nameEnding != null ? opts.nameEnding : app.nameEnding && app.nameEnding() }));
     app.cardsAge = -1; app.cardsShown = 0;
     var list = S.list();
     var empty = list.slots.filter(function (x) { return !x.meta || !x.meta.alive; })[0];
     app.slot = opts.slot || (empty ? empty.slot : 1);
-    app.tab = isPhone() ? 'log' : 'acts';
+    app.tab = 'year';
     save();
     renderGame();
     proceed();
@@ -264,7 +196,7 @@
       var s = S.load(n);
       if (!s) return toast('저장된 인생이 없습니다.');
       app.s = s; app.slot = n;
-      if (!s.alive) return renderSummary();
+      if (!s.alive && !E.pendingMoments(s).length) return renderSummary();
       app.cardsAge = s.age; app.cardsShown = (s.cards || []).length; // do not replay last year's cards
       renderGame();
       proceed();
@@ -395,13 +327,13 @@
   function renderAgeBtn() {
     var s = app.s, b = $('#btn-age'), au = $('#btn-auto'), sp = $('#btn-speed');
     if (!b) return;
-    if (au) { au.innerHTML = app.auto ? '⏸ <span>자동 진행 중</span>' : '▶ <span>자동 진행</span>'; au.setAttribute('aria-pressed', app.auto ? 'true' : 'false'); au.classList.toggle('on', app.auto); }
-    if (sp) sp.textContent = app.speed + 'x';
+    if (au) { au.innerHTML = (app.auto ? '⏸ 자동 진행 중' : '▶ 자동 진행') + '<small>해마다 넘김 · 선택에서 멈춤</small>'; au.setAttribute('aria-pressed', app.auto ? 'true' : 'false'); au.classList.toggle('on', app.auto); }
+    if (sp) sp.textContent = '진행 속도 ' + app.speed + '배';
     doc.body.classList.toggle('auto-on', !!app.auto);
     if (!s.alive) { b.innerHTML = '인생 결산 보기<small>이번 생이 끝났습니다</small>'; return; }
     if (s.queue.length) { b.innerHTML = '선택하기<small>먼저 일어난 일에 답하세요</small>'; return; }
-    if (E.isMontage(s)) { b.innerHTML = '빨리 넘기기 ⏩<small>아기 시절은 자동으로 흘러가요</small>'; return; }
-    b.innerHTML = '+1살 <small>' + (s.age + 1) + '살이 됩니다 · 행동력 ' + s.ap + '</small>';
+    if (E.isMontage(s)) { b.innerHTML = '다음 장면 ▶<small>눌러서 아기 시절을 이어가요</small>'; return; }
+    b.innerHTML = '올해 마치기 → ' + (s.age + 1) + '살' + (s.ap ? '<small>남은 행동 ' + s.ap + '번은 사라져요</small>' : '');
   }
   function renderLog(full) {
     var s = app.s, box = $('#log');
@@ -419,10 +351,9 @@
     return groups.map(function (g) { return g.join(''); }).join('');
   }
 
-  var TABS = [['log', '기록'], ['acts', '활동'], ['people', '관계'], ['career', '학업·직업'], ['football', '축구'], ['goals', '업적']];
+  var TABS = [['year', '올해'], ['people', '사람'], ['self', '나'], ['chronicle', '연대기']];
   function renderTabs() {
     var box = $('#tabs'); box.innerHTML = '';
-    if (!isPhone() && app.tab === 'log') app.tab = 'acts';
     var tabs = TABS;
     // the 축구 tab exists only for a hero who knows football; a selected one moves to 학업·직업
     if (E.Life && app.s) { var vt = E.Life.uiTabs(app.s, TABS, app.tab); tabs = vt.tabs; app.tab = vt.tab; }
@@ -435,11 +366,41 @@
   function renderPanel() {
     var p = $('#panel'); if (!p) return;
     p.innerHTML = '';
-    ({ log: panelLog, acts: panelActs, people: panelPeople, career: panelCareer, football: panelFootball, goals: panelGoals }[app.tab] || panelActs)(p);
+    ({ year: panelYear, self: panelSelf, chronicle: function (root) { RA.MomentsUI.chronicle(root, app.s, esc); var history = h('<section><h2>인생 이야기 전체</h2></section>'); root.appendChild(history); panelLog(history); }, log: panelLog, acts: panelActs, people: panelPeople, career: panelCareer, football: panelFootball, goals: panelGoals }[app.tab] || panelYear)(p);
+  }
+  function panelSelf(p) {
+    p.innerHTML = '<h2>나의 길과 능력</h2><div id="v2-self-career"></div><div id="v2-self-acts"></div><section id="v2-self-football"><h2>축구 기록과 트로피</h2></section><section id="v2-self-goals"><h2>업적</h2></section>';
+    panelCareer($('#v2-self-career', p)); panelActs($('#v2-self-acts', p));
+    panelFootball($('#v2-self-football', p)); panelGoals($('#v2-self-goals', p));
+  }
+  function panelYear(p) {
+    var s = app.s, ev = E.currentEvent(s);
+    p.innerHTML = '<h1>올해 · ' + s.age + '살</h1><p class="muted">' + s.year + '년 · ' + esc(country().name) + '</p><p class="hint">' + (s.age < 5 ? '아기 시절' : '걷는 길 · ' + esc(E.Routes.label(s))) + '</p>' +
+      '<section id="year-decisions"><h2>처리할 일</h2><button class="btn v2-pending">' + (ev ? esc(ev.text) : '지금은 기다리는 결정이 없어요.') + '</button><p class="hint">' + (ev ? '이 나이와 지금까지의 선택으로 찾아온 일이에요. 답을 고르면 다음 이야기가 이어져요.' : '사람들과 시간을 보내거나 올해 할 일을 골라요.') + '</p></section><section><h2>사람들</h2><div class="v2-year-people"></div></section><section id="year-actions"><h2>올해 할 일 · 3칸</h2><p class="hint">넘기면 사라져요 · 남은 행동 ' + s.ap + '칸</p><div class="v2-year-actions"></div><button class="btn v2-all-acts">다른 활동 고르기</button></section>';
+    $('.v2-pending', p).onclick = function () { if (ev) showEvent(); };
+    s.people.filter(function (x) { return x.alive && /father|mother|friend/.test(x.role); }).slice(0, 3).forEach(function (x) {
+      var b = h('<button class="btn v2-person" aria-label="' + esc(x.name) + ' · ' + esc(relLabel(x)) + '">' + esc(x.role === 'friend' ? x.name : relLabel(x)) + '<small>' + (x.rel >= 60 ? '가까움 · 함께할 시간을 기다려요' : x.rel < 30 ? '서먹함 · 대화가 필요해요' : '안부가 궁금해요') + '</small></button>');
+      b.onclick = function () { app.tab = 'people'; refresh(); }; $('.v2-year-people', p).appendChild(b);
+    });
+    var acts = E.activities(s).filter(function (a) { return a.ok; }).slice(0, 3);
+    for (var i = 0; i < 3; i++) (function (a, n) {
+      var b = h('<button class="btn v2-action-slot">' + (a ? esc(a.label) : '이 나이에 맞는 활동을 기다려요') + '</button>');
+      b.disabled = !a; b.onclick = function () { onActivity(a); }; $('.v2-year-actions', p).appendChild(b);
+    })(acts[i], i);
+    $('.v2-all-acts', p).onclick = function () { panelActs(p); };
+    if (s.age < 5) $('#year-actions', p).innerHTML = '<p>아기 시절에는 장면을 넘기며 자라요.</p>';
+    if (s.age >= 5 && !s.firstYearGuideSeen && !app.guideOpen && !$('.modal-wrap')) {
+      app.guideOpen = true;
+      var guideStep = 0, texts = ['올해 할 일: 한 해에 세 칸을 골라 연습하고 사람을 만나요.', '처리할 일: 왜 찾아온 결정인지 읽고 답을 골라요.', '+1살: 올해를 마치면 다음 해로 가요. 남은 행동은 사라져요.'];
+      var m = modal('<div class="card-b"><h2>첫해 길잡이</h2><p id="guide-text"></p><button class="btn btn-gold" id="guide-next">다음</button><button class="btn" id="guide-skip">건너뛰기</button></div>');
+      function finish() { s.firstYearGuideSeen = true; app.guideOpen = false; save(); closeModal(); proceed(); }
+      $('#guide-text', m).textContent = texts[0]; $('#guide-skip', m).onclick = finish;
+      $('#guide-next', m).onclick = function () { if (++guideStep === 3) finish(); else $('#guide-text', m).textContent = texts[guideStep]; };
+    }
   }
 
   function panelLog(p) {
-    p.innerHTML = '<p class="hint" style="margin:0 0 6px">최근 기록이 위에 보입니다.</p><div class="log" style="padding:0">' + renderLogHtml(app.s, true) + '</div>';
+    p.innerHTML = '<h2>인생 이야기 전체</h2><p class="hint" style="margin:0 0 6px">최근 기록이 위에 보입니다.</p><div class="log" style="padding:0">' + renderLogHtml(app.s, true) + '</div>';
   }
 
   function panelActs(p) {
@@ -485,11 +446,9 @@
   }
   function afterAction() {
     save();
-    triumphCue();
     var news = app.s.y.newAchievements; app.s.y.newAchievements = null;
     refresh();
     if (news && news.length) { A.play('achieve'); news.forEach(function (id) { var a = achById(id); if (a) toast('🏅 업적 달성: ' + a.name); }); }
-    if (!app.s.alive) return setTimeout(renderSummary, 900);
     proceed();
   }
   function achById(id) { return (RA.data.achievements || []).filter(function (a) { return a.id === id; })[0]; }
@@ -659,9 +618,19 @@
       (app.auto ? autoRowHtml('⏸ 자동 진행 끄기<small>선택을 기다리는 중</small>') : '') + '</div>');
     wrap.appendChild(body);
     ev.choices.forEach(function (ch) {
+      // Authored summaries accompany the engine's evaluated probability fields.
+      var authored = E.eventIndex()[ev.id];
+      if (authored.choices && authored.choices[ch.i]) ch = Object.assign({}, authored.choices[ch.i], ch);
       var pct = ch.bet ? '<span class="p odds">' + Math.round(ch.bet.odds * 100) + '% · 💰×' + ch.bet.mult + '</span>'
         : ch.chance != null ? '<span class="p">성공 ' + Math.round(ch.chance * 100) + '%</span>' : '';
-      var extra = (ch.risky ? '<span class="risky-tag">⚠️ 위험한 선택</span>' : '') +
+      var outcomes = ch.outcomes || (ch.check ? { success: ch.success, partial: ch.partial, fail: ch.fail } : null);
+      var partial = ch.probabilities ? ch.partialChance : null;
+      var branchSummary = outcomes ? '<span class="desc">' + ['success', 'partial', 'fail'].filter(function (k) { return outcomes[k]; }).map(function (k) {
+        var outcome = outcomes[k], probability = !ch.probabilities ? null : k === 'success' ? ch.successChance : k === 'partial' ? partial : ch.failChance;
+        return '<span class="v2-branch">' + ({ success: '성공', partial: '부분 성공', fail: '실패' })[k] + (probability == null ? '' : ' ' + Math.round(probability * 100) + '%') + ' — ' + esc(E.render(s, typeof outcome === 'string' ? outcome : outcome.summary || outcome.log || outcome.text || '결과를 확인해요.')) + '</span>';
+      }).join('') + '</span>' : '';
+      var retryText = ch.retry === 'final' ? '이번 기회는 한 번뿐 · 실패하면 다시 도전할 수 없어요.' : ch.retry === 'improve' ? '실패해도 연습하면 내년에 다시 · 능력을 키워 재평가받아요.' : '실패해도 나중에 다시 · 다음 기회를 기다려요.';
+      var extra = branchSummary + (ch.retry ? '<span class="desc">' + retryText + (ch.retry !== 'final' ? ' 재도전 비용은 다음 선택에서 확인해요.' : '') + '</span>' : '') + (ch.risky ? '<span class="risky-tag">⚠️ 위험한 선택</span>' : '') +
         (ch.bet ? '<span class="desc">판돈 ' + esc(money(ch.bet.stake)) + ' · 이기면 ' + esc(money(Math.round(ch.bet.stake * (ch.bet.mult - 1)))) + ' 벌고, 지면 잃어요. 아주 드물게 잭팟(' + E.JACKPOT.x + '배 더)이 터져요. 🎲 도박 중독 +' + ch.bet.addict + '</span>' : '') +
         (ch.career ? '<span class="desc">💼 진로: ' + esc(ch.career) + '</span>' : '') +
         (ch.desc ? '<span class="desc">' + esc(ch.desc) + '</span>' : '') + (ch.preview ? chipsHtml(ch.preview, true) : '');
@@ -683,6 +652,7 @@
   }
   // Bet result: the won/lost amount counts up in a banner, coins fall on a win, slot reels on a jackpot.
   function betFx(bet) {
+    if (RA.V2.reduced()) return;
     var root = $('#fx-root'); if (!root || !bet || !bet.delta) return;
     var up = bet.delta > 0;
     var el = h('<div class="bet-fx ' + (bet.jackpot ? 'jackpot' : up ? 'win' : 'lose') + '"><div class="bx">' +
@@ -709,22 +679,64 @@
       if (t - t0 < dur + 900) G.requestAnimationFrame(step); else { el.remove(); if (coins) coins.remove(); }
     })(t0);
   }
+  function resultChangeLines(changes, s) {
+    var lines = [], signed = function (n) { return (n > 0 ? '+' : '') + n; };
+    (changes || []).forEach(function (c) {
+      var path = c.path || '', root = path.split('.')[0];
+      if (['money', 'wallet', 'household.cash'].indexOf(path) >= 0 && c.d != null) {
+        lines.push((path === 'household.cash' ? '부모의 가계 현금 ' : path === 'wallet' ? '내 용돈 ' : '잔고 ') + (c.displayAmount || money(c.d)));
+      } else if (c.kind === 'relationship') {
+        var person = c.person || {}, who = /father/.test(person.role) ? '아버지' : /mother/.test(person.role) ? '어머니' : person.name || '상대';
+        lines.push(who + (c.d > 0 ? '와 가까워짐 ' : '와 멀어짐 ') + signed(c.d));
+      } else if (c.kind === 'memory') {
+        lines.push('기억: ' + E.render(s, c.text || c.entry.text));
+      } else if (c.kind === 'person') {
+        if (/^[가-힣 /]+$/.test(c.label || '') && c.label !== '기억' && (c.d != null || typeof c.after === 'string' || typeof c.after === 'boolean')) lines.push((c.person.name || c.person.role) + ' · ' + c.label + ': ' + (c.d == null ? String(c.after) : signed(c.d)));
+      } else if (root === 'people' && Array.isArray(c.after)) {
+        c.after.forEach(function (p) {
+          var previous = (c.before || []).find(function (x) { return x.id === p.id; });
+          var who = /father|mother/.test(p.role) ? relLabel(p) : p.name;
+          if (!previous) lines.push('새로 만난 사람: ' + who);
+          else {
+            var delta = p.rel - previous.rel;
+            if (delta) lines.push(who + (delta > 0 ? '와 가까워짐 ' : '와 멀어짐 ') + signed(delta));
+            if (p.alive !== previous.alive) lines.push(who + (p.alive ? '의 소식을 다시 들었어요' : '가 세상을 떠났어요'));
+          }
+        });
+      } else if (root === 'memories') {
+        var after = Array.isArray(c.after) ? c.after : c.after && typeof c.after === 'object' ? Object.values(c.after) : [];
+        var before = JSON.stringify(c.before || []);
+        after.forEach(function (memory) {
+          if (memory && memory.text && before.indexOf(JSON.stringify(memory)) < 0) lines.push('기억: ' + E.render(s, memory.text));
+        });
+        if (!after.length && typeof c.after === 'string') lines.push('기억: ' + E.render(s, c.after));
+      } else if (C.STAT_LABELS[c.k] && c.d != null) lines.push(C.STAT_LABELS[c.k] + ' ' + signed(c.d));
+      else if (/^talent\./.test(path) && c.d != null) {
+        var names = { lang: '언어', language: '언어', music: '음악', sports: '운동', sport: '운동', art: '미술', logic: '논리', cooking: '요리' };
+        var name = names[path.split('.')[1]];
+        if (name) lines.push(name + ' 재능 ' + signed(c.d));
+      }
+    });
+    return lines.filter(function (line, i) { return lines.indexOf(line) === i; });
+  }
   function onChoose(i, ev) {
     var s = app.s;
+    var wasBorn = s.born;
     var res = E.choose(s, i);
     if (!res) return;
+    res.changes = res.appliedChanges || res.changes;
+    if (!wasBorn && s.born && !E.pendingMoments(s).some(function (m) { return m.kind === 'birth'; })) E.emitMoment(s, { kind: 'birth', tier: 'S', tone: 'tender', title: '태어난 날', sub: E.heroName(s) + ', 새로운 삶이 시작되었다.', scene: 'hospital' });
     if (res.bet) { A.play(res.bet.jackpot ? 'jackpot' : res.bet.won ? 'coins' : 'lose'); betFx(res.bet); app.mood = res.bet.won ? 'celebrate' : 'sad'; app.moodUntil = performance.now() + 2000; }
     else if (res.outcome === 'fail') { A.play('bad'); app.mood = 'sad'; app.moodUntil = performance.now() + 2000; }
     else { A.play(res.sound || 'good'); if (res.outcome === 'success') { app.mood = 'celebrate'; app.moodUntil = performance.now() + 1800; } }
-    triumphCue();
     var m = $('.modal');
     var pic = m && m.querySelector('.ev-pic');
     if (pic && res.fx) { pic.classList.remove('fx-shake', 'fx-glow', 'fx-dim'); void pic.offsetWidth; pic.classList.add('fx-' + res.fx); }
     var body = m.querySelector('.card-b');
     body.innerHTML = categoryHtml(ev.category) + '<p class="ev-text muted">' + esc(ev.text) + '</p>' +
-      '<div class="result ' + (res.outcome === 'fail' ? 'fail' : '') + '">' + (res.outcome === 'success' ? '✔ 성공! ' : res.outcome === 'fail' ? '✖ 실패… ' : '') + esc(res.log) +
-      res.changes.filter(function (c) { return c.k === 'msg'; }).map(function (c) { return '<br>▸ ' + esc(c.t); }).join('') + '</div>' +
-      chipsHtml(res.changes) +
+      '<div class="result ' + (res.outcome === 'fail' ? 'fail' : '') + '">' + (res.outcome === 'success' ? '성공 · ' : res.outcome === 'partial' ? '부분 성공 · ' : res.outcome === 'fail' ? '실패 · ' : '') + esc(res.log) +
+      '</div>' +
+      '<h3>실제로 달라진 것</h3><ul class="v2-changes">' + resultChangeLines(res.changes, s).map(function (line) { return '<li>' + esc(line) + '</li>'; }).join('') + '</ul>' +
       '<button class="btn btn-green btn-big" id="next" style="width:100%">' + (s.queue.length ? '다음 ▶' : (s.alive ? '계속하기 ▶' : '…')) + '</button>' +
       (app.auto ? autoRowHtml('⏸ 자동 진행 끄기') : '');
     bindAutoStop(body);
@@ -732,8 +744,6 @@
     var go = function () {
       A.play('click');
       save();
-      if (!s.alive) { closeModal(); return renderSummary(); }
-      if (s.queue.length && !unseenCards()) return showEvent();
       closeModal(); afterAction();
     };
     nb.addEventListener('click', go);
@@ -746,7 +756,6 @@
   // ---------------------------------------------------------------- flow, montage and auto-play
   function autoDelay() { return app.speed === 2 ? 900 : 1800; }
   function cardDelay() { return app.speed === 2 ? 1000 : 1700; }
-  function triumphCue() { var s = app.s; if (s && s.y && s.y.triumph) { s.y.triumph = null; if (!A.siuu()) A.play('goal'); } }
   function unseenCards() {
     var s = app.s; if (!s || !s.cards) return 0;
     if (app.cardsAge !== s.age) { app.cardsAge = s.age; app.cardsShown = 0; }
@@ -756,6 +765,11 @@
     app.auto = !!on;
     clearTimeout(app.autoTimer);
     renderAgeBtn();
+    if (app.montageOpen && app.auto) {
+      var nextCard = $('.mt-next');
+      if (nextCard) nextCard.click();
+      return;
+    }
     toast(app.auto ? '▶ 자동 진행을 켰어요. 선택이 필요하면 멈춰요.' : '⏸ 자동 진행을 껐어요.', 1800);
     if (app.auto) proceed();
   }
@@ -764,27 +778,30 @@
     var s = app.s;
     clearTimeout(app.autoTimer);
     if (!s || app.screen !== 'game') return;
-    if (!s.alive) { setTimeout(renderSummary, 600); return; }
     if ($('.modal-wrap') || app.montageOpen) { if (app.auto || E.isMontage(s)) app.autoTimer = setTimeout(proceed, 800); return; }
+    if ($('.v2-moment')) return;
     if (unseenCards()) return showMontage();
+    if (RA.MomentsUI.show({ state: s, esc: esc, look: function () { return lookOf(s); }, pause: function () { app.auto = false; clearTimeout(app.autoTimer); renderAgeBtn(); }, save: save, resume: function () { refresh(); proceed(); } })) return;
+    if (!s.alive) { renderSummary(); return; }
     if (s.queue.length) return showEvent();
     renderAgeBtn();
-    if (E.isMontage(s)) { app.autoTimer = setTimeout(onAgeUp, fast ? 50 : 500); return; }
+    if (E.isMontage(s)) { if (app.auto || RA.V2.settings.infantAuto || fast) app.autoTimer = setTimeout(onAgeUp, fast ? 50 : 500); return; }
     if (app.auto) app.autoTimer = setTimeout(function () { if (app.auto && !$('.modal-wrap') && !app.montageOpen) onAgeUp(); else proceed(); }, autoDelay());
   }
   function showMontage() {
     var s = app.s, c = country();
     app.montageOpen = true;
     var root = $('#fx-root');
-    var ov = h('<div class="montage" role="dialog" aria-label="아기 시절"><div class="mt-card card"><div class="mt-age"></div><div class="mt-pic"></div><p class="mt-text"></p><div class="mt-chips"></div><div class="mt-dots"></div><p class="mt-hint">화면을 누르면 넘어가요</p></div></div>');
+    var ov = h('<div class="montage" role="dialog" aria-label="아기 시절"><div class="mt-card card"><div class="mt-age"></div><div class="mt-pic"></div><p class="mt-text"></p><div class="mt-chips"></div><div class="mt-dots"></div><button class="btn mt-next">다음 장면 ▶</button><label class="v2-auto-label"><input type="checkbox" class="mt-auto"> 자동 넘김</label><p class="mt-hint">기본은 눌러서 넘기기예요.</p></div></div>');
     root.appendChild(ov);
+    $('#btn-age').hidden = true;
     var cv = doc.createElement('canvas'); cv.width = P.W; cv.height = P.H; cv.className = 'px';
     ov.querySelector('.mt-pic').appendChild(cv);
     var cur = null, timer = null;
     addCanvas(cv, function (t) {
       if (!cur) return;
       var ms = (RA.data.milestones || []).filter(function (m) { return m.id === cur.id; })[0];
-      P.drawMilestone(cv.getContext('2d'), cur.pic, t, c, lookOf(s), cur.props || (ms && ms.props));
+      P.drawMilestone(cv.getContext('2d'), cur.age < 5 && /sibling|smile/.test(cur.pic) ? 'birth' : cur.pic, RA.V2.reduced() ? 0 : t, c, lookOf(s), cur.props || (ms && ms.props));
     });
     function show() {
       var left = unseenCards();
@@ -797,11 +814,14 @@
       ov.querySelector('.mt-dots').innerHTML = dots;
       var card = ov.querySelector('.mt-card'); card.classList.remove('pop'); void card.offsetWidth; card.classList.add('pop');
       A.play('click');
-      clearTimeout(timer); timer = setTimeout(next, cardDelay());
+      clearTimeout(timer); if (app.auto || RA.V2.settings.infantAuto) timer = setTimeout(next, cardDelay());
     }
     function next() { clearTimeout(timer); app.cardsShown++; show(); }
-    function finish() { clearTimeout(timer); app.montageOpen = false; ov.remove(); refresh(); proceed(); }
-    ov.addEventListener('click', next);
+    function finish() { clearTimeout(timer); app.montageOpen = false; $('#btn-age').hidden = false; ov.remove(); refresh(); proceed(); }
+    ov.querySelector('.mt-next').onclick = next;
+    ov.querySelector('.mt-pic').onclick = next;
+    var autoInput = ov.querySelector('.mt-auto'); autoInput.checked = RA.V2.settings.infantAuto;
+    autoInput.onchange = function () { RA.V2.settings.infantAuto = this.checked; RA.V2.apply(); clearTimeout(timer); if (this.checked) timer = setTimeout(next, cardDelay()); };
     show();
   }
   // ---------------------------------------------------------------- age up
@@ -812,22 +832,19 @@
     if (!s.alive) return renderSummary();
     if (s.queue.length) return showEvent();
     if ($('.modal-wrap') || app.montageOpen) return;
+    if ($('.v2-moment')) return;
+    if (s.age >= 5 && s.ap > 0 && app.ageWarn !== s.age && !app.auto) { app.ageWarn = s.age; toast('남은 행동 ' + s.ap + '칸은 넘기면 사라져요. +1살을 다시 누르면 진행해요.', 5000); return; }
     E.ageUp(s);
     var baby = E.isMontage(s) || unseenCards();
     if (!baby) { A.play('age'); ageFlash(s.age); }
     save();
-    if (isPhone()) app.tab = E.isMontage(s) ? app.tab : 'log';
+    app.tab = 'year';
     refresh(true);
-    var anim = s.y.anim;
     var news = s.y.newAchievements; s.y.newAchievements = null;
-    var hadTriumph = !!s.y.triumph;
-    triumphCue();
     setTimeout(function () {
-      if (anim) celebrate(anim, hadTriumph);
       if (news) news.forEach(function (id) { var a = achById(id); if (a) toast('🏅 업적 달성: ' + a.name); });
-      if (news && news.length && !anim && !hadTriumph) A.play('achieve');
-      if (!s.alive) { A.play('death'); return setTimeout(renderSummary, anim ? 2600 : 1200); }
-      setTimeout(proceed, anim ? 1800 : 50);
+      if (!s.alive) { proceed(); return; }
+      setTimeout(proceed, 50);
     }, baby ? 50 : 650);
   }
 
@@ -901,6 +918,7 @@
   function showMenu() {
     var list = S.list();
     var m = modal('<div class="card-h">메뉴 <button class="btn btn-sm btn-ghost" id="x">닫기</button></div><div class="card-b">' +
+      '<button class="btn" id="v2-settings-open">글자·움직임·소리 설정</button>' +
       (app.s ? '<div class="section-title">저장 슬롯 (현재: ' + app.slot + '번 · 매년 자동 저장)</div>' : '<div class="section-title">저장 슬롯</div>') +
       '<div class="slots" id="mslots"></div>' +
       (app.s ? '<div class="section-title">캐릭터</div><button class="btn" id="btn-rename">✏️ 이름 바꾸기</button>' : '') +
@@ -908,6 +926,7 @@
       '<div class="section-title">게임</div><div class="row"><button class="btn grow" id="m-new">새 인생</button>' + (app.s ? '<button class="btn grow" id="m-help">도움말</button>' : '') + '</div>' +
       '<p class="hint">비공식 팬 패러디 게임입니다. 실존 인물·구단과 관계가 없으며 등장하는 구단·학교 이름은 모두 가상입니다. 폰트: Galmuri (OFL-1.1).</p></div>', { dismiss: true });
     m.querySelector('#x').addEventListener('click', closeModal);
+    m.querySelector('#v2-settings-open').onclick = function () { RA.V2.settingsPanel({ modal: modal, close: closeModal, resume: function () { refresh(); proceed(); } }); };
     var rename = m.querySelector('#btn-rename'); if (rename) rename.addEventListener('click', editHeroName);
     m.querySelector('#m-new').addEventListener('click', function () { closeModal(); renderStart(); });
     var hb = m.querySelector('#m-help'); if (hb) hb.addEventListener('click', showHelp);
@@ -980,6 +999,7 @@
 
   // ---------------------------------------------------------------- boot
   function boot() {
+    RA.V2.init();
     // The old title preference is obsolete; the game itself is always 인생게임.
     try { G.localStorage.removeItem('ronaldo-adventure.name'); } catch (e) { /* blocked storage */ }
     $('#btn-mute').textContent = A.isMuted() ? '🔇' : '🔊';

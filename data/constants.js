@@ -6,7 +6,7 @@
   RA.data = RA.data || {};
 
   RA.C = {
-    SAVE_VERSION: 7,
+    SAVE_VERSION: 8,
     HERO_NAME: '호날두',          // default protagonist name (male or female)
     STATS: ['health', 'happy', 'smarts', 'looks', 'football', 'grit', 'social', 'fame'],
     STAT_LABELS: {
@@ -91,4 +91,9 @@
     REL_KEYS: ['father', 'mother', 'siblings', 'bro', 'sis1', 'sis2', 'friend', 'partner',
       'spouse', 'children', 'coach', 'family']
   };
+  RA.ownEvents = function (events) {
+    events.forEach(function (ev) { if (!ev.own) ev.own = ev.routes && ev.routes.length === 1 ? 'route:' + ev.routes[0] : 'life'; });
+    return events;
+  };
+  RA.C.TOKENS.push('parent');
 })(typeof globalThis !== 'undefined' ? globalThis : this);
