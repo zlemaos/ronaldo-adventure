@@ -513,7 +513,8 @@ body, .mt-text, .ev-text, .log .e, .choice, .toast { word-break: keep-all; overf
 .v2-settings input[type=checkbox]{width:24px;height:24px;accent-color:var(--gold)}
 .v2-settings select{padding:8px;min-height:44px;background:var(--bg);color:var(--text)}
 #v2-settings-open{width:100%;margin-bottom:8px}
-.v2-moment{position:fixed;inset:0;background:#0b1020;z-index:70;overflow-y:auto;padding:24px}
+.v2-moment{position:fixed;inset:0;background:#0b1020;z-index:70;overflow-y:auto;padding:24px;pointer-events:auto} /* #fx-root lets clicks through; the dialog must not */
+.v2-moment .v2-skip{margin-top:8px;min-height:44px;font-size:13px}
 .v2-moment-inner{max-width:480px;min-height:calc(100dvh - 48px);margin:auto;display:flex;flex-direction:column;gap:20px}
 .v2-moment h1{font-size:1.7em;margin:0;color:var(--gold)}
 .v2-moment .btn{margin-top:auto;min-height:56px}

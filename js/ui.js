@@ -763,9 +763,12 @@
   }
   function showMontage() {
     var s = app.s, c = country();
+    // "스킵 좀 가능하게해": with the big-moment screens turned off (메뉴), the baby-years slideshow is skipped too — its
+    // lines are already in the 인생 기록
+    if (RA.MomentsUI.skipAll()) { app.cardsShown = s.cards.length; refresh(); return proceed(); }
     app.montageOpen = true;
     var root = $('#fx-root');
-    var ov = h('<div class="montage" role="dialog" aria-label="아기 시절"><div class="mt-card card"><div class="mt-age"></div><div class="mt-pic"></div><p class="mt-text"></p><div class="mt-chips"></div><div class="mt-dots"></div><p class="mt-hint">화면을 누르면 넘어가요</p></div></div>');
+    var ov = h('<div class="montage" role="dialog" aria-label="아기 시절"><div class="mt-card card"><div class="mt-age"></div><div class="mt-pic"></div><p class="mt-text"></p><div class="mt-chips"></div><div class="mt-dots"></div><p class="mt-hint">화면을 누르면 넘어가요</p><button class="btn btn-sm btn-ghost mt-skip">⏭ 전부 건너뛰기</button></div></div>');
     root.appendChild(ov);
     var cv = doc.createElement('canvas'); cv.width = P.W; cv.height = P.H; cv.className = 'px';
     ov.querySelector('.mt-pic').appendChild(cv);
@@ -791,6 +794,7 @@
     function next() { clearTimeout(timer); app.cardsShown++; show(); }
     function finish() { clearTimeout(timer); app.montageOpen = false; ov.remove(); refresh(); proceed(); }
     ov.addEventListener('click', next);
+    ov.querySelector('.mt-skip').addEventListener('click', function (e) { e.stopPropagation(); app.cardsShown = s.cards.length; finish(); });
     show();
   }
   // ---------------------------------------------------------------- age up
@@ -887,6 +891,7 @@
     var list = S.list();
     var m = modal('<div class="card-h">메뉴 <button class="btn btn-sm btn-ghost" id="x">닫기</button></div><div class="card-b">' +
       '<button class="btn" id="v2-settings-open">글자·움직임·소리 설정</button>' +
+      '<button class="btn" id="m-moments">' + (RA.MomentsUI.skipAll() ? '🎬 큰 순간 화면 다시 보기 (지금: 건너뜀)' : '⏭ 큰 순간 화면 건너뛰기 (지금: 보여줌)') + '</button>' +
       (app.s ? '<div class="section-title">저장 슬롯 (현재: ' + app.slot + '번 · 매년 자동 저장)</div>' : '<div class="section-title">저장 슬롯</div>') +
       '<div class="slots" id="mslots"></div>' +
       (app.s ? '<div class="section-title">캐릭터</div><button class="btn" id="btn-rename">✏️ 이름 바꾸기</button>' : '') +
@@ -895,6 +900,7 @@
       '<p class="hint">비공식 팬 패러디 게임입니다. 실존 인물·구단과 관계가 없으며 등장하는 구단·학교 이름은 모두 가상입니다. 폰트: Galmuri (OFL-1.1).</p></div>', { dismiss: true });
     m.querySelector('#x').addEventListener('click', closeModal);
     m.querySelector('#v2-settings-open').onclick = function () { RA.V2.settingsPanel({ modal: modal, close: closeModal, resume: function () { if (app.screen === 'game') { refresh(); proceed(); } } }); };
+    m.querySelector('#m-moments').onclick = function () { RA.MomentsUI.setSkipAll(!RA.MomentsUI.skipAll()); toast(RA.MomentsUI.skipAll() ? '큰 순간 화면을 건너뜁니다 (연대기에는 남아요)' : '큰 순간 화면을 다시 보여줍니다'); showMenu(); };
     var rename = m.querySelector('#btn-rename'); if (rename) rename.addEventListener('click', editHeroName);
     m.querySelector('#m-new').addEventListener('click', function () { closeModal(); renderStart(); });
     var hb = m.querySelector('#m-help'); if (hb) hb.addEventListener('click', showHelp);
