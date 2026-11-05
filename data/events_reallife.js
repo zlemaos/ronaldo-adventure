@@ -63,7 +63,7 @@
       text: '뒷골목에서 아는 형이 담배를 내민다. "한 대 피워 봐."',
       choices: [
         { text: '받아서 피운다', risky: true, effects: { happy: 2, social: 2, mischief: 3, health: -3, flags: ['smoker'] }, log: '기침이 터졌지만 어른이 된 것 같았다. 그날부터 담배를 샀다.' },
-        { text: '"난 공 차야 돼" 거절한다', effects: { health: 1, grit: 1 }, log: '형은 어깨를 으쓱했다. 폐가 고마워했다.' },
+        { text: '"난 축구 해야 돼" 거절한다', alt: { text: '"난 안 피워" 거절한다' }, effects: { health: 1, grit: 1 }, log: '형은 어깨를 으쓱했다. 폐가 고마워했다.' },
         { text: '자리를 피한다', effects: { social: -1 }, log: '조용히 빠져나왔다. 조금 어색해졌다.' }
       ] },
     { id: 'rl_teen_quit_smoke', age: [16, 70], decision: true, cooldown: 4, cond: { flags: ['smoker'] },
