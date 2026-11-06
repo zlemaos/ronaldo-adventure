@@ -348,7 +348,7 @@
         if (d) out.push({ k: k, d: d });
       }
     });
-    if (eff.alcohol > 0) s.y.drank = true;
+    if (eff.alcohol > 0) { s.y.drank = true; var vow = E.breakTeetotal(s); if (vow) out.push({ k: 'msg', t: vow }); }
     if (eff.mischief || eff.gamble || eff.alcohol || eff.record) E.traitUnlocks(s);
     if (typeof eff.money === 'number' && eff.money !== 0) {
       var m = Math.round(eff.money * wage(s));
@@ -614,7 +614,13 @@
     return true;
   };
 
-  function eventChoices(s, ev) { return ev.choicesFn ? ev.choicesFn(s) : (ev.choices || []); }
+  E.breakTeetotal = function (s) { if (!s.flags.teetotal) return ''; delete s.flags.teetotal; return '아버지 앞에서 했던 금주 맹세를 깼다. 잔을 내려다보며 한참 말이 없었다. '; };
+  function eventChoices(s, ev) {
+    var choices = ev.choicesFn ? ev.choicesFn(s) : (ev.choices || []);
+    function drinking(ch) { return [ch, ch.success, ch.partial, ch.fail].some(function (b) { return b && b.effects && b.effects.alcohol > 0; }); }
+    if (!s.flags.teetotal || !choices.some(drinking)) return choices;
+    return choices.map(function (ch) { return drinking(ch) ? Object.assign({}, ch, { text: '금주 맹세를 깨더라도 ' + ch.text }) : ch; }).concat([{ text: '금주 맹세를 지킨다', log: '아버지와의 맹세를 떠올리며 술 대신 물을 골랐다.' }]);
+  }
 
   // Current pending modal event, rendered for the UI.
   E.currentEvent = function (s) {

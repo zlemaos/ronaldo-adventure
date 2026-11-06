@@ -73,7 +73,19 @@
       { text: '결과를 받아들이고 다음 길을 찾는다', effects: { happy: 2, grit: 2, rel: { family: 3 } },
         log: '{father}[이/가] "숫자가 사람을 정하진 않는다"며 어깨를 두드렸다.' },
       { text: '재수를 결심한다', effects: { smarts: 3, happy: -3, money: -800, flags: ['kr_jaesu'] },
+        schedule: { id: 'kr_jaesu_result', years: 1 },
         log: '노량진 고시원 창문 없는 방에서 1년이 시작됐다.' }
+    ]
+  });
+  E({
+    id: 'kr_jaesu_result', manual: true, age: [19, 21], countries: ['kr'], cond: { flags: ['kr_jaesu'] },
+    text: '고시원에서 보낸 일 년이 끝났다. 두 번째 {exam} 성적표를 펼칠 시간이 왔다.',
+    choices: [
+      { text: '두 번째 결과를 확인한다', check: { stat: 'smarts', diff: 55, min: 0.1, max: 0.7, partial: 0.2 },
+        success: { effects: { happy: 4, unflags: ['kr_jaesu'], flags: ['kr_suneung_good'] }, log: '지난 시험보다 성적이 올랐다. 지원할 수 있는 학교를 다시 살펴봤다.' },
+        partial: { effects: { grit: 2, unflags: ['kr_jaesu'] }, log: '지난 시험과 비슷한 성적이었다. 이제 이 결과로 다음 길을 찾기로 했다.' },
+        fail: { effects: { happy: -3, unflags: ['kr_jaesu', 'kr_suneung_good'] }, log: '지난 시험보다 성적이 내려갔다. 아쉬웠지만 시험 밖의 길도 알아보기로 했다.' } },
+      { text: '시험 대신 다른 길을 선택한다', effects: { grit: 2, unflags: ['kr_jaesu'] }, log: '재수 생활을 마치고 진학과 일자리 상담을 예약했다.' }
     ]
   });
   E({

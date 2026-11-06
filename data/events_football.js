@@ -67,6 +67,12 @@
         { text: '도전하러 간다', effects: { grit: 3, fx: ['joinAcademy'] }, log: '새로운 도전을 위해 가방을 쌌다.' },
         { text: '축구 말고 다른 미래를 생각한다', effects: { smarts: 2, fx: ['quitFootball'] }, log: '공 대신 다른 꿈을 품기로 했다.' }
       ] },
+    { id: 'canon_academic_support', manual: true, age: [12, 17], cond: { flags: ['academy_academic_warning'], fb: ['academy'] },
+      text: '학교 선생님이 수업 언어 때문에 어려운 부분을 물었다. 보충 수업과 재평가 일정을 함께 정하자고 한다.',
+      choices: [
+        { text: '언어 보충 수업과 선배의 과외를 받는다', effects: { smarts: 2, unflags: ['academy_academic_warning'] }, log: '보충 수업에서 모르는 말을 하나씩 물었다. 과외 뒤 재평가를 통과했다.' },
+        { text: '집으로 돌아가 익숙한 말로 공부한다', effects: { fx: ['quitFootball'], unflags: ['academy_academic_warning'] }, log: '학교와 상의해 고향에서 공부를 이어 가기로 했다.' }
+      ] },
     { id: 'canon_warning', age: [12, 17], once: true, weight: 30, cond: { flags: ['academy_warning'], fb: ['academy'] },
       text: '{coach}[이/가] 사무실로 불렀다. "재능은 충분하다. 문제는 네 성질이다."',
       choices: [

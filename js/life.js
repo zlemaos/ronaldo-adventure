@@ -378,12 +378,14 @@
     });
     if (L.drinkOpen(s)) {
       var dok = s.jail > 0 ? '수감 중에는 할 수 없다' : s.ap <= 0 ? '올해 행동력을 다 썼다' : s.money < 30 * W(s) ? '술값이 없다' : true;
-      list.push({ id: 'drink', label: '술자리', icon: '🍺', ok: dok === true, reason: dok === true ? '' : dok, opts: null, ui: null, cost: 1 });
+      list.push({ id: 'drink', label: s.flags.teetotal ? '술자리: 금주 맹세를 깨고 마시기' : '술자리', icon: '🍺', ok: dok === true, reason: dok === true ? '' : dok, opts: null, ui: null, cost: 1 });
+      if (s.flags.teetotal) list.push({ id: 'keep_teetotal', label: '술자리: 금주 맹세 지키기', icon: '🥤', ok: s.ap > 0 && !s.jail, reason: '행동력이 필요하다', cost: 1 });
     }
     return list;
   };
   var _doAct = E.doActivity;
   E.doActivity = function (s, id, arg) {
+    if (id === 'keep_teetotal' && s.flags.teetotal && s.alive && !s.queue.length && !s.jail && s.ap > 0) { s.ap--; var kept = '아버지와의 맹세를 떠올리며 술 대신 탄산수를 골랐다.'; E.addLog(s, kept, 'act'); return { ok: true, log: kept, changes: [] }; }
     if (id !== 'drink' && !/^hobby_/.test(id)) return _doAct(s, id, arg);
     if (!s.alive || s.queue.length) return null;
     var a = E.activities(s).filter(function (x) { return x.id === id; })[0];
@@ -419,6 +421,7 @@
   var DRINK_LINES = ['포장마차에서 처음 보는 사람들과 잔을 부딪쳤다.', '회식 2차, 3차까지 따라갔다. 노래방에서 목이 쉬었다.', '친구 생일 파티에서 밤을 새웠다.', '동네 술집 사장님이 안주를 하나 더 내줬다.', '술기운에 오래 연락 안 한 친구에게 전화했다.', '술잔을 돌리며 속 얘기를 꺼냈다. 다들 조용히 들어 줬다.', '맥주 한 잔이 다섯 잔이 됐다.', '새벽 첫차를 타고 집에 갔다.'];
   var TEEN_DRINK = ['공원 구석에서 형들이 건넨 캔맥주를 받았다. 쓴맛에 얼굴을 찡그렸다.', '편의점 뒤에서 몰래 소주 한 병을 나눠 마셨다.', '친구네 빈집에서 술판이 벌어졌다. 머리가 핑 돌았다.'];
   L.drink = function (s) {
+    var vow = E.breakTeetotal(s);
     s.money -= Math.round(E.rint(s, 30, 80) * W(s));
     var t = s.traits;
     var soc = E.rint(s, 2, 3);
@@ -429,7 +432,7 @@
     if (s.age < 19) { t.mischief = clamp((t.mischief || 0) + 2, 0, 100); E.addStat(s, 'health', -1); }
     E.traitUnlocks(s);
     var line = E.line(s, s.age < 19 ? 'drink_teen' : 'drink', s.age < 19 ? TEEN_DRINK : DRINK_LINES);
-    return line + ' (사교성 +' + soc + ' · 음주 +' + up + ': 음주가 높을수록 술 먹고 사고 칠 확률이 커진다)';
+    return vow + line + ' (사교성 +' + soc + ' · 음주 +' + up + ': 음주가 높을수록 술 먹고 사고 칠 확률이 커진다)';
   };
   // incident chance grows with drinking: 0 below 15, about 1 in 3 a year near 60, more when drinking this year
   L.incidentChance = function (s) { var a = (s.traits || {}).alcohol || 0; if (a < 15) return 0; return clamp((a - 10) / 150 + (s.y.drinks || 0) * 0.05, 0, 0.6); };
@@ -726,7 +729,9 @@
     Array.prototype.splice.apply(list, [ids().indexOf('young_death') + 1, 0].concat(early));
     // turning a life around outranks the route and fame endings it would otherwise fall under
     var top = wins.filter(function (e) { return ['whistleblower', 'went_straight', 'reformed_rascal', 'sober_again', 'slum_star', 'self_made_heir', 'hobby_dream'].indexOf(e.id) >= 0; });
-    Array.prototype.splice.apply(list, [ids().indexOf('tycoon'), 0].concat(top));
+    var recovery = top.filter(function (e) { return e.id === 'went_straight'; });
+    Array.prototype.splice.apply(list, [ids().indexOf('fallen_genius'), 0].concat(recovery));
+    Array.prototype.splice.apply(list, [ids().indexOf('tycoon'), 0].concat(top.filter(function (e) { return recovery.indexOf(e) < 0; })));
     var late = falls.filter(function (e) { return first.indexOf(e) < 0 && early.indexOf(e) < 0; });
     Array.prototype.splice.apply(list, [ids().indexOf('bankrupt'), 0].concat(late));
     var social = wins.filter(function (e) { return e.id === 'party_soul'; });

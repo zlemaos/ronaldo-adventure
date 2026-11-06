@@ -630,11 +630,11 @@
     choices: [
       { text: '밤마다 사전을 끼고 공부한다', check: { stat: 'smarts', diff: 45 },
         success: { effects: { smarts: 3, grit: 2 }, log: '시험을 통과했다. 식당 아주머니가 "이제 우리 말 다 하네" 하고 웃었다.' },
-        fail: { effects: { health: -3, happy: -3, flags: ['academy_warning'] }, log: '잠을 줄여도 점수가 안 나왔다. 아카데미에서 경고장이 날아왔다.' } },
+        fail: { effects: { health: -3, happy: -3, flags: ['academy_academic_warning'] }, schedule: { id: 'canon_academic_support', years: 0 }, log: '잠을 줄여도 점수가 안 나왔다. 아카데미에서 학업 경고장이 날아왔다.' } },
       { text: '같은 고향 선배에게 과외를 부탁한다', effects: { social: 2, money: -10, smarts: 2 }, log: '선배가 고향 말로 하나하나 풀어 줬다. 대가는 축구화 닦기 한 달이었다.' },
       { text: '훈련만 하고 시험은 운에 맡긴다', risky: true, check: { odds: 0.4 },
         success: { effects: { football: 2, happy: 2 }, log: '커트라인에 딱 걸쳐 통과했다. 등에 식은땀이 흘렀다.' },
-        fail: { effects: { happy: -5, flags: ['academy_warning'] }, log: '낙제점이었다. 한 번만 더 그러면 집으로 돌아가야 한다.' } }
+        fail: { effects: { happy: -5, flags: ['academy_academic_warning'] }, schedule: { id: 'canon_academic_support', years: 0 }, log: '낙제점이었다. 한 번만 더 그러면 집으로 돌아가야 한다.' } }
     ] });
 
   // ================================================================ festivals and country life
