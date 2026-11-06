@@ -85,8 +85,13 @@
   };
   var talents={sports:'공을 발바닥으로 멈추는 놀이를 했다.',music:'컵을 두드려 짧은 박자를 주고받았다.',art:'색 두 개를 섞어 이름 없는 색을 만들었다.',logic:'블록 다리가 무너지는 이유를 하나씩 바꿔 봤다.',language:'그림책의 마지막 말을 {name}[이/가] 이어 봤다.',cooking:'차가운 채소를 씻고 냄새를 맡았다.',stage:'담요 뒤에서 인형 목소리를 바꾸어 말했다.'};
   ['father','mother'].forEach(function(role) {
-    function exposure(id,kind,t,query) { put({id:'fam_'+role+'_'+kind+'_'+id,own:'family:'+kind+':'+id,age:[5,12],cond:{parent:Object.assign({role:role,alive:true},query)},text:'{'+role+'}[과/와] 함께한 오후. '+t,choices:[{text:'조금 더 해 본다',effects:{happy:2,memory:{tag:kind+'_'+id,who:role,text:t}},log:'다음에 또 해 보고 싶은 부분을 골랐다.'},{text:'구경만 하고 다른 놀이를 한다',effects:{happy:1},log:'{'+role+'}[이/가] 좋아하는 것과 {name}[이/가] 좋아하는 것이 꼭 같지는 않았다.'}]}); }
+    function exposure(id,kind,t,query,talent) { put({id:'fam_'+role+'_'+kind+'_'+id,own:'family:'+kind+':'+id,age:[5,12],cond:{parent:Object.assign({role:role,alive:true},query)},text:'{'+role+'}[과/와] 함께한 오후. '+t,choices:[{text:'조금 더 해 본다',effects:{happy:2,memory:{tag:kind+'_'+id,who:role,text:t}},run:talent?function(s){RA.Engine.Routes.addTalent(s,talent,2);}:undefined,log:'다음에 또 해 보고 싶은 부분을 골랐다.'},{text:'구경만 하고 다른 놀이를 한다',effects:{happy:1},log:'{'+role+'}[이/가] 좋아하는 것과 {name}[이/가] 좋아하는 것이 꼭 같지는 않았다.'}]}); }
     Object.keys(jobs).forEach(function(id){exposure(id,'job',jobs[id],{job:[id]});});
+    var athleteSports={pro_football:'축구',pro_baseball:'야구',pro_basketball:'농구'};
+    Object.keys(athleteSports).forEach(function(id){
+      exposure(id,'job','원정 중인 {'+role+'}의 '+athleteSports[id]+' 경기를 중계로 보았다. 쉬는 날에는 작은 공으로 '+athleteSports[id]+' 놀이를 함께 해 보았다.',{job:[id]},'sport');
+    });
+    exposure('sports_coach','job','체육교실에서 {'+role+'}[이/가] 아이들의 준비 운동을 도왔다. 쉬는 시간에 안전하게 몸을 풀어 보았다.',{job:['sports_coach']});
     Object.keys(talents).forEach(function(id){var q={};q[id]=[1,3];exposure(id,'talent',talents[id],{talent:q});});
   });
   var combos={

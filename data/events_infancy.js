@@ -3,13 +3,17 @@
   var RA=G.RA=G.RA||{};RA.data=RA.data||{};
   var M=RA.data.milestones=RA.data.milestones||[];
   RA.data.infancy = [];
-  function card(id,age,pic,text,cond,effects){var c={id:'inf_'+id,own:'family:infancy',age:age,pic:pic,text:text,cond:cond,effects:effects||{happy:1}};M.push(c);RA.data.infancy.push(c);}
+  function card(id,age,pic,text,cond,effects){var c={id:'inf_'+id,own:'family:infancy',age:age,pic:pic,text:text,cond:cond,effects:effects||{happy:1}};M.push(c);RA.data.infancy.push(c);return c;}
   card('birth',0,'birth','작은 손이 손가락 하나를 꼭 쥐었다. 어른들이 목소리를 낮추고 {name}의 이름을 불렀다.',{household:{tier:[1,5]}},{moment:{kind:'birth',tier:'S',tone:'tender',title:'처음 만난 날',sub:'{name}의 이름을 불렀다'},memory:{tag:'birth_hands',who:'family',text:'처음 {name}의 이름을 부르던 목소리.'}});
   ['father','mother'].forEach(function(role){
     card(role+'_song',0,'smile','{'+role+'}[이/가] 같은 자장가를 작게 불렀다. 울음 사이로 숨 고르는 소리가 잦아들었다.',{parent:{role:role,bright:{warmth:[2,3]},alive:true}});
     card(role+'_shift',0,'smile','{'+role+'}의 근무가 끝나기 전 다른 어른이 아기를 안았다. 돌아온 뒤에는 씻은 손으로 조심스레 품을 바꿨다.',{parent:{role:role,time:['shift'],alive:true}});
     card(role+'_noise',0,'smile','술을 마신 {'+role+'}의 목소리에 아기가 깼다. 다른 어른이 조용한 방으로 옮겨 달래고 밤을 지켰다.',{parent:{role:role,dark:{alcohol:[2,3]},alive:true}});
     card(role+'_work',1,'move','{'+role+'}의 출근 시간이 달라졌다. 맡아 주는 어른에게 좋아하는 담요와 잠드는 순서를 알려 주었다.',{parent:{role:role,time:['shift','away','regular'],alive:true}});
+    var athleteSports={pro_football:'축구',pro_baseball:'야구',pro_basketball:'농구'};
+    Object.keys(athleteSports).forEach(function(id){
+      card(role+'_athlete_'+id,2,'smile','{'+role+'}의 '+athleteSports[id]+' 경기 영상을 보았다. 집에 온 날에는 작은 공을 함께 굴렸다.',{parent:{role:role,job:[id],alive:true}}).talent='sport';
+    });
   });
   card('siblings',0,'sibling','형제가 이불 끝에서 작은 발을 구경했다. 안아 보기 전에는 어른에게 손을 받쳐 달라고 했다.',{household:{siblings:[1,3]}});
   card('only',0,'smile','집 안의 어른들이 처음 맡는 밤 당번을 나눴다. 아기가 잠들자 서로 눈짓으로 안부를 물었다.',{household:{siblings:[0,0]}});

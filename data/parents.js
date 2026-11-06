@@ -15,6 +15,10 @@
     combos: ['edu_pressure', 'warm_unreliable', 'debt', 'cold_strict'],
     jobs: [
       { id: 'kitman', name: '구단 장비 담당', tier: 2, time: 'shift', exposure: ['football', 'sports'], desc: '선수들의 장비와 경기 준비를 맡는다.' },
+      { id: 'pro_football', name: '프로 축구선수', tier: 3, time: 'away', exposure: ['football', 'sports'], retireAt: 38, nextJob: 'sports_coach', desc: '훈련과 원정 경기로 집을 자주 비운다. 평범한 프로의 수입이며 선수 생활 뒤에는 새 일을 찾는다.' },
+      { id: 'pro_baseball', name: '프로 야구선수', tier: 4, time: 'away', exposure: ['sports'], retireAt: 38, nextJob: 'sports_coach', desc: '전지훈련과 긴 시즌의 원정 경기를 다닌다. 계약으로 형편은 넉넉하지만 스타의 수입은 아니다.' },
+      { id: 'pro_basketball', name: '프로 농구선수', tier: 3, time: 'away', exposure: ['sports'], retireAt: 38, nextJob: 'sports_coach', desc: '체육관 훈련과 원정 경기로 집을 비운다. 계약과 출전 기회를 고민하는 보통의 프로다.' },
+      { id: 'sports_coach', name: '스포츠 지도자', tier: 2, time: 'regular', exposure: ['sports'], desc: '지역 체육교실에서 아이들의 운동과 안전한 훈련을 돕는다.' },
       { id: 'cook', name: '요리사', tier: 2, time: 'shift', exposure: ['cooking'], desc: '식당 부엌에서 음식을 만든다.' },
       { id: 'teacher', name: '교사', tier: 3, time: 'regular', exposure: ['language', 'logic'], desc: '학교에서 아이들을 가르친다.' },
       { id: 'musician', name: '음악가', tier: 2, time: 'flexible', exposure: ['music', 'stage'], desc: '연습과 공연으로 생활한다.' },

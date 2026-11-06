@@ -48,6 +48,15 @@
     ['father','mother'].forEach(function(role){
       var p=RA.Engine.person(s,role);if(!p||!p.alive||!p.v2)return;
       var job=data().jobs.find(function(j){return j.id===p.v2.jobId;});
+      // Income runs before person ages advance; bornAt already gives this year's parent age.
+      if(job && job.retireAt && s.age-p.bornAt>=job.retireAt){
+        var story='{'+role+'}[은/는] '+job.name+' 생활을 마치고 은퇴했다. 이제 스포츠 지도자로 아이들의 훈련을 돕는다. 원정 가방 대신 수업 준비물을 챙겼다.';
+        p.v2.jobId=job.nextJob;delete p.v2.occupation;
+        job=data().jobs.find(function(j){return j.id===p.v2.jobId;});
+        s.household.tier=F.tier({parents:s.people.filter(function(x){return x.v2;}).map(function(x){return x.v2;})});
+        F.effects(s,{memory:{tag:'athlete_retirement_'+p.id,who:role,text:story}},[]);
+        RA.Engine.addLog(s,story,'family');
+      }
       if(job && job.time!=='home')F.post(s,'income',role,Math.round(RA.data.economy.parentAnnual.value*job.tier),'parent job tier model; 보정 필요');
     });
     var size=1+s.people.filter(function(p){return p.alive&&['father','mother','sibling'].includes(p.role);}).length;
