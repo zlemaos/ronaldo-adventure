@@ -44,7 +44,7 @@
       normalizeResidence();
       var open = Array.prototype.map.call(root.querySelectorAll('details'), function (d) { return d.open; }), scroll = G.scrollY;
       var preview = previewLines(), ns = spec.parents.map(function (p) { return p.nationality; });
-      root.innerHTML = '<div class="v2-creator"><h1>태어날 집 고르기</h1><nav class="v2-steps" aria-label="설정 단계">' + ['부모', '집과 아이', '미리보기'].map(function (name, i) { return '<button class="btn ' + (i === step ? 'btn-gold' : '') + '" data-step="' + i + '">' + (i + 1) + ' ' + name + '</button>'; }).join('') + '</nav><div class="v2-setup-content">' +
+      root.innerHTML = '<div class="v2-creator"><h1>태어날 집 고르기</h1><nav class="v2-steps" aria-label="설정 단계">' + ['부모', '집과 아이', '미리보기'].map(function (name, i) { return '<button class="btn ' + (i === step ? 'btn-gold' : '') + '"' + (i === step ? ' aria-current="step"' : '') + ' data-step="' + i + '">' + (i + 1) + ' ' + name + '</button>'; }).join('') + '</nav><div class="v2-setup-content">' +
         (step === 0 ? '<div class="v2-presets"><button class="btn" data-preset="canon">호날두 이야기 기반</button><button class="btn" data-preset="random">🎲 무작위</button><button class="btn" data-preset="custom">직접 만들기</button></div><p class="hint">호날두 가족의 공개된 이야기에서 영감을 받은 허구 설정</p><p class="hint">아래로 내려 어머니 설정도 확인하세요 ↓</p>' + spec.parents.map(parent).join('') :
           step === 1 ? '<h2>우리 집과 아이</h2><p>' + (ns[0] === ns[1] ? '부모 국적이 같아 사는 나라가 고정돼요.' : '부모 국적이 달라요. 두 나라 중 사는 곳을 골라요.') + '</p>' +
             field('사는 나라', 'residence', ns.filter(function (n, i) { return ns.indexOf(n) === i; }).map(function (id) { return { id: id, name: RA.data.countries[id].name }; }), spec.residence) +

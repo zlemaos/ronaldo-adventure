@@ -14,7 +14,7 @@
       while (moment && (moment.tier !== 'S' || skipAll())) {
         var banner = G.document.createElement('aside');
         banner.className = 'v2-moment-banner'; banner.setAttribute('role', 'status');
-        banner.textContent = moment.title + ' · ' + (moment.sub || '');
+        banner.textContent = moment.title + (moment.sub ? ' · ' + moment.sub : '');
         G.document.querySelector('#fx-root').appendChild(banner);
         RA.Engine.ackMoment(s, moment.id); ctx.save();
         setTimeout(function (shown) { return function () { shown.remove(); }; }(banner), 4500);

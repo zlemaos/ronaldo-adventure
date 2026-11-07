@@ -13,6 +13,9 @@
 <!-- the web app manifest is added by js/ui.js only when served over http(s); file:// cannot load it -->
 <title>인생게임</title>
 <link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/v2.css">
+<!-- the record-binder look must be on before the first paint; js/opening.js keeps the same rule -->
+<script>try{if((JSON.parse(localStorage.getItem('ronaldo-adventure.preferences')||'{}').look)!=='classic')document.documentElement.classList.add('ui-v2')}catch(e){document.documentElement.classList.add('ui-v2')}</script>
 </head>
 <body>
 <div id="app">
@@ -20,6 +23,7 @@
     <button class="logo" id="btn-home" title="처음 화면">
       <span class="logo-ball">⚽</span><span id="game-name">인생게임</span>
     </button>
+    <div class="strip" id="strip" hidden></div>
     <div class="top-actions">
       <span class="seed-chip" id="seed-chip" hidden></span>
       <button class="icon-btn" id="btn-mute" title="소리 켜기/끄기" aria-label="소리">🔊</button>

@@ -739,4 +739,122 @@
       r(4, 12, 8, 3, '#7c5e10'); r(5, 2, 2, 3, '#fff6c8');
     }
   };
+
+  // ---------------------------------------------------------------- record binder (GUI "A v2"): path identity, stamps, keepsakes
+  // Pure helpers (no DOM): js/ui.js decides where they show. Every life path gets a spine colour and a stamp motif;
+  // only the football path uses the ball motif, so other lives never carry football imagery.
+  P.heroTop = function (age, baseY) { var d = DIM[stageOf(age)]; return (baseY || 88) - d.legs - d.body - d.head; };
+  var GROUP_LOOK = {
+    '운동': ['#1E6A86', '#5EC4E8', 'diamond'], '연예계': ['#8A3570', '#F08FD0', 'star'], '예술': ['#65539B', '#B7A5FF', 'brush'],
+    '전문직': ['#2C5BA6', '#8FB6FF', 'scale'], '직장': ['#3B6B74', '#8FD0DA', 'case'], '어둠': ['#7E2236', '#F0708A', 'dice'], '상태': ['#46527E', '#AAB4DA', 'seal']
+  };
+  var ROUTE_STAMP = {
+    football: 'ball', basketball: 'hoop', baseball: 'diamond', fighter: 'glove', sports_staff: 'diamond', esports: 'gear',
+    idol: 'star', singer: 'note', band: 'note', rapper: 'note', classical: 'note', actor: 'star', comedian: 'star', model: 'star', creator: 'star', performer: 'star', media: 'star',
+    art: 'brush', design: 'brush', writer: 'book', cook: 'spoon', law: 'scale', medical: 'cross', science: 'gear', it: 'gear', trades: 'gear', transport: 'gear',
+    office: 'case', startup: 'case', merchant: 'case', public: 'case', politics: 'case', service: 'case', teaching: 'book', religion: 'book',
+    farm: 'leaf', military: 'shield', safety: 'shield', gang: 'dice', con: 'dice', thief: 'dice', gamble: 'dice'
+  };
+  var STAMP_NAMES = { ball: '공', spoon: '숟가락', hoop: '농구공', diamond: '다이아몬드', glove: '주먹', note: '음표', star: '별', brush: '붓', book: '책', scale: '저울',
+    cross: '십자', case: '가방', gear: '톱니', leaf: '잎사귀', shield: '방패', dice: '주사위', seal: '동그라미' };
+  P.STAMP_SHAPES = Object.keys(STAMP_NAMES);
+  // route: a data/routes.js entry (or null before any path). Small children on a state route read as "어린 시절".
+  P.pathTheme = function (route, age) {
+    var look = (route && GROUP_LOOK[route.group]) || GROUP_LOOK['상태'];
+    if (route && route.id === 'football') look = ['#187A50', '#2FD171', 'ball'];
+    var stamp = (route && ROUTE_STAMP[route.id]) || look[2];
+    var life = !route || (route.state && age < 7) ? '어린 시절' : route.name;
+    return { id: route ? route.id : 'none', life: life, spine: look[0], hi: look[1], stamp: stamp, stampName: STAMP_NAMES[stamp] + ' 도장' };
+  };
+  // 7-px-wide motifs drawn at the top inside the stamp ring ('#' = ink)
+  var MOTIF = {
+    ball: ['  ##  ', ' #### ', '######', ' #### ', ' #### '], hoop: [' ### ', '#.#.#', '#####', '#.#.#', ' ### '], diamond: ['  #  ', ' #.# ', '#...#', ' #.# ', '  #  '],
+    glove: [' #### ', '######', '######', ' #### ', '  ##  '], note: ['  ###', '  # #', '  #  ', '###  ', '###  '], star: ['  #  ', ' ### ', '#####', ' ### ', ' # # '],
+    brush: ['    ##', '   ## ', '  ##  ', ' ##   ', '##    '], book: ['## ##', '#####', '#####', '#####'], scale: ['#####', '# # #', '# # #', '  #  ', ' ### '],
+    cross: ['  ##  ', '######', '######', '  ##  '], case: [' ### ', '#####', '#####', '#####'], gear: ['# # #', ' ### ', '## ##', ' ### ', '# # #'],
+    leaf: ['  ###', ' ### ', '###  ', '#    '], shield: ['#####', '#####', ' ### ', '  #  '], dice: ['#####', '#.#.#', '#####', '#.#.#', '#####'], seal: ['###', '###']
+  };
+  P.stampBitmap = function (shape, key) {
+    var img = new Uint8Array(1600), spoon = shape === 'spoon', cx = spoon ? 15 : 20, cy = 20, r = spoon ? 14.5 : 19.5, mx = cx, my = spoon ? 20 : 22, x, y;
+    function dot(px, py) { if (px >= 0 && py >= 0 && px < 40 && py < 40) img[py * 40 + px] = 1; }
+    function line(x0, y0, x1, y1) { // 2px brush
+      var dx = Math.abs(x1 - x0), dy = Math.abs(y1 - y0), sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1, e = dx - dy;
+      for (;;) { dot(x0, y0); dot(x0 + 1, y0); dot(x0, y0 + 1); dot(x0 + 1, y0 + 1);
+        if (x0 === x1 && y0 === y1) break; var e2 = 2 * e; if (e2 > -dy) { e -= dy; x0 += sx; } if (e2 < dx) { e += dx; y0 += sy; } }
+    }
+    for (y = 0; y < 40; y++) for (x = 0; x < 40; x++) {
+      var px = x + 0.5, py = y + 0.5, d = Math.hypot(px - cx, py - cy);
+      var dash = key === 'fail' ? Math.floor((Math.atan2(py - cy, px - cx) + Math.PI) / (2 * Math.PI) * 18) % 2 === 1 : false;
+      if (d <= r && d > r - 2.5 && !dash) img[y * 40 + x] = 1;
+      if (key === 'success' && d <= r - 4 && d > r - 5.2) img[y * 40 + x] = 1;
+      if (key === 'partial' && d <= r - 4 && x < cx - 0.5 && (x + y) % 4 === 0) img[y * 40 + x] = 1;
+    }
+    if (spoon) {
+      for (var hx = cx + 14; hx < 40; hx++) if (key !== 'fail' || Math.floor(hx / 3) % 2 === 0) { dot(hx, 17); dot(hx, 18); dot(hx, 22); dot(hx, 23); }
+      for (var hy = 17; hy <= 23; hy++) { dot(38, hy); dot(39, hy); }
+    } else {
+      var m = MOTIF[shape] || MOTIF.seal, w = 0;
+      m.forEach(function (row) { w = Math.max(w, row.length); });
+      var ox = mx - Math.floor(w / 2), oy = 6;
+      for (y = oy - 1; y <= oy + m.length; y++) for (x = ox - 1; x <= ox + w; x++) img[y * 40 + x] = 0; // clear any hatch behind the motif
+      m.forEach(function (row, j) { for (var i = 0; i < row.length; i++) if (row[i] === '#') dot(ox + i, oy + j); });
+    }
+    if (key === 'partial') for (y = my - 8; y <= my + 8; y++) for (x = mx - 8; x <= mx + 8; x++) img[y * 40 + x] = 0; // clear hatch behind the mark
+    if (key === 'success') { line(mx - 7, my, mx - 3, my + 4); line(mx - 3, my + 4, mx + 6, my - 5); }
+    else if (key === 'fail') { line(mx - 6, my - 6, mx + 5, my + 5); line(mx + 5, my - 6, mx - 6, my + 5); }
+    else if (key === 'partial') {
+      for (y = -6; y <= 6; y++) for (x = -6; x <= 6; x++) { var dd = Math.hypot(x + 0.5, y + 0.5); if ((dd <= 6.5 && dd > 5) || (dd <= 6.5 && x < 0)) dot(mx + x, my + y); }
+    } else { for (y = -3; y <= 3; y++) for (x = -3; x <= 3; x++) if (Math.hypot(x + 0.5, y + 0.5) <= 3.6) dot(mx + x, my + y); }
+    return img;
+  };
+  P.STAMP_INK = { success: '#f5c518', partial: '#8fc2ff', fail: '#ff9fae', choice: '#eef1ff' };
+  P.drawStamp = function (ctx, shape, key) {
+    var img = P.stampBitmap(shape, key);
+    ctx.clearRect(0, 0, 40, 40); ctx.fillStyle = P.STAMP_INK[key] || P.STAMP_INK.choice;
+    for (var i = 0; i < 1600; i++) if (img[i]) ctx.fillRect(i % 40, Math.floor(i / 40), 1, 1);
+  };
+  // 16x16 keepsakes for the chronicle shelf: [x, y, w, h, colour]
+  var KS = {
+    boots: [[3, 2, 5, 8, '#f4f6ff'], [3, 9, 9, 4, '#f4f6ff'], [12, 10, 2, 3, '#f4f6ff'], [4, 11, 9, 1, '#2fd171'], [5, 4, 2, 1, '#0b1020'], [5, 6, 2, 1, '#0b1020'], [4, 13, 2, 2, '#9aa6c8'], [10, 13, 2, 2, '#9aa6c8']],
+    ball: [[5, 2, 6, 12, '#f4f6ff'], [3, 4, 10, 8, '#f4f6ff'], [2, 6, 12, 4, '#f4f6ff'], [7, 6, 3, 3, '#0b1020'], [3, 9, 2, 2, '#0b1020'], [11, 9, 2, 2, '#0b1020'], [6, 2, 4, 1, '#9aa6c8']],
+    bag: [[4, 3, 8, 11, '#3b82f6'], [5, 1, 6, 2, '#1d4ed8'], [6, 2, 4, 1, '#0b1020'], [5, 7, 6, 4, '#1d4ed8'], [7, 8, 2, 1, '#f4f6ff']],
+    medal: [[5, 1, 2, 6, '#e8384f'], [9, 1, 2, 6, '#3b82f6'], [4, 7, 8, 8, '#9aa6c8'], [5, 8, 6, 6, '#d5dfeb'], [7, 9, 2, 3, '#f4f6ff']],
+    key: [[2, 5, 6, 6, '#d5dfeb'], [4, 7, 2, 2, '#0b1020'], [8, 7, 7, 2, '#d5dfeb'], [12, 9, 2, 2, '#d5dfeb'], [14, 9, 1, 3, '#d5dfeb'], [2, 10, 6, 1, '#9aa6c8'], [8, 8, 7, 1, '#9aa6c8']],
+    bottle: [[6, 1, 4, 2, '#d5dfeb'], [5, 3, 6, 1, '#9aa6c8'], [4, 4, 8, 11, '#f4f6ff'], [5, 6, 6, 1, '#8fc2ff'], [5, 9, 6, 1, '#8fc2ff'], [5, 12, 6, 1, '#8fc2ff']],
+    cap: [[1, 4, 14, 3, '#3b4a80'], [3, 3, 10, 1, '#56649a'], [4, 7, 8, 5, '#24305c'], [13, 6, 1, 6, '#e8384f'], [12, 11, 3, 2, '#e8384f']],
+    ring: [[5, 4, 6, 2, '#d5dfeb'], [3, 6, 2, 6, '#d5dfeb'], [11, 6, 2, 6, '#d5dfeb'], [5, 12, 6, 2, '#d5dfeb'], [6, 1, 4, 3, '#8fc2ff'], [7, 1, 1, 1, '#f4f6ff']],
+    shoe: [[4, 5, 5, 6, '#8fc2ff'], [4, 10, 9, 3, '#8fc2ff'], [5, 13, 8, 1, '#4f7fc0'], [5, 7, 3, 1, '#f4f6ff']],
+    letter: [[2, 4, 12, 9, '#f4f6ff'], [2, 4, 1, 1, '#9aa6c8'], [3, 5, 2, 1, '#9aa6c8'], [5, 6, 2, 1, '#9aa6c8'], [9, 6, 2, 1, '#9aa6c8'], [11, 5, 2, 1, '#9aa6c8'], [13, 4, 1, 1, '#9aa6c8'], [7, 8, 2, 2, '#e8384f'], [6, 8, 1, 1, '#e8384f'], [9, 8, 1, 1, '#e8384f']],
+    clock: [[5, 2, 6, 12, '#d5dfeb'], [3, 4, 10, 8, '#d5dfeb'], [2, 6, 12, 4, '#d5dfeb'], [7, 4, 2, 5, '#0b1020'], [9, 8, 3, 1, '#0b1020']],
+    suitcase: [[6, 2, 4, 1, '#9aa6c8'], [6, 2, 1, 3, '#9aa6c8'], [9, 2, 1, 3, '#9aa6c8'], [2, 5, 12, 9, '#65539b'], [2, 8, 12, 1, '#b7a5ff'], [4, 14, 2, 1, '#0b1020'], [10, 14, 2, 1, '#0b1020']],
+    bandage: [[2, 6, 12, 4, '#f4f6ff'], [6, 6, 4, 4, '#d5dfeb'], [7, 7, 1, 1, '#9aa6c8'], [8, 8, 1, 1, '#9aa6c8']],
+    flower: [[7, 8, 2, 7, '#21a35d'], [9, 11, 3, 2, '#21a35d'], [6, 2, 4, 6, '#f4f6ff'], [4, 4, 8, 2, '#f4f6ff'], [7, 4, 2, 2, '#8fc2ff']],
+    candle: [[7, 1, 2, 3, '#ff9fae'], [7, 4, 2, 1, '#0b1020'], [5, 5, 6, 9, '#f4f6ff'], [4, 14, 8, 1, '#9aa6c8']],
+    photo: [[2, 3, 12, 10, '#d5dfeb'], [3, 4, 10, 6, '#4f7fc0'], [3, 8, 10, 2, '#21a35d'], [10, 5, 2, 2, '#f4f6ff'], [3, 10, 10, 2, '#f4f6ff']],
+    cup: [[3, 1, 10, 6, '#d5dfeb'], [1, 2, 2, 4, '#9aa6c8'], [13, 2, 2, 4, '#9aa6c8'], [5, 7, 6, 2, '#9aa6c8'], [7, 9, 2, 3, '#9aa6c8'], [4, 12, 8, 3, '#56649a'], [5, 2, 2, 3, '#f4f6ff']],
+    coin: [[5, 2, 6, 12, '#d5dfeb'], [3, 4, 10, 8, '#d5dfeb'], [6, 5, 4, 6, '#9aa6c8'], [7, 6, 2, 4, '#f4f6ff']],
+    briefcase: [[6, 3, 4, 1, '#9aa6c8'], [6, 3, 1, 2, '#9aa6c8'], [9, 3, 1, 2, '#9aa6c8'], [2, 5, 12, 9, '#53608a'], [2, 8, 12, 1, '#24305c'], [7, 8, 2, 2, '#d5dfeb']],
+    star: [[7, 1, 2, 3, '#d5dfeb'], [5, 4, 6, 2, '#d5dfeb'], [2, 6, 12, 2, '#d5dfeb'], [4, 8, 8, 2, '#d5dfeb'], [4, 10, 3, 3, '#d5dfeb'], [9, 10, 3, 3, '#d5dfeb'], [3, 13, 2, 1, '#d5dfeb'], [11, 13, 2, 1, '#d5dfeb']]
+  };
+  P.KEEPSAKES = Object.keys(KS);
+  var KS_OF = { birth: 'bottle', enrollment: 'bag', graduation: 'cap', first_love: 'letter', marriage: 'ring', childbirth: 'shoe', first_job: 'briefcase',
+    retirement: 'clock', move: 'suitcase', major_injury: 'bandage', farewell: 'flower', death: 'candle', memory: 'photo', promote: 'medal', leader: 'medal',
+    nobel: 'medal', jackpot: 'coin', lottery: 'coin', transfer: 'suitcase', national: 'medal', pro: 'key' };
+  // football objects only for football moments (goal, trophies) or while the life is a football life
+  P.keepsakeFor = function (kind, footballLife) {
+    kind = String(kind || '');
+    if (kind === 'goal') return 'ball';
+    if (/^trophy_/.test(kind)) return 'cup';
+    if (footballLife && (kind === 'pro' || kind === 'national')) return 'boots';
+    return KS_OF[kind] || 'star';
+  };
+  P.drawKeepsake = function (ctx, item) {
+    ctx.clearRect(0, 0, 16, 16);
+    (KS[item] || KS.star).forEach(function (q) { ctx.fillStyle = q[4]; ctx.fillRect(q[0], q[1], q[2], q[3]); });
+  };
+  P.drawLock = function (ctx) { // 6x7
+    ctx.clearRect(0, 0, 6, 7); ctx.fillStyle = '#bcc6e4';
+    [[1, 0, 4, 1], [1, 0, 1, 3], [4, 0, 1, 3], [0, 3, 6, 4]].forEach(function (q) { ctx.fillRect(q[0], q[1], q[2], q[3]); });
+    ctx.clearRect(2, 4, 2, 2);
+  };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

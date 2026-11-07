@@ -2,20 +2,33 @@
 (function (G) {
   'use strict';
   var RA = G.RA = G.RA || {}, V = RA.V2 = {}, key = 'ronaldo-adventure.preferences';
-  V.settings = { text: 'normal', motion: false, skip: false, infantAuto: false };
+  // look: 'v2' = the record-binder screens (default), 'classic' = the earlier screens, kept on request
+  V.settings = { text: 'normal', motion: false, skip: false, infantAuto: false, look: 'v2' };
   V.init = function () {
     try { Object.assign(V.settings, JSON.parse(G.localStorage.getItem(key) || '{}')); } catch (e) { /* defaults */ }
+    if (V.settings.look !== 'classic') V.settings.look = 'v2';
     V.apply();
   };
+  V.isV2 = function () { return V.settings.look !== 'classic'; };
   V.reduced = function () { return V.settings.motion || G.matchMedia('(prefers-reduced-motion: reduce)').matches; };
   V.apply = function () {
     var d = G.document.documentElement;
-    d.dataset.text = V.settings.text; d.classList.toggle('reduce-motion', V.reduced());
+    d.dataset.text = V.settings.text; d.classList.toggle('reduce-motion', V.reduced()); d.classList.toggle('ui-v2', V.isV2());
     try { G.localStorage.setItem(key, JSON.stringify(V.settings)); } catch (e) { /* preferences remain usable */ }
   };
+  // Risky-choice odds as three cells in a fixed order; a 0% outcome stays visible. Percentages are the engine's values, rounded.
+  V.OUTCOMES = [{ key: 'success', name: '성공', mark: '✓' }, { key: 'partial', name: '부분 성공', mark: '◐' }, { key: 'fail', name: '실패', mark: '✕' }];
+  V.oddsCells = function (prob) {
+    return V.OUTCOMES.map(function (o) { return { key: o.key, name: o.name, mark: o.mark, pct: Math.round(((prob && prob[o.key]) || 0) * 100) }; });
+  };
+  V.resultInfo = function (key) {
+    return V.OUTCOMES.filter(function (o) { return o.key === key; })[0] || { key: 'choice', name: '기록됨', mark: '●' };
+  };
   V.settingsPanel = function (ctx) {
-    var m = ctx.modal('<div class="card-b v2-settings"><h2>설정</h2><label for="text-size">글자 크기</label><select id="text-size"><option value="normal">보통</option><option value="large">크게</option><option value="largest">아주 크게</option></select><label><input type="checkbox" id="motion"> 움직임 줄이기</label><label><input type="checkbox" id="sound"> 소리 켜기</label><label><input type="checkbox" id="skip-opening"> 오프닝 항상 건너뛰기</label><button class="btn btn-gold" id="settings-done">닫기</button></div>');
+    var m = ctx.modal('<div class="card-b v2-settings"><h2>설정</h2><label for="ui-look">화면 모양</label><select id="ui-look"><option value="v2">새 화면 · 인생 기록철</option><option value="classic">예전 화면</option></select><label for="text-size">글자 크기</label><select id="text-size"><option value="normal">보통</option><option value="large">크게</option><option value="largest">아주 크게</option></select><label><input type="checkbox" id="motion"> 움직임 줄이기</label><label><input type="checkbox" id="sound"> 소리 켜기</label><label><input type="checkbox" id="skip-opening"> 오프닝 항상 건너뛰기</label><button class="btn btn-gold" id="settings-done">닫기</button></div>');
     var q = function (s) { return m.querySelector(s); };
+    q('#ui-look').value = V.settings.look;
+    q('#ui-look').onchange = function () { V.settings.look = this.value === 'classic' ? 'classic' : 'v2'; V.apply(); if (ctx.restyle) ctx.restyle(); };
     q('#text-size').value = V.settings.text; q('#motion').checked = V.settings.motion; q('#sound').checked = !RA.Audio.isMuted(); q('#skip-opening').checked = V.settings.skip;
     q('#text-size').onchange = function () { V.settings.text = this.value; V.apply(); };
     q('#motion').onchange = function () { V.settings.motion = this.checked; V.apply(); };
